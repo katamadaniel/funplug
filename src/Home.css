@@ -1,0 +1,20 @@
+/* LandingPage.css */
+.landing-page {
+  font-family: Arial, sans-serif;
+}
+
+.main-search-box {
+  display: flex;
+  justify-content: right;
+  padding: 20px 0;
+}
+
+.events {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+h3{
+  color: #007bff;
+}

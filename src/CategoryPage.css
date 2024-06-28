@@ -1,0 +1,24 @@
+.event-list, .user-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 20px;
+}
+
+.event-card, .user-card {
+  width: 200px;
+  margin: 10px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.event-card h4, .user-card h4 {
+  margin: 0 0 10px;
+}
+
+.event-card p, .user-card p {
+  margin: 0;
+}

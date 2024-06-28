@@ -1,0 +1,53 @@
+/* Card.css */
+.card {
+  border: 1px solid #ccc;
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.2);
+  box-shadow: rgba(0,0,0,0.2) 5px 5px 2px;
+}
+
+.card-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.card-content h3{
+  font-size: 16px;
+  color:black; 
+}
+
+
+.card-content {
+  padding: 10px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+}
+
+.card-title {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+.card-description {
+  font-size: 1em;
+  margin-bottom: 20px;
+}
+.view-details-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.view-details-button:hover {
+  background-color: #0056b3;
+}

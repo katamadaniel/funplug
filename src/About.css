@@ -1,0 +1,76 @@
+/* About.css */
+.about-container {
+  padding: 20px;
+  font-family: 'Arial, sans-serif';
+  color: #333;
+}
+
+.about-container h1 {
+  font-size: 2.5em;
+  color: #ff6347;
+  animation: fadeInDown 1s ease;
+}
+
+.about-container h2 {
+  font-size: 2em;
+  color: #4682b4;
+  animation: fadeInLeft 1s ease;
+}
+
+.about-container p {
+  font-size: 1.2em;
+  line-height: 1.6;
+  animation: fadeInRight 1s ease;
+}
+
+.mission-image {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  display: block;
+  animation: zoomIn 1s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

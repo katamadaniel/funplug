@@ -1,0 +1,23 @@
+/* Menu.css */
+.menu {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 0;
+}
+
+.menu-list {
+  display: flex;
+  justify-content: right;
+  gap: 20px;
+  list-style-type: none;
+  padding: 0;
+  margin: 0 20px;
+}
+
+.menu-item {
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  text-decoration: underline;
+}
