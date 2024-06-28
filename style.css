@@ -1,0 +1,9 @@
+body{
+    align-items: center;
+    margin: auto;
+}
+.events{
+    align-items: center;
+    display: flex;
+    margin: auto;
+}
