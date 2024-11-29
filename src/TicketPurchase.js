@@ -1,12 +1,13 @@
-// TicketPurchase.js
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import './TicketPurchase.css';
 
 const TicketPurchase = ({ event, onClose }) => {
-  const [ticketType, setTicketType] = useState('');
+  const [ticketType, setTicketType] = useState(event.ticketType === 'free' ? 'Free' : '');
   const [quantity, setQuantity] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
   const [errors, setErrors] = useState({});
@@ -14,13 +15,16 @@ const TicketPurchase = ({ event, onClose }) => {
   const [purchaseStatus, setPurchaseStatus] = useState(null);
 
   useEffect(() => {
-    if (ticketType && quantity) {
-      const selectedTicket = event.tickets.find(ticket => ticket.type === ticketType);
-      setTotalAmount(selectedTicket ? selectedTicket.price * quantity : 0);
+    if (ticketType && quantity && event.ticketType !== 'free') {
+      const selectedTicketPrice = 
+        ticketType === 'Regular' ? event.regularPrice : 
+        ticketType === 'VIP' ? event.vipPrice : 
+        event.vvipPrice;
+      setTotalAmount(selectedTicketPrice * quantity);
     } else {
       setTotalAmount(0);
     }
-  }, [ticketType, quantity, event.tickets]);
+  }, [ticketType, quantity, event]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -31,11 +35,18 @@ const TicketPurchase = ({ event, onClose }) => {
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email address is invalid';
     }
-    if (!paymentOption) newErrors.paymentOption = 'Payment option is required';
+    if (!phone) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(phone)) {
+      newErrors.phone = 'Phone number is invalid';
+    }
+    if (event.ticketType !== 'free' && !paymentOption) {
+      newErrors.paymentOption = 'Payment option is required';
+    }
     return newErrors;
   };
 
-  const handleBuyTicket = () => {
+  const handleBuyTicket = async () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -46,15 +57,27 @@ const TicketPurchase = ({ event, onClose }) => {
     setLoading(true);
     setPurchaseStatus(null);
 
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      const purchaseData = {
+        ticketType,
+        quantity,
+        email,
+        phone,
+        paymentOption: event.ticketType === 'free' ? 'free' : paymentOption,
+        totalAmount: event.ticketType === 'free' ? 0 : totalAmount,
+        eventId: event._id,
+        creatorId: event.userId,
+        eventTitle: event.title,
+      };
+      
+      await axios.post('http://localhost:5000/api/ticket_purchases', purchaseData);
+      setPurchaseStatus('success');
+    } catch (error) {
+      console.error('Error purchasing ticket:', error.message);
+      setPurchaseStatus('failed');
+    } finally {
       setLoading(false);
-      const success = Math.random() > 0.2; // 80% chance of success
-      setPurchaseStatus(success ? 'success' : 'failed');
-      if (success) {
-        alert('Payment successful! Confirmation sent to your email.');
-      }
-    }, 5000); // 5 seconds delay
+    }
   };
 
   return (
@@ -64,13 +87,32 @@ const TicketPurchase = ({ event, onClose }) => {
         <h2>Purchase Tickets for {event.title}</h2>
         <div className="form-group">
           <label>Ticket Type:</label>
-          <select value={ticketType} onChange={(e) => setTicketType(e.target.value)}>
+          <select 
+            value={ticketType} 
+            onChange={(e) => setTicketType(e.target.value)} 
+            disabled={
+              event.ticketType === 'free' || 
+              (event.regularTicketsRemaining <= 0 && event.vipTicketsRemaining <= 0 && event.vvipTicketsRemaining <= 0)
+            }
+          >
             <option value="">Select Ticket Type</option>
-            {event.tickets.map(ticket => (
-              <option key={ticket.type} value={ticket.type}>
-                {ticket.type} - ${ticket.price}
+            {event.ticketType === 'free' ? (
+              <option value="Free" disabled={event.freeTicketsRemaining <= 0}>
+                Free {event.freeTicketsRemaining <= 0 && '(Sold Out)'}
               </option>
-            ))}
+            ) : (
+              <>
+                <option value="Regular" disabled={event.regularTicketsRemaining <= 0}>
+                  Regular - Ksh.{event.regularPrice} {event.regularTicketsRemaining <= 0 && '(Sold Out)'}
+                </option>
+                <option value="VIP" disabled={event.vipTicketsRemaining <= 0}>
+                  VIP - Ksh.{event.vipPrice} {event.vipTicketsRemaining <= 0 && '(Sold Out)'}
+                </option>
+                <option value="VVIP" disabled={event.vvipTicketsRemaining <= 0}>
+                  VVIP - Ksh.{event.vvipPrice} {event.vvipTicketsRemaining <= 0 && '(Sold Out)'}
+                </option>
+              </>
+            )}
           </select>
           {errors.ticketType && <p className="error">{errors.ticketType}</p>}
         </div>
@@ -81,6 +123,7 @@ const TicketPurchase = ({ event, onClose }) => {
             value={quantity} 
             onChange={(e) => setQuantity(e.target.value)} 
             min="1"
+            max={event.ticketType === 'free' ? event.freeTicketsRemaining : 100}
           />
           {errors.quantity && <p className="error">{errors.quantity}</p>}
         </div>
@@ -94,28 +137,48 @@ const TicketPurchase = ({ event, onClose }) => {
           {errors.email && <p className="error">{errors.email}</p>}
         </div>
         <div className="form-group">
-          <label>Payment Option:</label>
-          <select value={paymentOption} onChange={(e) => setPaymentOption(e.target.value)}>
-            <option value="">Select Payment Option</option>
-            <option value="mpesa">M-Pesa</option>
-            <option value="card">Debit Card</option>
-          </select>
-          {errors.paymentOption && <p className="error">{errors.paymentOption}</p>}
+          <label>Phone:</label>
+          <input 
+            type="text" 
+            value={phone} 
+            onChange={(e) => setPhone(e.target.value)} 
+          />
+          {errors.phone && <p className="error">{errors.phone}</p>}
         </div>
+        {event.ticketType !== 'free' && (
+          <div className="form-group">
+            <label>Payment Option:</label>
+            <select value={paymentOption} onChange={(e) => setPaymentOption(e.target.value)}>
+              <option value="">Select Payment Option</option>
+              <option value="mpesa">M-Pesa</option>
+              <option value="card">Debit Card</option>
+            </select>
+            {errors.paymentOption && <p className="error">{errors.paymentOption}</p>}
+          </div>
+        )}
         <div className="total-amount">
           <label>Total Amount: </label>
-          <span>${totalAmount.toFixed(2)}</span>
+          <span>Ksh.{totalAmount.toFixed(2)}</span>
         </div>
-        <button className="buy-ticket-button" onClick={handleBuyTicket}>Buy Ticket</button>
-        {loading && <div className="loader">Processing Payment...</div>}
+        <button 
+          className="buy-ticket-button" 
+          onClick={handleBuyTicket} 
+          disabled={
+            event.ticketType === 'free' ? event.freeTicketsRemaining <= 0 : 
+            (event.regularTicketsRemaining <= 0 && event.vipTicketsRemaining <= 0 && event.vvipTicketsRemaining <= 0)
+          }
+        >
+          {event.ticketType === 'free' ? 'Get Free Ticket' : 'Buy Ticket'}
+        </button>
+        {loading && <div className="loader">Processing...</div>}
         {purchaseStatus === 'success' && (
           <div className="purchase-status success">
-            <FaCheckCircle /> Payment successful! Confirmation sent to your email.
+            <FaCheckCircle /> {event.ticketType === 'free' ? 'Ticket Reserved Successfully!' : 'Purchase Successful!'}
           </div>
         )}
         {purchaseStatus === 'failed' && (
-          <div className="purchase-status failed">
-            <FaTimesCircle /> Payment failed. Please try again.
+          <div className="purchase-status error">
+            <FaTimesCircle /> {event.ticketType === 'free' ? 'Reservation Failed. Please try again.' : 'Purchase Failed. Please try again.'}
           </div>
         )}
       </div>

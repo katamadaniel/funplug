@@ -1,21 +1,125 @@
-// App.js
-import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Category from './Category';
-import CategoryPage from './CategoryPage';
-import { categories } from './categories';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import EventModal from './EventModal';
+import TicketPurchase from './TicketPurchase';
+import CircularProgress from '@mui/material/CircularProgress'; // Import CircularProgress
+import './CategoryDetails.css';
 
-const App = () => {
+const USERS_API_URL = 'http://localhost:5000/api/users'; 
+const EVENT_API_URL = 'http://localhost:5000/api/events';
+const DEFAULT_AVATAR_URL = '/default-avatar.png';
+
+const CategoryDetails = () => {
+  const { category } = useParams();
+  const [filteredUserIds, setFilteredUserIds] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isTicketPurchaseOpen, setIsTicketPurchaseOpen] = useState(false);
+
+  useEffect(() => {
+    // Fetch all users and all events from the server
+    const fetchData = async () => {
+      try {
+        const usersResponse = await axios.get(USERS_API_URL);
+        setUsers(usersResponse.data);
+
+        const eventsResponse = await axios.get(EVENT_API_URL);
+
+        // Filter users based on category and extract their IDs
+        const filteredUsers = usersResponse.data.filter(user => user.category === category);
+        const userIds = filteredUsers.map(user => user._id);
+        setFilteredUserIds(userIds);
+
+        // Get today's date for comparison
+        const today = new Date().setHours(0, 0, 0, 0);
+
+        // Filter events to include only upcoming events associated with the filtered user IDs
+        const userUpcomingEvents = eventsResponse.data
+          .filter(event => userIds.includes(event.userId) && new Date(event.date).getTime() >= today);
+
+        setEvents(userUpcomingEvents);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [category]);
+
+  // Show CircularProgress while loading
+  if (loading) return <div className="loading-container"><CircularProgress /></div>;
+
+  // Function to handle viewing event details
+  const handleViewEventDetails = (event) => {
+    const user = users.find(user => user._id === event.userId);
+    setSelectedEvent(event);
+    setSelectedUser(user || { username: 'Unknown User', avatar: DEFAULT_AVATAR_URL });
+    setIsEventModalOpen(true);
+  };
+
+  // Function to handle opening the ticket purchase modal from the event modal
+  const handleBuyTicket = () => {
+    setIsEventModalOpen(false);
+    setIsTicketPurchaseOpen(true); 
+  };
+
+  // Function to close the ticket purchase modal
+  const handleCloseTicketPurchase = () => {
+    setIsTicketPurchaseOpen(false);
+    setSelectedEvent(null);
+  };
+
   return (
-    <Router>
-      <Switch>
-        <Route path="/" exact component={Category} />
-        {categories.map(category => (
-          <Route key={category.name} path={category.path} component={CategoryPage} />
-        ))}
-      </Switch>
-    </Router>
+    <div className="events-container">
+      {filteredUserIds.length > 0 && events.length > 0 ? (
+        events.map(event => (
+          <div key={event._id} className="event-card">
+            <img
+              src={event.image ? `http://localhost:5000/uploads/${event.image}` : '/default-event-image.png'}
+              alt={event.title}
+              className="event-image"
+            />
+            <h3>{event.title}</h3>
+            <p>{event.description}</p>
+            <p><strong>Venue:</strong> {event.venue}</p>
+            <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> {event.startTime}</p>
+            <button 
+              className="view-details-btn" onClick={() => handleViewEventDetails(event)}>
+              View Details
+            </button>
+          </div>
+        ))
+      ) : (
+        <p>No upcoming events found for users in this category.</p>
+      )}
+
+      {selectedEvent && isEventModalOpen && (
+        <EventModal
+          event={selectedEvent}
+          user={selectedUser}
+          isOpen={isEventModalOpen}
+          onClose={() => setIsEventModalOpen(false)}
+          onBuyTicket={handleBuyTicket}
+        />
+      )}
+
+      {selectedEvent && isTicketPurchaseOpen && (
+        <TicketPurchase
+          event={selectedEvent}
+          isOpen={isTicketPurchaseOpen}
+          onClose={handleCloseTicketPurchase}
+        />
+      )}
+    </div>
   );
 };
 
-export default App;
+export default CategoryDetails;

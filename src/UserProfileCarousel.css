@@ -11,7 +11,7 @@
 
 }
 
-.user-profile {
+.user-profile-card {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -23,15 +23,20 @@
   background-color: #8bc2f5;
 
 }
-.user-profile:hover{
+.user-profile-card:hover{
   transform: scale(1.05);
   background-color: azure;
   box-shadow: 5px 5px 10px #659BEB;
 }
 
-.user-avatar {
-  width: 100px;
-  height: 100px;
+.avatar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.avatar0 {
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 10px;
@@ -46,3 +51,15 @@
   font-size: 0.9em;
   color: #666;
 }
+
+/* Make the page and components mobile responsive */
+@media (max-width: 768px) {
+  .avatar0 {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+}
+

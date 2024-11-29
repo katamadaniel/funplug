@@ -15,8 +15,8 @@ const About = () => {
       </p>
 
       <p>
-        Our registered users have the privilege to create and share their events, profiles, and portfolios with their fan-base on other platforms to create
-        traction and engagement for their content, enabling them to build a community of loyal supporters.
+        Our registered users have the acess to create personalized profiles, events, share booking schedule and rates, book event spaces which enables them to 
+        get more sales and traction by simplifying the process.
       </p>
 
       <h2>FunPlug is your gateway to an insightful entertainment and events experience.</h2>
@@ -26,9 +26,9 @@ const About = () => {
       </p>
 
       <h3>
-        We provide you with all the information you need on celebrities, brands, and events to help you make an informed decision on who to support and 
-        which events to attend. We know that you are passionate about what you like and you want to have as much information on it before committing 
-        to anything, and that’s what we are here for.
+        We provide you with the information you need on creators, brands, and events to help you make an informed decision while planning to host or
+        attend events. We know that you are specific about your taste and interests thus you often require more time and information before committing 
+        to anything and that’s why we are here to make the search easy for you.
       </h3>
     </div>
   );

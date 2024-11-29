@@ -1,23 +1,68 @@
-/* Menu.css */
 .menu {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 0;
-}
-
-.menu-list {
+  position: relative;
   display: flex;
-  justify-content: right;
-  gap: 20px;
-  list-style-type: none;
-  padding: 0;
-  margin: 0 20px;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.menu-item {
+.hamburger {
+  font-size: 24px;
+  background: none;
+  border: none;
   cursor: pointer;
 }
 
-.menu-item:hover {
-  text-decoration: underline;
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  display: none;
+}
+
+.menu-list.open {
+  display: flex;
+}
+
+.menu-item {
+  margin: 10px 0;
+}
+
+.menu-item a {
+  text-decoration: none;
+  color: #000;
+}
+
+.main-search-box {
+  width: 100%;
+  margin-top: 10px;
+}
+
+@media (min-width: 768px) {
+  .menu {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .hamburger {
+    display: none;
+  }
+
+  .menu-list {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .menu-item {
+    margin: 0 15px;
+  }
+
+  .main-search-box {
+    margin-top: 0;
+    margin-left: auto;
+  }
 }

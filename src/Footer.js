@@ -18,7 +18,7 @@ const Footer = () => {
         ></iframe>
       </div>
       <div className="copyright">
-        &copy; {new Date().getFullYear()} Your Company. All rights reserved.
+        &copy; {new Date().getFullYear()} FunPlug Events Management System. All rights reserved.
       </div>
       <div className="social-media">
         <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">

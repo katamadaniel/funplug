@@ -1,12 +1,11 @@
-// src/Signup.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signup } from './services/userService';
-import './Signup.css';
-import '@fortawesome/fontawesome-free/css/all.min.css'; // Import FontAwesome CSS
+import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl, Typography, IconButton, InputAdornment,} from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const categories = [
-  'Music', 'Art', 'Games', 'Movies', 'Media', 'Dance', 'Fashion', 'Kids Fun'
+  'Music', 'Art', 'Games', 'Media', 'Dance', 'Fashion', 'Kids Fun'
 ];
 
 const Signup = () => {
@@ -20,7 +19,7 @@ const Signup = () => {
   });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -33,7 +32,6 @@ const Signup = () => {
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.username) newErrors.username = 'Username is required';
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -50,7 +48,6 @@ const Signup = () => {
     } else if (!/[A-Za-z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
       newErrors.password = 'Password must contain both letters and numbers';
     }
-
     return newErrors;
   };
 
@@ -74,68 +71,102 @@ const Signup = () => {
   };
 
   return (
-    <div className="signup-form">
-      <h2>Signup</h2>
+    <Container maxWidth="xs">
+      <Typography variant="h4" gutterBottom>Signup</Typography>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Username:</label>
-          <input type="text" name="username" value={formData.username} onChange={handleChange} />
-          {errors.username && <p className="error">{errors.username}</p>}
-        </div>
-        <div className="form-group">
-          <label>Email:</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} />
-          {errors.email && <p className="error">{errors.email}</p>}
-        </div>
-        <div className="form-group">
-          <label>Phone Number:</label>
-          <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
-          {errors.phone && <p className="error">{errors.phone}</p>}
-        </div>
-        <div className="form-group">
-          <label>Gender:</label>
-          <select name="gender" value={formData.gender} onChange={handleChange}>
-            <option value="">Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-          {errors.gender && <p className="error">{errors.gender}</p>}
-        </div>
-        <div className="form-group">
-          <label>Category:</label>
-          <select name="category" value={formData.category} onChange={handleChange}>
-            <option value="">Select Category</option>
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Username"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          error={!!errors.username}
+          helperText={errors.username}
+        />
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          error={!!errors.email}
+          helperText={errors.email}
+        />
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Phone Number"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          error={!!errors.phone}
+          helperText={errors.phone}
+        />
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Gender</InputLabel>
+          <Select
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+            error={!!errors.gender}
+          >
+            <MenuItem value=""><em>Select Gender</em></MenuItem>
+            <MenuItem value="male">Male</MenuItem>
+            <MenuItem value="female">Female</MenuItem>
+            <MenuItem value="other">Other</MenuItem>
+          </Select>
+          {errors.gender && <Typography color="error">{errors.gender}</Typography>}
+        </FormControl>
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Category</InputLabel>
+          <Select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            error={!!errors.category}
+          >
+            <MenuItem value=""><em>Select Category</em></MenuItem>
             {categories.map((category) => (
-              <option key={category} value={category}>{category}</option>
+              <MenuItem key={category} value={category}>{category}</MenuItem>
             ))}
-          </select>
-          {errors.category && <p className="error">{errors.category}</p>}
-        </div>
-        <div className="form-group">
-          <label>Password:</label>
-          <div className="password-wrapper">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-            {formData.password && (
-              <i
-                className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'} toggle-password`}
-                onClick={togglePasswordVisibility}
-              ></i>
-            )}
-          </div>
-          {errors.password && <p className="error">{errors.password}</p>}
-        </div>
-        {error && <p className="error">{error}</p>}
-        <button type="submit">Signup</button>
+          </Select>
+          {errors.category && <Typography color="error">{errors.category}</Typography>}
+        </FormControl>
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Password"
+          name="password"
+          type={showPassword ? 'text' : 'password'}
+          value={formData.password}
+          onChange={handleChange}
+          error={!!errors.password}
+          helperText={errors.password}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={togglePasswordVisibility}>
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        {error && <Typography color="error">{error}</Typography>}
+        <Button fullWidth variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
+          Signup
+        </Button>
       </form>
-      <button className="google-signup">Signup with Google</button>
-      <p>Already have an account? <a href="/login">Login here</a></p>
-    </div>
+      {/* <Button fullWidth variant="outlined" color="secondary" sx={{ mt: 1 }}>
+        Signup with Google
+      </Button> */}
+      <Typography variant="body2" sx={{ mt: 2 }}>
+        Already have an account? <a href="/login">Login here</a>
+      </Typography>
+    </Container>
   );
 };
 

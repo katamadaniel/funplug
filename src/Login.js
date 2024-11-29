@@ -1,15 +1,23 @@
-// src/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from './services/userService';
-import './Login.css';
-import '@fortawesome/fontawesome-free/css/all.min.css'; // Import FontAwesome CSS
+import { login, fetchProfile } from './services/userService';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  IconButton,
+  InputAdornment,
+  Box,
+} from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
-const Login = () => {
+const Login = ({ setIsAuthenticated, setUser }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -40,8 +48,22 @@ const Login = () => {
       setErrors({});
       setError('');
       try {
-        const data = await login(formData);
-        alert('Login successful');
+        const { token } = await login(formData);
+        localStorage.setItem('token', token);
+
+        // Fetch and set user profile
+        const profile = await fetchProfile(token);
+        
+        // Check for warnings and banned status
+        if (profile.warningCount >= 3) {
+          setError('Your account has been banned due to multiple warnings. Please contact support.');
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          return;
+        }
+
+        setUser(profile);
+        setIsAuthenticated(true);
         navigate('/profile'); // Redirect to profile after successful login
       } catch (error) {
         console.error('Error logging in:', error);
@@ -51,38 +73,68 @@ const Login = () => {
   };
 
   return (
-    <div className="login-form">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Email:</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} />
-          {errors.email && <p className="error">{errors.email}</p>}
-        </div>
-        <div className="form-group">
-          <label>Password:</label>
-          <div className="password-wrapper">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-            {formData.password && (
-              <i
-                className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'} toggle-password`}
-                onClick={togglePasswordVisibility}
-              ></i>
-            )}
-          </div>
-          {errors.password && <p className="error">{errors.password}</p>}
-        </div>
-        {error && <p className="error">{error}</p>}
-        <button type="submit">Login</button>
-      </form>
-      <button className="google-login">Login with Google</button>
-      <p>Don't have an account? <a href="/signup">Signup here</a></p>
-    </div>
+    <Container maxWidth="xs" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" component="h2" gutterBottom align="center">
+        Login
+      </Typography>
+      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+        <TextField
+          label="Email"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          error={Boolean(errors.email)}
+          helperText={errors.email}
+        />
+        <TextField
+          label="Password"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="password"
+          type={showPassword ? 'text' : 'password'}
+          value={formData.password}
+          onChange={handleChange}
+          error={Boolean(errors.password)}
+          helperText={errors.password}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={togglePasswordVisibility} edge="end">
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        {error && (
+          <Typography color="error" sx={{ mt: 1, mb: 2 }}>
+            {error}
+          </Typography>
+        )}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 2 }}
+        >
+          Login
+        </Button>
+      </Box>
+      {/* <Button variant="outlined" color="primary" fullWidth sx={{ mt: 2 }}>
+        Login with Google
+      </Button> */}
+      <Typography align="center" sx={{ mt: 2 }}>
+        Don't have an account? <a href="/signup">Signup here</a>
+      </Typography>
+      <Typography align="center" sx={{ mt: 1 }}>
+        <a href="/reset-password">Forgot Password?</a>
+      </Typography>
+    </Container>
   );
 };
 

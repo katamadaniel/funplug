@@ -1,6 +1,6 @@
-/* Header.css */
 .header {
   display: flex;
+  flex-direction: row;
   background-color: #007bff;
   justify-content: space-between;
   align-items: center;
@@ -9,16 +9,14 @@
 }
 
 .logo {
-  height: 40px;
-  background-image: url(../public/FunPlug.png);
   width: 80px;
   height: 80px;
+  background-image: url(../public/FunPlug.png);
   background-size: contain;
   background-repeat: no-repeat;
-}
-.logo{
   font-size: 30px;
-  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  display: flex;
   align-items: center;
 }
 
@@ -39,4 +37,64 @@
 
 .nav-button:hover {
   background-color: #0056b3;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-right: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+.settings-icon {
+  margin-left: -10px;
+  transform: translate(50%, 50%);
+  cursor: pointer;
+  background-color: white;
+  border-radius: 50%;
+  padding: 3px;
+}
+
+.settings-dropdown {
+  position: absolute;
+  top: 100px;
+  right: 0;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 5px 5px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.settings-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.settings-dropdown ul li {
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.settings-dropdown ul li:hover {
+  background-color: #007bff;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+
+  .logo {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
 }

@@ -1,4 +1,5 @@
 /* SearchResults.css */
+
 .search-results {
   display: flex;
   flex-wrap: wrap;
@@ -8,13 +9,18 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: #f9f9f9;
+  justify-content: center; /* Center cards on wider screens */
 }
 
 .search-result-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Ensure buttons align at the bottom */
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 20px;
-  width: 200px;
+  width: 100%;
+  max-width: 200px; /* Restrict max width for larger screens */
   background-color: #fff;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -25,7 +31,7 @@
   transform: translateY(-5px);
 }
 
-.result-avatar, .result-image {
+.result-avatar, .result-image, .venue-image {
   width: 100%;
   height: auto;
   border-radius: 4px;
@@ -39,4 +45,47 @@ h3 {
 p {
   margin: 5px 0;
   color: #555;
+}
+
+.view-profile-button,
+.view-details-button,
+.venue-info button {
+  margin-top: auto;
+  align-self: center;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.view-profile-button:hover,
+.view-details-button:hover,
+.venue-info button:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 600px) {
+  .search-results {
+    flex-direction: column;
+    padding: 10px;
+    margin: 10px;
+  }
+
+  .search-result-card {
+    width: 100%;
+    max-width: none; /* Allow full width on small screens */
+    margin-bottom: 15px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  p {
+    font-size: 14px;
+  }
 }

@@ -1,99 +1,147 @@
-/* TicketPurchase.css */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-  }
-  
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.close-button:hover{
+  background-color: #2980b9;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.error {
+  color: red;
+  font-size: 12px;
+}
+
+.buy-ticket-button {
+  background: #3498db;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.buy-ticket-button:hover {
+  background: #2980b9;
+}
+
+.total-amount {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.loader {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.purchase-status {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.purchase-status.success {
+  color: green;
+}
+
+.purchase-status.failed {
+  color: red;
+}
+
+.purchase-status svg {
+  margin-right: 5px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
   .modal-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    width: 400px;
-    position: relative;
+    width: 90%;
+    padding: 15px;
   }
-  
-  .close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: transparent;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  
-  .form-group {
-    margin-bottom: 15px;
-  }
-  
+
   .form-group label {
-    display: block;
-    margin-bottom: 5px;
+    font-size: 0.9rem;
   }
-  
+
   .form-group input,
   .form-group select {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
+    font-size: 0.9rem;
   }
-  
-  .error {
-    color: red;
-    font-size: 12px;
-  }
-  
-  .buy-ticket-button {
-    background: #3498db;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .buy-ticket-button:hover {
-    background: #2980b9;
-  }
-  
+
   .total-amount {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 0.9rem;
   }
-  
-  .loader {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 14px;
-    color: #333;
+}
+
+@media (max-width: 425px) {
+  .modal-content {
+    width: 95%;
+    padding: 10px;
   }
-  
-  .purchase-status {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 14px;
+
+  .form-group label {
+    font-size: 0.8rem;
   }
-  
-  .purchase-status.success {
-    color: green;
+
+  .form-group input,
+  .form-group select {
+    font-size: 0.8rem;
   }
-  
-  .purchase-status.failed {
-    color: red;
+
+  .total-amount {
+    font-size: 0.8rem;
   }
-  
-  .purchase-status svg {
-    margin-right: 5px;
+
+  .buy-ticket-button {
+    padding: 8px 16px;
+    font-size: 0.8rem;
   }
-  
+}

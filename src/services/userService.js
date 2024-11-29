@@ -1,11 +1,10 @@
-// src/services/userService.js
 import axios from 'axios';
+const USERS_API_URL = 'http://localhost:5000/api/users';
 
-const API_URL = 'http://localhost:5000/api/users';
-
+// User related APIs
 export const signup = async (formData) => {
   try {
-    const response = await axios.post(`${API_URL}/Signup`, formData); // Adjusted to lowercase 'signup'
+    const response = await axios.post(`${USERS_API_URL}/signup`, formData);
     return response.data;
   } catch (error) {
     console.error('Error signing up:', error.response ? error.response.data : error.message);
@@ -15,7 +14,7 @@ export const signup = async (formData) => {
 
 export const login = async (formData) => {
   try {
-    const response = await axios.post(`${API_URL}/Login`, formData); // Adjusted to lowercase 'login'
+    const response = await axios.post(`${USERS_API_URL}/login`, formData);
     return response.data;
   } catch (error) {
     console.error('Error logging in:', error.response ? error.response.data : error.message);
@@ -25,7 +24,7 @@ export const login = async (formData) => {
 
 export const fetchProfile = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/Profile`, {
+    const response = await axios.get(`${USERS_API_URL}/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
@@ -35,7 +34,69 @@ export const fetchProfile = async (token) => {
   }
 };
 
+export const updateProfile = async (formData, token) => {
+  try {
+    const response = await axios.put(`${USERS_API_URL}/profile`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating profile:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
 export const logoutUser = async () => {
-  // Add any necessary logic for logging out, such as clearing tokens or informing the server
-  return Promise.resolve();
+  try {
+    localStorage.removeItem('token');
+
+    await fetch(`${USERS_API_URL}/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    return Promise.resolve();
+  } catch (error) {
+    console.error('Error logging out:', error);
+    return Promise.reject(error);
+  }
+};
+
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      `${USERS_API_URL}/change-password`,
+      { currentPassword, newPassword },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error changing password:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+export const deleteUser = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`${USERS_API_URL}/profile`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 };

@@ -1,32 +1,138 @@
-.event-list {
-  max-width: 800px;
-  margin: 0 auto;
+/* General styling for the page */
+.events-page {
   padding: 20px;
+  font-family: Arial, sans-serif;
 }
 
-.event-list h2 {
-  font-size: 1.5rem;
+.add-event-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.add-event-button:hover {
+  background-color: #0056b3;
+}
+
+/* Styling for the modal */
+.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+/* Styling for the event form */
+.event-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.event-form input,
+.event-form textarea {
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.save-button,
+.cancel-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.save-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #218838;
+}
+
+.cancel-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Styling for the event cards */
+.events-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.event-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.event-card img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
   margin-bottom: 10px;
 }
 
-.event-list ul {
-  list-style-type: none;
-  padding: 0;
+/* Status and error messages */
+.status-message {
+  color: green;
 }
 
-.event-list li {
-  background-color: #f0f0f0;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
+.error-message {
+  color: red;
 }
 
-.event-list li h3 {
-  font-size: 1.2rem;
-  margin-bottom: 5px;
-}
+/* Responsive design */
+@media (max-width: 600px) {
+  .event-card {
+    width: 100%;
+  }
 
-.event-list li p {
-  color: #666;
-}
+  .form-buttons {
+    flex-direction: column;
+  }
 
+  .form-buttons button {
+    margin-bottom: 10px;
+  }
+}

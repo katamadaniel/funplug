@@ -9,7 +9,8 @@ const Category = () => {
     <div className="category-container">
       {categories.map((category) => (
         <div key={category.name} className="category-card">
-          <Link to={category.path}>
+          {/* Link to category using name as URL parameter */}
+          <Link to={`/category/${encodeURIComponent(category.name)}`}>
             <img src={category.image} alt={category.name} className="category-image" />
             <h3>{category.name}</h3>
           </Link>
