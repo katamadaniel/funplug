@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://katamadaniel.github.io/funplug",
   "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fortawesome/fontawesome-free": "^6.5.2",
