@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import './EventsPage.css';
 import EventModal from './EventFormModal';
-import { useCache } from './contexts/CacheContext'
 import {
   createEvent,
   fetchMyEvents,
@@ -49,33 +47,19 @@ const EventPage = ({ token }) => {
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [showPurchases, setShowPurchases] = useState(false);
   const [purchases, setPurchases] = useState([]);
-  const { getFromCache, addToCache, clearCache } = useCache();
-  const navigate = useNavigate();
 
-  const handleTokenExpiryLogout = () => {
-    clearCache(['events']); // Clear venues cache
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
-   // Fetch events and purchases
+  // Fetch events and purchases
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const cachedEvents = getFromCache('events');
-      if (cachedEvents) {
-        setEvents(cachedEvents.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-      } else {
-        const eventsData = await fetchMyEvents(token, handleTokenExpiryLogout);
-        addToCache('events', eventsData);
-        setEvents(eventsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-      }
+      const eventsData = await fetchMyEvents(token);
+      setEvents(eventsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
       console.error('Error fetching events:', error.message);
     } finally {
       setLoading(false);
     }
-  }, [token, getFromCache, addToCache]);
+  }, [token]);
 
   const fetchPurchases = useCallback(async () => {
     setLoading(true);

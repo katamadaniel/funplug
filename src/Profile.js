@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { fetchProfile, updateProfile, logoutUser } from './services/userService'; // Ensure logoutUser is implemented
 import { Grid, TextField, Button, Avatar, Typography, Select, MenuItem, CircularProgress, FormControl, InputLabel, Box } from '@mui/material';
 import { styled } from '@mui/system';
-import { useCache } from './contexts/CacheContext';
 
 const DEFAULT_AVATAR_URL = '/default-avatar.png'; // Replace with your actual default avatar path
 
@@ -29,60 +28,35 @@ const Profile = ({ token }) => {
   const [statusMessage, setStatusMessage] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
   const [warningCount, setWarningCount] = useState(0);
-  const { getFromCache, addToCache } = useCache();
 
   useEffect(() => {
     const loadProfile = async () => {
-      const cachedProfile = getFromCache('userProfile');
-      if (cachedProfile) {
-        // Use cached profile data
-        setUser(cachedProfile);
+      try {
+        const profile = await fetchProfile(token);
+        setUser(profile);
         setFormData({
-          username: cachedProfile.username,
-          email: cachedProfile.email,
-          phone: cachedProfile.phone,
-          gender: cachedProfile.gender,
-          category: cachedProfile.category,
-          avatar: cachedProfile.avatar,
-          biography: cachedProfile.biography || '',
-          background: cachedProfile.background || '',
+          username: profile.username,
+          email: profile.email,
+          phone: profile.phone,
+          gender: profile.gender,
+          category: profile.category,
+          avatar: profile.avatar,
+          biography: profile.biography || '',
+          background: profile.background || '',
         });
-        setWarningCount(cachedProfile.warnings ? cachedProfile.warnings.length : 0);
+        setWarningCount(profile.warnings ? profile.warnings.length : 0);
 
-        if (cachedProfile.isBanned) {
+        if (profile.isBanned) {
           alert('Your account has been banned due to excessive warnings. Please contact support.');
           logoutUser();
         }
-      } else {
-        // Fetch profile from API and cache it
-        try {
-          const profile = await fetchProfile(token);
-          setUser(profile);
-          addToCache('userProfile', profile);
-          setFormData({
-            username: profile.username,
-            email: profile.email,
-            phone: profile.phone,
-            gender: profile.gender,
-            category: profile.category,
-            avatar: profile.avatar,
-            biography: profile.biography || '',
-            background: profile.background || '',
-          });
-          setWarningCount(profile.warnings ? profile.warnings.length : 0);
-
-          if (profile.isBanned) {
-            alert('Your account has been banned due to excessive warnings. Please contact support.');
-            logoutUser();
-          }
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
       }
     };
 
     loadProfile();
-  }, [token, getFromCache, addToCache]);
+  }, [token]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

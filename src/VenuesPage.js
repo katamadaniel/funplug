@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import ImageGallery from 'react-image-gallery';
 import 'react-image-gallery/styles/css/image-gallery.css';
 import './CustomCarousel.css';
@@ -17,7 +16,6 @@ import {
 } from '@mui/material';
 import { fetchMyVenues, createVenue, updateVenue, deleteVenue, fetchVenueBookings } from './services/venuesService';
 import VenueFormModal from './VenueFormModal';
-import { useCache } from './contexts/CacheContext';
 import './VenuesPage.css';
 
 const VenuesPage = ({ token }) => {
@@ -29,33 +27,19 @@ const VenuesPage = ({ token }) => {
   const [showBookings, setShowBookings] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { getFromCache, addToCache, clearCache } = useCache();
-  const navigate = useNavigate();
 
-  const handleTokenExpiryLogout = () => {
-    clearCache(['venues']); // Clear venues cache
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
-  const loadVenues = useCallback(async () => {
+ const loadVenues = useCallback(async () => {
     setLoading(true);
     try {
-      const cachedVenues = getFromCache('venues');
-      if (cachedVenues) {
-        setVenues(cachedVenues);
-      } else {
-        const venueData = await fetchMyVenues(token, handleTokenExpiryLogout);
-        addToCache('venues', venueData);
-        setVenues(venueData);
-      }
+      const data = await fetchMyVenues(token);
+      setVenues(data);
     } catch (error) {
       setStatusMessage('Error fetching venues');
       console.error(error);
     } finally {
       setLoading(false);
     }
-  }, [token, getFromCache, addToCache]);
+  }, [token]);
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
