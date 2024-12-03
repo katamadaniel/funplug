@@ -2,7 +2,7 @@
   "name": "funplug",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://katamadaniel.github.io/funplug",
+  "homepage": "",
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@emotion/react": "^11.13.3",
@@ -28,6 +28,7 @@
     "react-image-gallery": "^1.3.0",
     "react-modal": "^3.16.1",
     "react-router-dom": "^6.26.1",
+    "react-scripts": "^5.0.1",
     "react-slick": "^0.30.2",
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.7.5",
@@ -60,10 +61,6 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^6.1.1",
-    "react-scripts": "^5.0.1"
-  },
-  "engines": {
-    "node": ">=14"
+    "gh-pages": "^6.1.1"
   }
 }
