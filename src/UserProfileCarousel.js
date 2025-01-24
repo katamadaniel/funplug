@@ -67,7 +67,7 @@ const UserProfileCarousel = ({ users }) => {
           <div key={user.id} className="user-profile-card">
             <div className="avatar-container">
               <Avatar
-                src={user.avatar ? `data:image/png;base64,${user.avatar}` : DEFAULT_AVATAR_URL}
+                src={user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL}
                 alt={`${user.username}'s avatar`}
                 sx={{ width: 120, height: 120, margin: 'auto' }}
               />

@@ -11,7 +11,6 @@ const AdminSettings = ({ initialAdmin }) => {
     name: admin?.name || '',
     password: '',
   });
-  const [avatarPreview, setAvatarPreview] = useState(admin?.avatarUrl || '/default-avatar.png');
   const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
@@ -26,9 +25,9 @@ const AdminSettings = ({ initialAdmin }) => {
         const response = await axios.get(PROFILE_API_URL, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         setAdmin(response.data);
         setFormData((prev) => ({ ...prev, name: response.data.name }));
-        setAvatarPreview(response.data.avatarUrl || '/default-avatar.png');
       } catch (error) {
         console.error('Error fetching admin profile:', error);
         if (error.response && error.response.status === 401) {
@@ -51,7 +50,7 @@ const AdminSettings = ({ initialAdmin }) => {
     if (file) {
       setSelectedFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => setAvatarPreview(reader.result);
+      reader.onloadend = () => setAdmin((prev) => ({ ...prev, avatarUrl: reader.result }));
       reader.readAsDataURL(file);
     }
   };
@@ -135,7 +134,7 @@ const AdminSettings = ({ initialAdmin }) => {
           <Typography variant="subtitle1" mb={1}>Avatar</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Avatar
-              src={avatarPreview}
+              src={admin?.avatarUrl ? `http://localhost:5000${admin.avatarUrl}` : '/default-avatar.png'}
               alt="Admin Avatar"
               sx={{
                 width: { xs: 70, md: 100 },

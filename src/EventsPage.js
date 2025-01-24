@@ -364,7 +364,7 @@ const EventPage = ({ token }) => {
             {upcomingEvents.map((event) => (
               <div key={event._id} className="event-card">
                 <img
-                  src={`http://localhost:5000/uploads/${event.image}`}
+                  src={`http://localhost:5000/uploads/events/${event.image}`}
                   alt={event.title}
                 />
                 <h3>{event.title}</h3>

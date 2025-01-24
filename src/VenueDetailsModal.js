@@ -8,7 +8,7 @@ import './VenueDetailsModal.css';
 const DEFAULT_AVATAR_URL = '/default-avatar.png';
 
 const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
-  const avatarSrc = user && user.avatar ? `data:image/png;base64,${user.avatar}` : DEFAULT_AVATAR_URL;
+  const avatarSrc = user && user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL;
 
   return (
     <Modal isOpen={!!venue} onRequestClose={onClose} className="venue-details-modal">
@@ -26,7 +26,7 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
           </div>
           <h2>{venue.name}</h2>
           <p>{venue.location}</p>
-          <ImageGallery items={venue.images.map((img) => ({ original: `http://localhost:5000${img}` }))} />
+          <ImageGallery items={venue.images.map((img) => ({ original: `http://localhost:5000/uploads/venues/${img}` }))} />
           <p><strong>Size:</strong> {venue.size} square ft.</p>
           <p><strong>Capacity:</strong> {venue.capacity} people</p>
           <p><strong>Status:</strong> {venue.bookingStatus}</p>

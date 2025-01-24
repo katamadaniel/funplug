@@ -5,11 +5,12 @@ import TicketPurchase from './TicketPurchase';
 import VenueDetailsModal from './VenueDetailsModal';
 import BookingFormModal from './BookingFormModal';
 import CircularProgress from '@mui/material/CircularProgress';
+import Avatar from '@mui/material/Avatar';
 import { useSearch } from './contexts/SearchContext';
 import './SearchResults.css';
 
 const USERS_API_URL = 'http://localhost:5000/api/users'; 
-const DEFAULT_AVATAR_URL = '/default-avatar.png'; 
+const DEFAULT_AVATAR_URL = '/uploads/avatars/default-avatar.png'; 
 
 const SearchResults = ({ results, onViewProfile }) => {
   const [users, setUsers] = useState([]);
@@ -104,7 +105,9 @@ const SearchResults = ({ results, onViewProfile }) => {
           <div key={index} className="search-result-card">
             {result.type === 'user' ? (
               <>
-                <img src={result.avatar ? `data:image/png;base64,${result.avatar}` : DEFAULT_AVATAR_URL} alt={result.username} className="result-avatar" />
+                <Avatar src={result.avatar ? `http://localhost:5000${result.avatar}` : DEFAULT_AVATAR_URL} alt={result.username} className="result-avatar" 
+                sx={{ width: 120, height: 120, margin: 'auto' }}
+                />
                 <h3>{result.username}</h3>
                 <p>{result.category}</p>
                 <button className="view-profile-button" onClick={() => onViewProfile(result._id)}>
@@ -113,7 +116,7 @@ const SearchResults = ({ results, onViewProfile }) => {
               </>
             ) : result.type === 'event' ? (
               <>
-                <img src={`http://localhost:5000/uploads/${result.image}`} alt={result.title} className="result-image" />
+                <img src={`http://localhost:5000/uploads/events/${result.image}`} alt={result.title} className="result-image" />
                 <h3>{result.title}</h3>
                 <p>{result.description}</p>
                 <p><strong>Venue:</strong> {result.venue}</p>
@@ -125,7 +128,7 @@ const SearchResults = ({ results, onViewProfile }) => {
               </>
             ) : result.type === 'venue' ? (
               <>
-                <img src={`http://localhost:5000${result.images[0]}`} alt={result.name} className="venue-image" />
+                <img src={`http://localhost:5000/uploads/venues/${result.images[0]}`} alt={result.name} className="venue-image" />
                 <div className="venue-info">
                   <h3>{result.name}</h3>
                   <p>{result.location}</p>

@@ -164,7 +164,7 @@ const VenuesPage = ({ token }) => {
               <div key={venue._id} className="venue-card">
                 <div className="image-gallery-container">
                   <ImageGallery
-                    items={venue.images.map((img) => ({ original: `http://localhost:5000${img}` }))}
+                    items={venue.images.map((img) => ({ original: `http://localhost:5000/uploads/venues/${img}` }))}
                     showFullscreenButton={true}
                     showPlayButton={false}
                     showThumbnails={false}

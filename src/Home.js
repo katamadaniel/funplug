@@ -181,7 +181,7 @@ const Home = () => {
         <div className={`events ${animate}`}>
           {paginatedEvents.map((event) => (
             <div key={event._id} className="card">
-              <img src={`http://localhost:5000/uploads/${event.image}`} alt={event.title} className="card-image" />
+              <img src={`http://localhost:5000/uploads/events/${event.image}`} alt={event.title} className="card-image" />
               <h3 className="event-title">{event.title}</h3>
               <div className="card-content">
                 <p>{event.description}</p>
@@ -209,7 +209,7 @@ const Home = () => {
         <div className={`venues ${animate}`}>
           {paginatedVenues.map((venue) => (
             <div key={venue._id} className="venue-card">
-              <img src={`http://localhost:5000${venue.images[0]}`} alt={venue.name} className="venue-image" />
+              <img src={`http://localhost:5000/uploads/venues/${venue.images[0]}`} alt={venue.name} className="venue-image" />
               <div className="venue-info">
                 <h3>{venue.name}</h3>
                 <p>{venue.location}</p>

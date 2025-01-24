@@ -4,11 +4,11 @@ import { Avatar, Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { Settings as SettingsIcon } from '@mui/icons-material';
 import './Header.css';
 
-const DEFAULT_AVATAR_URL = '/default-avatar.png'; 
-
+const DEFAULT_AVATAR_URL = '/uploads/avatars/default-avatar.png';
 const Header = ({ isAuthenticated, onLogout, user }) => {
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = useState(null); // Anchor element for menu
+  const [anchorEl, setAnchorEl] = useState(null);
+
   const handleLogin = () => {
     navigate('/login');
   };
@@ -51,12 +51,10 @@ const Header = ({ isAuthenticated, onLogout, user }) => {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <IconButton onClick={handleSettingsClick}>
                   <Avatar
-                    src={user.avatar ? `data:image/png;base64,${user.avatar}` : DEFAULT_AVATAR_URL}
+                    src={user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL}
                     alt={user.username ? `${user.username}'s avatar` : 'User avatar'}
                     sx={{ width: 40, height: 40 }}
                   />
-                </IconButton>
-                <IconButton onClick={handleSettingsClick}>
                   <SettingsIcon />
                 </IconButton>
                 <Menu

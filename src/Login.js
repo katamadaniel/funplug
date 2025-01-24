@@ -132,7 +132,7 @@ const Login = ({ setIsAuthenticated, setUser }) => {
         Don't have an account? <a href="/signup">Signup here</a>
       </Typography>
       <Typography align="center" sx={{ mt: 1 }}>
-        <a href="/reset-password">Forgot Password?</a>
+        <a href="/reset">Forgot Password?</a>
       </Typography>
     </Container>
   );

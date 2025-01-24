@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'; 
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import Avatar from '@mui/material/Avatar';
 import EventModal from './EventModal';
 import TicketPurchase from './TicketPurchase';
 import './UserProfile.css';
 
-const DEFAULT_AVATAR_URL = '/default-avatar.png';
+const DEFAULT_AVATAR_URL = '/uploads/avatars/default-avatar.png';
 
 const UserProfile = () => {
   const { id } = useParams(); // user ID from the URL
@@ -64,10 +65,14 @@ const UserProfile = () => {
     <div className="user-profile">
       {/* User Details Card */}
       <div className="user-details-card">
-        <img 
-          src={user.avatar ? `data:image/png;base64,${user.avatar}` : DEFAULT_AVATAR_URL}
-          alt={`${user.username}'s avatar`} 
-          className="avatar" 
+      <Avatar 
+          src={user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL}
+          alt={`${user.username}'s avatar` } 
+          sx={{
+            width: { xs: 70, md: 100 },
+            height: { xs: 70, md: 100 },
+            mb: 2,
+          }}
         />
         <div className="user-info">
           <h2>{user.username}</h2>
@@ -83,7 +88,7 @@ const UserProfile = () => {
         {upcomingEvents.length > 0 ? (
           upcomingEvents.map(event => (
             <div key={event._id} className="user-event-card">
-              <img src={`http://localhost:5000/uploads/${event.image}`} alt={event.title} className="event-image" />
+              <img src={`http://localhost:5000/uploads/events/${event.image}`} alt={event.title} className="event-image" />
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <p><strong>Venue:</strong> {event.venue}</p>
@@ -105,7 +110,7 @@ const UserProfile = () => {
         {pastEvents.length > 0 ? (
           pastEvents.map(event => (
             <div key={event._id} className="user-event-card">
-              <img src={`http://localhost:5000/uploads/${event.image}`} alt={event.title} className="event-image" />
+              <img src={`http://localhost:5000/uploads/events/${event.image}`} alt={event.title} className="event-image" />
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <p><strong>Venue:</strong> {event.venue}</p>

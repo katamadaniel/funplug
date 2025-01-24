@@ -5,7 +5,7 @@ import './EventModal.css';
 const DEFAULT_AVATAR_URL = '/default-avatar.png';
 
 const EventModal = ({ event, user, onClose, onBuyTicket }) => {
-  const avatarSrc = user && user.avatar ? `data:image/png;base64,${user.avatar}` : DEFAULT_AVATAR_URL;
+  const avatarSrc = user && user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL;
 
   return (
     <div className="modal-overlay">

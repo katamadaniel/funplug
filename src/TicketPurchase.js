@@ -13,6 +13,7 @@ const TicketPurchase = ({ event, onClose }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [purchaseStatus, setPurchaseStatus] = useState(null);
+  const [lastPurchaseId, setLastPurchaseId] = useState(null);
 
   useEffect(() => {
     if (ticketType && quantity && event.ticketType !== 'free') {
@@ -26,6 +27,15 @@ const TicketPurchase = ({ event, onClose }) => {
     }
   }, [ticketType, quantity, event]);
 
+    // Format phone number to match 2547xxxxxxxx format
+    const formatPhoneNumber = (input) => {
+      const cleanInput = input.replace(/\D/g, ''); // Remove non-numeric characters
+      if (cleanInput.startsWith('0')) {
+        return `254${cleanInput.slice(1)}`; // Replace starting 0 with 254
+      }
+      return cleanInput.startsWith('254') ? cleanInput : `254${cleanInput}`; // Ensure it starts with 254
+    };
+
   const validateForm = () => {
     const newErrors = {};
     if (!ticketType) newErrors.ticketType = 'Ticket type is required';
@@ -37,8 +47,8 @@ const TicketPurchase = ({ event, onClose }) => {
     }
     if (!phone) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(phone)) {
-      newErrors.phone = 'Phone number is invalid';
+    } else if (!/^(254\d{9})$/.test(formatPhoneNumber(phone))) {
+      newErrors.phone = 'Phone number must be in 254xxxxxxxxx format';
     }
     if (event.ticketType !== 'free' && !paymentOption) {
       newErrors.paymentOption = 'Payment option is required';
@@ -47,6 +57,7 @@ const TicketPurchase = ({ event, onClose }) => {
   };
 
   const handleBuyTicket = async () => {
+    const formattedPhone = formatPhoneNumber(phone);
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -62,22 +73,59 @@ const TicketPurchase = ({ event, onClose }) => {
         ticketType,
         quantity,
         email,
-        phone,
+        phone: formattedPhone,
         paymentOption: event.ticketType === 'free' ? 'free' : paymentOption,
         totalAmount: event.ticketType === 'free' ? 0 : totalAmount,
         eventId: event._id,
         creatorId: event.userId,
         eventTitle: event.title,
       };
-      
-      await axios.post('http://localhost:5000/api/ticket_purchases', purchaseData);
-      setPurchaseStatus('success');
+
+      const response = await axios.post('http://localhost:5000/api/ticket_purchases', purchaseData);
+
+      if (event.ticketType === 'free' || totalAmount === 0) {
+        setPurchaseStatus('success');
+      } else {
+        const purchaseId = response.data.purchase._id;
+        setLastPurchaseId(purchaseId); // Save the purchase ID for retry
+        await pollPaymentStatus(purchaseId);
+      }
     } catch (error) {
       console.error('Error purchasing ticket:', error.message);
       setPurchaseStatus('failed');
     } finally {
       setLoading(false);
     }
+  };
+
+  const pollPaymentStatus = async (purchaseId) => {
+    setPurchaseStatus('pending');
+
+  const pollInterval = 5000; // Poll every 5 seconds
+  const timeout = 60000; // 1 minute timeout
+  let elapsedTime = 0;
+
+    while (elapsedTime < timeout) {
+      try {
+        const paymentStatusResponse = await axios.get(`http://localhost:5000/api/ticket_purchases/${purchaseId}/status`);
+        const { paymentStatus } = paymentStatusResponse.data;
+
+        if (paymentStatus === 'Success') {
+          setPurchaseStatus('success');
+        }
+        else if (paymentStatus === 'Failed') {
+          setPurchaseStatus('failed');
+          return;
+        }
+       } catch (error) {
+        console.error('Error checking payment status:', error.message);
+      }
+
+    await new Promise((resolve) => setTimeout(resolve, pollInterval));
+    elapsedTime += pollInterval;
+  }
+
+  setPurchaseStatus('retry');
   };
 
   return (
@@ -141,7 +189,8 @@ const TicketPurchase = ({ event, onClose }) => {
           <input 
             type="text" 
             value={phone} 
-            onChange={(e) => setPhone(e.target.value)} 
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="07xxxxxxxx" 
           />
           {errors.phone && <p className="error">{errors.phone}</p>}
         </div>
@@ -173,7 +222,7 @@ const TicketPurchase = ({ event, onClose }) => {
         {loading && <div className="loader">Processing...</div>}
         {purchaseStatus === 'success' && (
           <div className="purchase-status success">
-            <FaCheckCircle /> {event.ticketType === 'free' ? 'Ticket Reserved Successfully!' : 'Purchase Successful!'}
+            <FaCheckCircle /> {event.ticketType === 'free' ? 'Ticket Reserved Successfully!' : 'Purchase Successful! Check your email for ticket details.'}
           </div>
         )}
         {purchaseStatus === 'failed' && (
@@ -181,6 +230,18 @@ const TicketPurchase = ({ event, onClose }) => {
             <FaTimesCircle /> {event.ticketType === 'free' ? 'Reservation Failed. Please try again.' : 'Purchase Failed. Please try again.'}
           </div>
         )}
+        {purchaseStatus === 'retry' && (
+          <div className="purchase-status retry">
+            <p>Payment verification timed out. Please retry.</p>
+          <button
+            onClick={() => pollPaymentStatus(lastPurchaseId)}
+            disabled={loading}
+          >
+            Retry
+          </button>
+          </div>
+        )}
+
       </div>
     </div>
   );

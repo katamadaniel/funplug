@@ -1,52 +1,119 @@
-// src/PasswordResetVerify.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import './PasswordReset.css'; // Import the CSS file
+import {
+  Container,
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+
+const USERS_API_URL = 'http://localhost:5000/api/users';
 
 const PasswordResetVerify = () => {
   const { token } = useParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const validatePasswordStrength = (password) => {
+    const strengthRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+    return strengthRegex.test(password);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage('');
+    setError('');
+
     if (password !== confirmPassword) {
-      setMessage('Passwords do not match.');
+      setError('Passwords do not match.');
       return;
     }
 
+    if (!validatePasswordStrength(password)) {
+      setError(
+        'Password must be at least 8 characters long and include at least one letter and one number.'
+      );
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      await axios.post(`/api/reset-password/${token}`, { password });
-      setMessage('Password has been reset.');
-    } catch (error) {
-      setMessage('Error resetting password.');
+      const response = await axios.post(`${USERS_API_URL}/reset-password/${token}`, { password });
+      setMessage(response.data.message || 'Password has been reset successfully.');
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || 'Error resetting password. The token might be invalid or expired.';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="password-reset-container">
-      <h2>Reset Password</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="password"
-          placeholder="Enter new password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Confirm new password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Reset Password</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
+    <Container maxWidth="sm">
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Typography variant="h4" gutterBottom>
+          Reset Password
+        </Typography>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ width: '100%', mt: 2 }}
+        >
+          <TextField
+            label="New Password"
+            type="password"
+            fullWidth
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            margin="normal"
+          />
+          <TextField
+            label="Confirm Password"
+            type="password"
+            fullWidth
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            margin="normal"
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            disabled={loading}
+            sx={{ mt: 2 }}
+          >
+            {loading ? <CircularProgress size={24} /> : 'Reset Password'}
+          </Button>
+        </Box>
+        {message && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            {message}
+          </Alert>
+        )}
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+      </Box>
+    </Container>
   );
 };
 

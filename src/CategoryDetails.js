@@ -82,7 +82,7 @@ const CategoryDetails = () => {
         events.map(event => (
           <div key={event._id} className="event-card">
             <img
-              src={event.image ? `http://localhost:5000/uploads/${event.image}` : '/default-event-image.png'}
+              src={event.image ? `http://localhost:5000/uploads/events/${event.image}` : '/default-event-image.png'}
               alt={event.title}
               className="event-image"
             />

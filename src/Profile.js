@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProfile, updateProfile, logoutUser } from './services/userService'; // Ensure logoutUser is implemented
+import { fetchProfile, updateProfile, logoutUser } from './services/userService';
 import { Grid, TextField, Button, Avatar, Typography, Select, MenuItem, CircularProgress, FormControl, InputLabel, Box } from '@mui/material';
 import { styled } from '@mui/system';
 
-const DEFAULT_AVATAR_URL = '/default-avatar.png'; // Replace with your actual default avatar path
+const DEFAULT_AVATAR_URL = '/uploads/avatars/default-avatar.png';
 
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(12),
@@ -47,7 +47,7 @@ const Profile = ({ token }) => {
         setWarningCount(profile.warnings ? profile.warnings.length : 0);
 
         if (profile.isBanned) {
-          alert('Your account has been banned due to excessive warnings. Please contact support.');
+          alert('Your account has been banned due to violation of user agreement. Please contact support.');
           logoutUser();
         }
       } catch (error) {
@@ -77,6 +77,7 @@ const Profile = ({ token }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatusMessage('Saving changes...');
+    
     const updatedProfile = new FormData();
     updatedProfile.append('username', formData.username);
     updatedProfile.append('email', formData.email);
@@ -88,18 +89,30 @@ const Profile = ({ token }) => {
     if (avatarFile) {
       updatedProfile.append('avatar', avatarFile);
     }
-
+  
     try {
-      const updatedUser = await updateProfile(updatedProfile, token);
-      setUser(updatedUser);
-      setEditMode(false);
-      setPersonalizeMode(false);
-      setStatusMessage('Profile updated successfully!');
+      const response = await updateProfile(updatedProfile, token);
+      
+      if (response.message && response.message.includes('Verification email sent')) {
+        // Handle the case where the user needs to verify the email update
+        setStatusMessage('Verification email sent to your current email. Please verify the email update request.');
+      } else {
+        // Successfully updated profile without email verification (non-email changes)
+        setUser(response);
+        setEditMode(false);
+        setPersonalizeMode(false);
+        setStatusMessage('Profile updated successfully!');
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
-      setStatusMessage('Failed to update profile. Please try again.');
+  
+      if (error.response?.data?.message) {
+        setStatusMessage(error.response.data.message);
+      } else {
+        setStatusMessage('Failed to update profile. Please try again.');
+      }
     }
-  };
+  };  
 
   if (!user) {
     return (
@@ -113,7 +126,7 @@ const Profile = ({ token }) => {
     <Box sx={{ padding: 3, maxWidth: 600, margin: 'auto' }}>
         <Grid container spacing={3}>
           <Grid item xs={12} align="center">
-            <StyledAvatar src={user.avatar ? `data:image/png;base64,${user.avatar}` : DEFAULT_AVATAR_URL} />
+            <StyledAvatar src={user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL} />
             {editMode && (
               <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ marginTop: 8 }} />
             )}

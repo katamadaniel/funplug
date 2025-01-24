@@ -18,9 +18,11 @@ import EventDetails from './EventDetails';
 import VenuesPage from './VenuesPage';
 import Notifications from './Notifications';
 import { fetchProfile, logoutUser } from './services/userService';
-import { fetchAdminProfile, logoutAdmin } from './services/adminService'; // New import
+import { fetchAdminProfile, logoutAdmin } from './services/adminService';
 import PasswordResetRequest from './PasswordResetRequest';
 import PasswordResetVerify from './PasswordResetVerify';
+import EmailUpdateVerification from './EmailUpdateVerification';
+import VerifyEmail from './VerifyEmail';
 import ChangePassword from './ChangePassword';
 import DeleteAccount from './DeleteAccount';
 import TermsAndAgreement from './TermsAndAgreement';
@@ -145,8 +147,10 @@ function App() {
                       <div className="content">
                         <Routes>
                           <Route path="/admin" element={<AdminLogin setAdminAuthenticated={setAdminAuthenticated} setAdmin={setAdmin} />} />
-                          <Route path="/reset-password" element={<PasswordResetRequest />} />
-                          <Route path="/reset/:token" element={<PasswordResetVerify />} />
+                          <Route path="/reset" element={<PasswordResetRequest />} />
+                          <Route path="/reset-password/:token" element={<PasswordResetVerify />} />
+                          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+                          <Route path="/verify-email-update/:token" element={<EmailUpdateVerification />} />
                           <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
                           <Route path="/signup" element={<Signup />} />
                           <Route path="/" element={<Home />} />

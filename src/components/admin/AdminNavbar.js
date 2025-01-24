@@ -60,8 +60,8 @@ const AdminNavbar = ({ admin, setAdminAuthenticated, setAdmin }) => {
           {/* Admin Avatar */}
           <Avatar
             alt={admin?.name || 'Admin'}
-            src={admin?.avatarUrl  || '/default-avatar.png'}
-            sx={{ mr: 2, bgcolor: 'secondary.main' }}
+            src={admin?.avatarUrl ? `http://localhost:5000${admin.avatarUrl}` : '/default-avatar.png'}
+            sx={{ mr: 2, bgcolor: 'secondary.main', width: 40, height: 40 }}
           />
 
           {/* Logout Button */}
