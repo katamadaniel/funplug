@@ -64,7 +64,7 @@ const Header = ({ isAuthenticated, onLogout, user }) => {
                 >
                   <MenuItem onClick={() => handleMenuItemClick('/change-password')}>Change Password</MenuItem>
                   <MenuItem onClick={() => handleMenuItemClick('/delete-account')}>Delete Account</MenuItem>
-                  <MenuItem onClick={() => handleMenuItemClick('/terms-and-agreement')}>Terms and Agreement</MenuItem>
+                  <MenuItem onClick={() => handleMenuItemClick('/privacy-policy')}>Privacy Policy</MenuItem>
                   <MenuItem onClick={() => handleMenuItemClick('/report-problem')}>Report a Problem</MenuItem>
                   <MenuItem onClick={() => handleMenuItemClick('/contact-support')}>Contact Support</MenuItem>
                 </Menu>

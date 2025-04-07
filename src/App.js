@@ -25,7 +25,7 @@ import EmailUpdateVerification from './EmailUpdateVerification';
 import VerifyEmail from './VerifyEmail';
 import ChangePassword from './ChangePassword';
 import DeleteAccount from './DeleteAccount';
-import TermsAndAgreement from './TermsAndAgreement';
+import PrivacyPolicy from './PrivacyPolicy';
 import ReportProblem from './ReportProblem';
 import ContactSupport from './ContactSupport';
 import './App.css';
@@ -150,7 +150,7 @@ function App() {
                           <Route path="/reset" element={<PasswordResetRequest />} />
                           <Route path="/reset-password/:token" element={<PasswordResetVerify />} />
                           <Route path="/verify-email/:token" element={<VerifyEmail />} />
-                          <Route path="/verify-email-update/:token" element={<EmailUpdateVerification />} />
+                          <Route path="/verify-email-update/:userId/:token" element={<EmailUpdateVerification />} />
                           <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
                           <Route path="/signup" element={<Signup />} />
                           <Route path="/" element={<Home />} />
@@ -167,7 +167,7 @@ function App() {
                           <Route path="/notifications" element={<Notifications />} />
                           <Route path="/change-password" element={<ChangePassword />} />
                           <Route path="/delete-account" element={<DeleteAccount />} />
-                          <Route path="/terms-and-agreement" element={<TermsAndAgreement />} />
+                          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                           <Route path="/report-problem" element={<ReportProblem />} />
                           <Route path="/contact-support" element={<ContactSupport />} />
                           <Route path="*" element={<Navigate to="/" />} />

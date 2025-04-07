@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const EmailUpdateVerification = () => {
-  const { token } = useParams();
+  const { userId, token } = useParams();
   const [statusMessage, setStatusMessage] = useState('Verifying your email update...');
   const [isVerified, setIsVerified] = useState(false);
   const navigate = useNavigate();
@@ -12,7 +14,7 @@ const EmailUpdateVerification = () => {
     const verifyEmailUpdate = async () => {
       try {
         // Call the API to verify the token
-        const response = await axios.post('/api/users/verify-email-update', { token });
+        const response = await axios.get(`${API_BASE_URL}/api/users/verify-email-update/${userId}/${token}`);
         setStatusMessage(response.data.message || 'Email update verified successfully!');
         setIsVerified(true);
       } catch (error) {
@@ -25,7 +27,7 @@ const EmailUpdateVerification = () => {
     };
 
     verifyEmailUpdate();
-  }, [token]);
+  }, [userId, token]);
 
   const handleGoToProfile = () => {
     navigate('/profile'); // Redirect to the user's profile page
