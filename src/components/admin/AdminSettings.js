@@ -3,7 +3,8 @@ import { Box, Typography, TextField, Button, Avatar, IconButton, Grid } from '@m
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import axios from 'axios';
 
-const PROFILE_API_URL = 'http://localhost:5000/api/admins/profile';
+const API_URL = process.env.REACT_APP_API_URL;
+const PROFILE_API_URL = `${API_URL}/api/admins/profile`;
 
 const AdminSettings = ({ initialAdmin }) => {
   const [admin, setAdmin] = useState(initialAdmin || null);
@@ -134,7 +135,7 @@ const AdminSettings = ({ initialAdmin }) => {
           <Typography variant="subtitle1" mb={1}>Avatar</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Avatar
-              src={admin?.avatarUrl ? `http://localhost:5000${admin.avatarUrl}` : '/default-avatar.png'}
+              src={admin?.avatarUrl ? `${API_URL}${admin.avatarUrl}` : '/default-avatar.png'}
               alt="Admin Avatar"
               sx={{
                 width: { xs: 70, md: 100 },

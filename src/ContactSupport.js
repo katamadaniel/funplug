@@ -14,6 +14,9 @@ import {
   Divider,
 } from '@mui/material';
 
+const API_URL = process.env.REACT_APP_API_URL;
+const SUPPORT_API_URL = `${API_URL}/api/support/chat/`;
+
 const ContactSupport = () => {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
@@ -25,7 +28,7 @@ const ContactSupport = () => {
   // Function to fetch chat history
   const fetchChatHistory = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/support/chat/${userId}`);
+      const response = await axios.get(`${SUPPORT_API_URL}${userId}`);
       setChatHistory(response.data);
     } catch (error) {
       console.error('Error fetching chat history:', error);
@@ -42,7 +45,7 @@ const ContactSupport = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/support/chat', {
+      const response = await axios.post(`${API_URL}/api/support/chat`, {
         userId, // Send the logged-in user's ID
         message,
       });
@@ -64,7 +67,7 @@ const ContactSupport = () => {
   // Fetch chat history on component mount
   useEffect(() => {
     fetchChatHistory();
-    // Optionally, you can set an interval to refresh chat every few seconds
+    // Set an interval to refresh chat every few seconds
     const interval = setInterval(fetchChatHistory, 5000); // Fetch chat every 5 seconds
     return () => clearInterval(interval); // Clear the interval on unmount
   }, []);

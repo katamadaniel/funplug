@@ -3,10 +3,11 @@ import axios from 'axios';
 
 const SearchContext = createContext();
 
-const EVENTS_API_URL = 'http://localhost:5000/api/events';
-const USERS_API_URL = 'http://localhost:5000/api/users';
-const VENUES_API_URL = 'http://localhost:5000/api/venues';
-const USER_PROFILE_API_URL = 'http://localhost:5000/api/search/user';
+const API_URL = process.env.REACT_APP_API_URL;
+const EVENTS_API_URL = `${API_URL}/api/events`;
+const USERS_API_URL = `${API_URL}/api/users`;
+const VENUES_API_URL = `${API_URL}/api/venues`;
+const USER_PROFILE_API_URL = `${API_URL}/api/search/user`;
 
 export const SearchProvider = ({ children }) => {
   const [searchResults, setSearchResults] = useState([]);

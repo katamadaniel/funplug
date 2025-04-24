@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Button, Drawer, List, ListItem, ListItemText, TextField, Switch, Box } from '@mui/material';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const AdminNotifications = () => {
   const [problemReports, setProblemReports] = useState([]);
   const [supportChats, setSupportChats] = useState([]);
@@ -14,7 +16,7 @@ const AdminNotifications = () => {
   // Fetch usernames for problem reports and support chats
   const fetchUsernames = async (userIds) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/users/get-usernames', { userIds });
+      const response = await axios.post(`${API_URL}/api/users/get-usernames`, { userIds });
       setUserDetails(response.data);  // {userId: 'username'}
     } catch (error) {
       console.error('Error fetching user details:', error);
@@ -24,7 +26,7 @@ const AdminNotifications = () => {
   // Fetch Problem Reports
   const fetchProblemReports = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/report/problem');
+      const response = await axios.get(`${API_URL}/api/report/problem`);
       setProblemReports(response.data);
 
       // Fetch the usernames for the associated userIds
@@ -38,7 +40,7 @@ const AdminNotifications = () => {
   // Fetch Support Chats and Group by User
   const fetchSupportChats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/support/chat');
+      const response = await axios.get(`${API_URL}/api/support/chat`);
       const chatsGroupedByUser = groupChatsByUser(response.data);
       setSupportChats(chatsGroupedByUser);
 
@@ -64,7 +66,7 @@ const AdminNotifications = () => {
   // Toggle Problem Report Resolved Status
   const handleToggleResolved = async (reportId, currentStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/report/problem/${reportId}`, {
+      await axios.put(`${API_URL}/api/report/problem/${reportId}`, {
         resolved: !currentStatus,
       });
       fetchProblemReports(); // Refresh after update
@@ -76,7 +78,7 @@ const AdminNotifications = () => {
   // Admin Send Response to Support Chat
   const handleSendResponse = async () => {
     try {
-      await axios.post('http://localhost:5000/api/support/chat/reply', {
+      await axios.post(`${API_URL}/api/support/chat/reply`, {
         userId: selectedUserId,
         message: adminMessage,
       });

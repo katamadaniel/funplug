@@ -1,6 +1,9 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL;
+const TICKET_PURCHASES_API_URL = `${API_URL}/api/ticket_purchases`;
+
 export const TicketsContext = createContext();
 
 export const TicketsProvider = ({ children }) => {
@@ -13,11 +16,11 @@ export const TicketsProvider = ({ children }) => {
     const fetchTicketsData = async () => {
       try {
         // Fetch total tickets sold weekly
-        const weeklyResponse = await axios.get('http://localhost:5000/api/ticket_purchases/total/weekly');
+        const weeklyResponse = await axios.get(`${TICKET_PURCHASES_API_URL}/total/weekly`);
         setTotalTicketsWeekly(weeklyResponse.data);
 
         // Fetch total tickets sold monthly
-        const monthlyResponse = await axios.get('http://localhost:5000/api/ticket_purchases/total/monthly');
+        const monthlyResponse = await axios.get(`${TICKET_PURCHASES_API_URL}/total/monthly`);
         setTotalTicketsMonthly(monthlyResponse.data);
 
         setLoading(false); // Set loading to false once data is fetched

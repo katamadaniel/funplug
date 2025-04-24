@@ -3,6 +3,8 @@ import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import './TicketPurchase.css';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const TicketPurchase = ({ event, onClose }) => {
   const [ticketType, setTicketType] = useState(event.ticketType === 'free' ? 'Free' : '');
   const [quantity, setQuantity] = useState('');
@@ -81,7 +83,7 @@ const TicketPurchase = ({ event, onClose }) => {
         eventTitle: event.title,
       };
 
-      const response = await axios.post('http://localhost:5000/api/ticket_purchases', purchaseData);
+      const response = await axios.post(`${API_URL}/api/ticket_purchases`, purchaseData);
 
       if (event.ticketType === 'free' || totalAmount === 0) {
         setPurchaseStatus('success');
@@ -107,7 +109,7 @@ const TicketPurchase = ({ event, onClose }) => {
 
     while (elapsedTime < timeout) {
       try {
-        const paymentStatusResponse = await axios.get(`http://localhost:5000/api/ticket_purchases/${purchaseId}/status`);
+        const paymentStatusResponse = await axios.get(`${API_URL}/api/ticket_purchases/${purchaseId}/status`);
         const { paymentStatus } = paymentStatusResponse.data;
 
         if (paymentStatus === 'Success') {

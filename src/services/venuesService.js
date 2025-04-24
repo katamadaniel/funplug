@@ -1,8 +1,9 @@
 // services/venuesService.js
 import axios from 'axios';
 
-const VENUES_API_URL = 'http://localhost:5000/api/venues';
-const BOOKINGS_API_URL = 'http://localhost:5000/api/venue_bookings';
+const API_URL = process.env.REACT_APP_API_URL;
+const VENUES_API_URL = `${API_URL}/api/venues`;
+const BOOKINGS_API_URL = `${API_URL}/api/venue_bookings`;
 
 export const createVenue = async (formData) => {
   try {

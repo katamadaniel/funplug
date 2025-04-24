@@ -21,8 +21,8 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const AdminSidebar = () => {
-  const [collapsed, setCollapsed] = useState(false); // State to handle collapse
-  const toggleCollapse = () => setCollapsed(!collapsed); // Toggle function
+  const [collapsed, setCollapsed] = useState(false);
+  const toggleCollapse = () => setCollapsed(!collapsed);
 
   return (
     <Box

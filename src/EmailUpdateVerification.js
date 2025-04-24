@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const EmailUpdateVerification = () => {
   const { userId, token } = useParams();
@@ -14,7 +14,7 @@ const EmailUpdateVerification = () => {
     const verifyEmailUpdate = async () => {
       try {
         // Call the API to verify the token
-        const response = await axios.get(`${API_BASE_URL}/api/users/verify-email-update/${userId}/${token}`);
+        const response = await axios.get(`${API_URL}/api/users/verify-email-update/${userId}/${token}`);
         setStatusMessage(response.data.message || 'Email update verified successfully!');
         setIsVerified(true);
       } catch (error) {

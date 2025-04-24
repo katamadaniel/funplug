@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import {
   Container,
   Typography,
@@ -12,8 +11,7 @@ import {
   DialogTitle,
   TextField
 } from '@mui/material';
-
-const USERS_API_URL = 'http://localhost:5000/api/users';
+import { deleteUser } from './services/userService';
 
 const DeleteAccount = () => {
   const [error, setError] = useState('');
@@ -34,32 +32,23 @@ const DeleteAccount = () => {
 
   const handleDeleteAccount = async () => {
     try {
-      const token = localStorage.getItem('token'); // Retrieve token from local storage
+      const token = localStorage.getItem('token');
       if (!token) {
         setError('You must be logged in to delete your account.');
         return;
       }
 
-      // Send delete request with password for verification
-      await axios.delete(`${USERS_API_URL}/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        data: { password }, // Provide the password for verification
-      });
+      await deleteUser(password, token);
 
-      // Remove token from local storage
       localStorage.removeItem('token');
       setSuccess('Account deleted successfully!');
       setError('');
 
-      // Close the dialog
       handleCloseDialog();
 
-      // Navigate to the login page after showing the success message
       setTimeout(() => {
         navigate('/login');
-      }, 4000); // Delay to show success message for a short time
+      }, 4000);
     } catch (error) {
       setError('Error deleting account. Please ensure your password is correct.');
       setSuccess('');
@@ -88,7 +77,6 @@ const DeleteAccount = () => {
         Delete Account
       </Button>
 
-      {/* Confirmation Dialog */}
       <Dialog open={open} onClose={handleCloseDialog}>
         <DialogTitle>Confirm Account Deletion</DialogTitle>
         <DialogContent>

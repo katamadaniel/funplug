@@ -2,8 +2,8 @@
 
 import axios from 'axios';
 
-// Base URL for your admin-related API requests
-const ADMIN_API_URL = 'http://localhost:5000/api/admins'; // Update with your actual API endpoint
+const API_URL = process.env.REACT_APP_API_URL;
+const ADMIN_API_URL = `${API_URL}/api/admins`;
 
 /**
  * Log in an admin user.

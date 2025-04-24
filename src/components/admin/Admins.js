@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Typography, Button, Table, TableBody, TableCell, TableHead, TableRow, TextField, Alert } from '@mui/material';
 import axios from 'axios';
 
-// Define API URL for fetching admins
-const ADMINS_API_URL = 'http://localhost:5000/api/admins';
+const API_URL = process.env.REACT_APP_API_URL;
+const ADMINS_API_URL = `${API_URL}/api/admins`;
 
 const Admins = () => {
   const [admins, setAdmins] = useState([]);

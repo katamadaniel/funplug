@@ -6,11 +6,13 @@ import VenueDetailsModal from './VenueDetailsModal';
 import BookingFormModal from './BookingFormModal';
 import CircularProgress from '@mui/material/CircularProgress';
 import Avatar from '@mui/material/Avatar';
+import { getAvatarUrl } from './utils/avatar';
 import { useSearch } from './contexts/SearchContext';
 import './SearchResults.css';
 
-const USERS_API_URL = 'http://localhost:5000/api/users'; 
-const DEFAULT_AVATAR_URL = '/uploads/avatars/default-avatar.png'; 
+const API_URL = process.env.REACT_APP_API_URL;
+const USERS_API_URL = `${API_URL}/api/users`;
+const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
 
 const SearchResults = ({ results, onViewProfile }) => {
   const [users, setUsers] = useState([]);
@@ -20,9 +22,14 @@ const SearchResults = ({ results, onViewProfile }) => {
   const [isTicketModalOpen, setTicketModalOpen] = useState(false);
   const [isVenueModalOpen, setVenueModalOpen] = useState(false);
   const [isBookingModalOpen, setBookingModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true); // State for loading
+  const [loading, setLoading] = useState(true);
 
   const { searchQuery } = useSearch();
+
+    const handleImageError = (e) => {
+      e.target.onerror = null;
+      e.target.src = process.env.REACT_APP_AVATAR_URL;
+    };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -42,13 +49,13 @@ const SearchResults = ({ results, onViewProfile }) => {
   const handleViewEventDetails = (event) => {
     const user = users.find(user => user._id === event.userId);
     setSelectedEvent(event);
-    setSelectedUser(user || { username: 'Unknown User', avatar: DEFAULT_AVATAR_URL });
+    setSelectedUser(user || { username: 'Unknown User' });
   };
 
   const handleViewVenueDetails = (venue) => {
     const user = users.find(user => user._id === venue.userId);
     setSelectedVenue(venue);
-    setSelectedUser(user || { username: 'Unknown User', avatar: DEFAULT_AVATAR_URL });
+    setSelectedUser(user || { username: 'Unknown User' });
     setVenueModalOpen(true);
   };
 
@@ -105,8 +112,9 @@ const SearchResults = ({ results, onViewProfile }) => {
           <div key={index} className="search-result-card">
             {result.type === 'user' ? (
               <>
-                <Avatar src={result.avatar ? `http://localhost:5000${result.avatar}` : DEFAULT_AVATAR_URL} alt={result.username} className="result-avatar" 
+                <Avatar src={getAvatarUrl(result)} alt={result.username} className="result-avatar" 
                 sx={{ width: 120, height: 120, margin: 'auto' }}
+                onError={handleImageError}
                 />
                 <h3>{result.username}</h3>
                 <p>{result.category}</p>
@@ -116,7 +124,7 @@ const SearchResults = ({ results, onViewProfile }) => {
               </>
             ) : result.type === 'event' ? (
               <>
-                <img src={`http://localhost:5000/uploads/events/${result.image}`} alt={result.title} className="result-image" />
+                <img src={`${IMAGE_BASE_URL}/events/${result.image}`} alt={result.title} className="result-image" />
                 <h3>{result.title}</h3>
                 <p>{result.description}</p>
                 <p><strong>Venue:</strong> {result.venue}</p>
@@ -128,7 +136,7 @@ const SearchResults = ({ results, onViewProfile }) => {
               </>
             ) : result.type === 'venue' ? (
               <>
-                <img src={`http://localhost:5000/uploads/venues/${result.images[0]}`} alt={result.name} className="venue-image" />
+                <img src={`${IMAGE_BASE_URL}/venues/${result.images[0]}`} alt={result.name} className="venue-image" />
                 <div className="venue-info">
                   <h3>{result.name}</h3>
                   <p>{result.location}</p>

@@ -24,10 +24,11 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
 import axios from 'axios';
 
-const EVENTS_API_URL = 'http://localhost:5000/api/events';
-const USERS_API_URL = 'http://localhost:5000/api/users';
-const ALL_SALES_API_URL = 'http://localhost:5000/api/events/all-ticket-sales';
-const TICKET_PURCHASES_API_URL = 'http://localhost:5000/api/ticket_purchases';
+const API_URL = process.env.REACT_APP_API_URL;
+const EVENTS_API_URL = `${API_URL}/api/events`;
+const USERS_API_URL = `${API_URL}/api/users`;
+const TICKET_SALES_API_URL = `${API_URL}/api/events/all-ticket-sales`;
+const TICKET_PURCHASES_API_URL = `${API_URL}/api/ticket_purchases`;
 
 const EventsAdmin = () => {
   const [events, setEvents] = useState([]);
@@ -88,7 +89,7 @@ const EventsAdmin = () => {
       const eventsData = eventsResponse.data;
 
       // Fetch ticket sales data
-      const salesResponse = await axios.get(ALL_SALES_API_URL);
+      const salesResponse = await axios.get(TICKET_SALES_API_URL);
       const salesData = salesResponse.data;
 
       // Merge events data with sales data

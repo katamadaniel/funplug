@@ -11,11 +11,14 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { CircularProgress } from '@mui/material';
 import './Home.css';
 
-const EVENTS_API_URL = 'http://localhost:5000/api/events';
-const USERS_API_URL = 'http://localhost:5000/api/users'; 
-const VENUES_API_URL = 'http://localhost:5000/api/venues';
+const API_URL = process.env.REACT_APP_API_URL;
+const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
 
-const DEFAULT_AVATAR_URL = '/default-avatar.png'; 
+const EVENTS_API_URL = `${API_URL}/api/events`;
+const USERS_API_URL = `${API_URL}/api/users`;
+const VENUES_API_URL = `${API_URL}/api/venues`;
+
+const DEFAULT_AVATAR_URL = process.env.REACT_APP_AVATAR_URL; 
 
 const ITEMS_PER_PAGE = 4;
 const VENUES_PER_PAGE = 4;
@@ -181,7 +184,7 @@ const Home = () => {
         <div className={`events ${animate}`}>
           {paginatedEvents.map((event) => (
             <div key={event._id} className="card">
-              <img src={`http://localhost:5000/uploads/events/${event.image}`} alt={event.title} className="card-image" />
+              <img src={`${IMAGE_BASE_URL}/events/${event.image}`} alt={event.title} className="card-image" />
               <h3 className="event-title">{event.title}</h3>
               <div className="card-content">
                 <p>{event.description}</p>
@@ -209,7 +212,7 @@ const Home = () => {
         <div className={`venues ${animate}`}>
           {paginatedVenues.map((venue) => (
             <div key={venue._id} className="venue-card">
-              <img src={`http://localhost:5000/uploads/venues/${venue.images[0]}`} alt={venue.name} className="venue-image" />
+              <img src={`${IMAGE_BASE_URL}/venues/${venue.images[0]}`} alt={venue.name} className="venue-image" />
               <div className="venue-info">
                 <h3>{venue.name}</h3>
                 <p>{venue.location}</p>

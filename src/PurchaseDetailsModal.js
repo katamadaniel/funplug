@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './PurchaseDetailsModal.css';
 
-const PURCHASES_API_URL = 'http://localhost:5000/api/ticket_purchases';
+const API_URL = process.env.REACT_APP_API_URL
+const PURCHASES_API_URL = `${API_URL}/api/ticket_purchases`;
 
 const PurchaseDetailsModal = ({ isOpen, onClose, eventId, eventTitle }) => {
   const [purchaseDetails, setPurchaseDetails] = useState([]);

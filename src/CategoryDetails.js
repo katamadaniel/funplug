@@ -3,12 +3,15 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import EventModal from './EventModal';
 import TicketPurchase from './TicketPurchase';
-import CircularProgress from '@mui/material/CircularProgress'; // Import CircularProgress
+import CircularProgress from '@mui/material/CircularProgress';
 import './CategoryDetails.css';
 
-const USERS_API_URL = 'http://localhost:5000/api/users'; 
-const EVENT_API_URL = 'http://localhost:5000/api/events';
-const DEFAULT_AVATAR_URL = '/default-avatar.png';
+const API_URL = process.env.REACT_APP_API_URL;
+const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
+
+const EVENTS_API_URL = `${API_URL}/api/events`;
+const USERS_API_URL = `${API_URL}/api/users`;
+const DEFAULT_AVATAR_URL = process.env.REACT_APP_AVATAR_URL; 
 
 const CategoryDetails = () => {
   const { category } = useParams();
@@ -28,7 +31,7 @@ const CategoryDetails = () => {
         const usersResponse = await axios.get(USERS_API_URL);
         setUsers(usersResponse.data);
 
-        const eventsResponse = await axios.get(EVENT_API_URL);
+        const eventsResponse = await axios.get(EVENTS_API_URL);
 
         // Filter users based on category and extract their IDs
         const filteredUsers = usersResponse.data.filter(user => user.category === category);
@@ -82,7 +85,7 @@ const CategoryDetails = () => {
         events.map(event => (
           <div key={event._id} className="event-card">
             <img
-              src={event.image ? `http://localhost:5000/uploads/events/${event.image}` : '/default-event-image.png'}
+              src={event.image ? `${IMAGE_BASE_URL}/events/${event.image}` : '/default-event-image.png'}
               alt={event.title}
               className="event-image"
             />

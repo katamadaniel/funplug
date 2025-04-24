@@ -2,40 +2,75 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
+import { getAvatarUrl } from './utils/avatar';
 import EventModal from './EventModal';
 import TicketPurchase from './TicketPurchase';
 import './UserProfile.css';
 
-const DEFAULT_AVATAR_URL = '/uploads/avatars/default-avatar.png';
+const API_URL = process.env.REACT_APP_API_URL;
+const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
 
 const UserProfile = () => {
-  const { id } = useParams(); // user ID from the URL
+  const { id } = useParams();
   const [user, setUser] = useState(null);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [pastEvents, setPastEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isTicketModalOpen, setTicketModalOpen] = useState(false);
+  const [isFollowFormOpen, setIsFollowFormOpen] = useState(false);
+  const [followName, setFollowName] = useState('');
+  const [followEmail, setFollowEmail] = useState('');
+  const [followersCount, setFollowersCount] = useState(0);
+
+  const handleFollowClick = () => {
+    setIsFollowFormOpen(!isFollowFormOpen);
+  };
+
+  const handleFollowSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_URL}/api/users/follow/${id}`, { name: followName, email: followEmail });
+      alert('Successfully followed!');
+      setIsFollowFormOpen(false);
+      setFollowName('');
+      setFollowEmail('');
+      fetchFollowersCount(); // refresh followers after following
+    } catch (error) {
+      console.error('Error following creator:', error);
+      alert('Error following creator. Maybe already following?');
+    }
+  };
+
+  const fetchFollowersCount = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/users/followers/count/${id}`);
+      setFollowersCount(response.data.followerCount);
+    } catch (error) {
+      console.error('Error fetching followers count:', error);
+    }
+  };
+
+  const handleImageError = (e) => {
+    e.target.onerror = null;
+    e.target.src = process.env.REACT_APP_AVATAR_URL;
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // Fetch the user's profile
-        const userResponse = await axios.get(`http://localhost:5000/api/search/user/${id}`);
+        const userResponse = await axios.get(`${API_URL}/api/search/user/${id}`);
         setUser(userResponse.data.user);
 
-        // Fetch all events
-        const eventsResponse = await axios.get(`http://localhost:5000/api/events`);
-        
-        // Filter events by the current user's ID and sort by creation date
+        const eventsResponse = await axios.get(`${API_URL}/api/events`);
         const userEvents = eventsResponse.data
           .filter(event => event.userId === id)
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
-        // Separate events into upcoming and past events based on the current date
+
         const now = new Date();
         setUpcomingEvents(userEvents.filter(event => new Date(event.date) >= now));
         setPastEvents(userEvents.filter(event => new Date(event.date) < now));
 
+        fetchFollowersCount();
       } catch (error) {
         console.error('Error fetching user profile or events:', error);
       }
@@ -63,32 +98,59 @@ const UserProfile = () => {
 
   return (
     <div className="user-profile">
-      {/* User Details Card */}
       <div className="user-details-card">
-      <Avatar 
-          src={user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL}
-          alt={`${user.username}'s avatar` } 
+        <Avatar 
+          src={getAvatarUrl(user)}
+          alt={user ? `${user.username}'s avatar` : 'Unknown User'}
           sx={{
             width: { xs: 70, md: 100 },
             height: { xs: 70, md: 100 },
             mb: 2,
           }}
+          onError={handleImageError}
         />
-        <div className="user-info">
+        <div className="follow-section">
           <h2>{user.username}</h2>
+          <p className="followers-count">{followersCount} Followers</p>
+          <button className="follow-button" onClick={handleFollowClick}>
+            {isFollowFormOpen ? 'Cancel' : 'Follow'}
+          </button>
+        </div>
+
+        {isFollowFormOpen && (
+          <form className="follow-form" onSubmit={handleFollowSubmit}>
+            <input
+              type="text"
+              placeholder="Your Name"
+              value={followName}
+              onChange={(e) => setFollowName(e.target.value)}
+              required
+            />
+            <input
+              type="email"
+              placeholder="Your Email"
+              value={followEmail}
+              onChange={(e) => setFollowEmail(e.target.value)}
+              required
+            />
+            <button type="submit" className="submit-follow-button">Subscribe</button>
+          </form>
+        )}
+
+        <div className="user-info">
           <p><strong>Category:</strong> {user.category}</p>
           <p><strong>Gender:</strong> {user.gender}</p>
           <p><strong>Email:</strong> {user.email}</p>
         </div>
       </div>
 
-      {/* Upcoming Events Section */}
-      <h2>Upcoming Events by {user.username}</h2>
-      <div className="user-events upcoming-events">
+      {/* Upcoming Events */}
+      <h2 className="events-heading">Upcoming Events by {user.username}</h2>
+      <div className="user-events">
         {upcomingEvents.length > 0 ? (
           upcomingEvents.map(event => (
             <div key={event._id} className="user-event-card">
-              <img src={`http://localhost:5000/uploads/events/${event.image}`} alt={event.title} className="event-image" />
+              <img src={`${IMAGE_BASE_URL}/events/${event.image}`} alt={event.title} className="event-image" />
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <p><strong>Venue:</strong> {event.venue}</p>
@@ -104,13 +166,13 @@ const UserProfile = () => {
         )}
       </div>
 
-      {/* Past Events Section */}
-      <h2>Past Events by {user.username}</h2>
-      <div className="user-events past-events">
+      {/* Past Events */}
+      <h2 className="events-heading">Past Events by {user.username}</h2>
+      <div className="user-events">
         {pastEvents.length > 0 ? (
           pastEvents.map(event => (
             <div key={event._id} className="user-event-card">
-              <img src={`http://localhost:5000/uploads/events/${event.image}`} alt={event.title} className="event-image" />
+              <img src={`${IMAGE_BASE_URL}/events/${event.image}`} alt={event.title} className="event-image" />
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <p><strong>Venue:</strong> {event.venue}</p>
@@ -123,7 +185,7 @@ const UserProfile = () => {
         )}
       </div>
 
-      {/* Event Modal for viewing details */}
+      {/* Event Modal */}
       {selectedEvent && (
         <EventModal
           event={selectedEvent}

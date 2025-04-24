@@ -5,19 +5,19 @@ import './FAQ.css';
 const faqs = [
   {
     question: 'Who are we?',
-    answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    answer: 'We are an events management platform where celebrities, event organizers and vendors in the events industry can converge for a seemless planning and sales experience.'
   },
   {
     question: 'Who is this platform for?',
-    answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    answer: 'This platform is for everyone looking for events or venues for their events as well as vendor services where we connect you to all the available vendors.'
   },
   {
-    question: 'Do we host events?',
-    answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    question: 'What do we do?',
+    answer: 'We provide venors in the events space a platform to connect with clients, showcase, sell & get bookings for their services and products while managing thier transactions.'
   },
   {
-    question: 'Why celebrities?',
-    answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    question: 'Do we charge to open or mentain an account?',
+    answer: 'No we do not, creating and running an account is free. We only take a small percentage of the revenue generated through transactions on our platform as a service charge.'
   }
 ];
 

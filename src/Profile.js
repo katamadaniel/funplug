@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProfile, updateProfile, logoutUser } from './services/userService';
-import { Grid, TextField, Button, Avatar, Typography, Select, MenuItem, CircularProgress, FormControl, InputLabel, Box } from '@mui/material';
+import { Grid, TextField, Button, Avatar, Typography, Select, MenuItem, CircularProgress, FormControl, InputLabel, Box, Dialog,
+   DialogTitle, DialogContent, Table, TableBody, TableCell, TableHead, TableRow, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { styled } from '@mui/system';
-
-const DEFAULT_AVATAR_URL = '/uploads/avatars/default-avatar.png';
+import { getAvatarUrl } from './utils/avatar';
 
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(12),
@@ -15,6 +16,7 @@ const Profile = ({ token }) => {
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [personalizeMode, setPersonalizeMode] = useState(false);
+  const [followersOpen, setFollowersOpen] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -94,10 +96,8 @@ const Profile = ({ token }) => {
       const response = await updateProfile(updatedProfile, token);
       
       if (response.message && response.message.includes('Verification email sent')) {
-        // Handle the case where the user needs to verify the email update
         setStatusMessage('Verification email sent to your current email. Please verify the email update request.');
       } else {
-        // Successfully updated profile without email verification (non-email changes)
         setUser(response);
         setEditMode(false);
         setPersonalizeMode(false);
@@ -124,139 +124,150 @@ const Profile = ({ token }) => {
 
   return (
     <Box sx={{ padding: 3, maxWidth: 600, margin: 'auto' }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} align="center">
-            <StyledAvatar src={user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL} />
-            {editMode && (
-              <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ marginTop: 8 }} />
-            )}
-          </Grid>
-
-          {editMode ? (
-            <Grid item xs={12}>
-              <form onSubmit={handleSubmit}>
-                <TextField
-                  label="Username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  fullWidth
-                  margin="normal"
-                  variant="outlined"
-                />
-                <TextField
-                  label="Email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  fullWidth
-                  margin="normal"
-                  variant="outlined"
-                />
-                <TextField
-                  label="Phone Number"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  fullWidth
-                  margin="normal"
-                  variant="outlined"
-                />
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Gender</InputLabel>
-                  <Select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    label="Gender"
-                  >
-                    <MenuItem value="">Select Gender</MenuItem>
-                    <MenuItem value="male">Male</MenuItem>
-                    <MenuItem value="female">Female</MenuItem>
-                    <MenuItem value="other">Other</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    label="Category"
-                  >
-                    <MenuItem value="">Select Category</MenuItem>
-                    <MenuItem value="Music">Music</MenuItem>
-                    <MenuItem value="Art">Art</MenuItem>
-                    <MenuItem value="Games">Games</MenuItem>
-                    <MenuItem value="Movies">Movies</MenuItem>
-                    <MenuItem value="Media">Media</MenuItem>
-                    <MenuItem value="Dance">Dance</MenuItem>
-                    <MenuItem value="Fashion">Fashion</MenuItem>
-                    <MenuItem value="Kids Fun">Kids Fun</MenuItem>
-                  </Select>
-                </FormControl>
-                <Button variant="contained" color="primary" type="submit" fullWidth sx={{ mt: 2 }}>
-                  Save
-                </Button>
-              </form>
-            </Grid>
-          ) : (
-              <Grid item xs={12}>
-                <Typography variant="h6">Username: {user.username}</Typography>
-                <Typography variant="subtitle1">Email: {user.email}</Typography>
-                <Typography variant="subtitle1">Phone: {user.phone}</Typography>
-                <Typography variant="subtitle1">Gender: {user.gender}</Typography>
-                <Typography variant="subtitle1">Category: {user.category}</Typography>
-              </Grid>
-              )}
-              <Grid item xs={12}>
-                <Button variant="outlined" onClick={() => setEditMode(!editMode)} fullWidth>
-                  {editMode ? 'Cancel' : 'Edit Profile'}
-                </Button>
-                <Button onClick={() => setPersonalizeMode(!personalizeMode)} sx={{ mt: 2, ml: 2 }}>
-                  {personalizeMode ? 'Cancel' : 'Personalize'}
-                </Button>
-              </Grid>
-
-          {personalizeMode && (
-            <Grid item xs={12}>
-              <form onSubmit={handleSubmit}>
-                <TextField
-                  label="Biography"
-                  name="biography"
-                  value={formData.biography}
-                  onChange={handleChange}
-                  fullWidth
-                  margin="normal"
-                  multiline
-                  rows={4}
-                />
-                <TextField
-                  label="Background"
-                  name="background"
-                  value={formData.background}
-                  onChange={handleChange}
-                  fullWidth
-                  margin="normal"
-                  multiline
-                  rows={4}
-                />
-                <Button variant="contained" color="primary" type="submit" fullWidth sx={{ mt: 2 }}>
-                  Save
-                </Button>
-              </form>
-            </Grid>
+      <Grid container spacing={3}>
+        <Grid item xs={12} align="center">
+          <StyledAvatar src={getAvatarUrl(user)} />
+          {editMode && (
+            <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ marginTop: 8 }} />
           )}
 
-      {user && (user.biography || user.background) && (
-        <Grid item xs={12}>
-          <Typography variant="h6">Personal Details</Typography>
-          <Typography variant="body1"><strong>Biography:</strong> {user.biography}</Typography>
-          <Typography variant="body1"><strong>Background:</strong> {user.background}</Typography>
+          {/* Followers Count and Button */}
+          <Typography variant="subtitle1" sx={{ mt: 1 }}>
+            Followers: {user.followers ? user.followers.length : 0}
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            sx={{ mt: 1 }}
+            onClick={() => setFollowersOpen(true)}
+          >
+            View Followers
+          </Button>
         </Grid>
-      )}
-          {warningCount > 0 && (
-            <Grid item sx={{ mt: 3, p: 2, border: '1px solid', borderColor: 'warning.main', borderRadius: 1 }}>
+
+        {/* Other Profile Info (Edit Form / Personalize) */}
+        {editMode ? (
+          <Grid item xs={12}>
+            <form onSubmit={handleSubmit}>
+              <TextField
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                fullWidth
+                margin="normal"
+                variant="outlined"
+              />
+              <TextField
+                label="Email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                fullWidth
+                margin="normal"
+                variant="outlined"
+              />
+              <TextField
+                label="Phone Number"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                fullWidth
+                margin="normal"
+                variant="outlined"
+              />
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Gender</InputLabel>
+                <Select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  label="Gender"
+                >
+                  <MenuItem value="">Select Gender</MenuItem>
+                  <MenuItem value="male">Male</MenuItem>
+                  <MenuItem value="female">Female</MenuItem>
+                  <MenuItem value="other">Other</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Category</InputLabel>
+                <Select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  label="Category"
+                >
+                  <MenuItem value="">Select Category</MenuItem>
+                  <MenuItem value="Music">Music</MenuItem>
+                  <MenuItem value="Art">Art</MenuItem>
+                  <MenuItem value="Games">Games</MenuItem>
+                  <MenuItem value="Movies">Movies</MenuItem>
+                  <MenuItem value="Media">Media</MenuItem>
+                  <MenuItem value="Dance">Dance</MenuItem>
+                  <MenuItem value="Fashion">Fashion</MenuItem>
+                  <MenuItem value="Kids Fun">Kids Fun</MenuItem>
+                </Select>
+              </FormControl>
+              <Button variant="contained" color="primary" type="submit" fullWidth sx={{ mt: 2 }}>
+                Save
+              </Button>
+            </form>
+          </Grid>
+        ) : (
+          <Grid item xs={12}>
+            <Typography variant="h6">Username: {user.username}</Typography>
+            <Typography variant="subtitle1">Email: {user.email}</Typography>
+            <Typography variant="subtitle1">Phone: {user.phone}</Typography>
+            <Typography variant="subtitle1">Gender: {user.gender}</Typography>
+            <Typography variant="subtitle1">Category: {user.category}</Typography>
+          </Grid>
+        )}
+
+        {/* Edit / Personalize Buttons */}
+        <Grid item xs={12}>
+          <Button variant="outlined" onClick={() => setEditMode(!editMode)} fullWidth>
+            {editMode ? 'Cancel' : 'Edit Profile'}
+          </Button>
+          <Button onClick={() => setPersonalizeMode(!personalizeMode)} sx={{ mt: 2, ml: 2 }}>
+            {personalizeMode ? 'Cancel' : 'Personalize'}
+          </Button>
+        </Grid>
+
+        {/* Personalize Form */}
+        {personalizeMode && (
+          <Grid item xs={12}>
+            <form onSubmit={handleSubmit}>
+              <TextField
+                label="Biography"
+                name="biography"
+                value={formData.biography}
+                onChange={handleChange}
+                fullWidth
+                margin="normal"
+                multiline
+                rows={4}
+              />
+              <TextField
+                label="Background"
+                name="background"
+                value={formData.background}
+                onChange={handleChange}
+                fullWidth
+                margin="normal"
+                multiline
+                rows={4}
+              />
+              <Button variant="contained" color="primary" type="submit" fullWidth sx={{ mt: 2 }}>
+                Save
+              </Button>
+            </form>
+          </Grid>
+        )}
+
+        {/* Warnings Display */}
+        {warningCount > 0 && (
+          <Grid item sx={{ mt: 3, p: 2, border: '1px solid', borderColor: 'warning.main', borderRadius: 1 }}>
             <Typography color="warning.main">You have {warningCount} warning(s).</Typography>
             {warningCount >= 3 && (
               <Typography color="error.main">
@@ -264,16 +275,59 @@ const Profile = ({ token }) => {
               </Typography>
             )}
           </Grid>
-          )}
+        )}
 
-          {statusMessage && (
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" color="secondary">
-                {statusMessage}
-              </Typography>
-            </Grid>
-          )}
-        </Grid>
+        {/* Status Message */}
+        {statusMessage && (
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" color="secondary">
+              {statusMessage}
+            </Typography>
+          </Grid>
+        )}
+      </Grid>
+
+      {/* Followers List Dialog */}
+      <Dialog open={followersOpen} onClose={() => setFollowersOpen(false)} fullWidth maxWidth="sm">
+  <DialogTitle>
+    Followers
+    <IconButton
+      aria-label="close"
+      onClick={() => setFollowersOpen(false)}
+      sx={{
+        position: 'absolute',
+        right: 8,
+        top: 8,
+      }}
+    >
+      <CloseIcon />
+    </IconButton>
+  </DialogTitle>
+  <DialogContent dividers>
+    {user.followers && user.followers.length > 0 ? (
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell>Email</TableCell>
+            <TableCell>Followed Date</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {user.followers.map((follower, index) => (
+            <TableRow key={index}>
+              <TableCell>{follower.name}</TableCell>
+              <TableCell>{follower.email}</TableCell>
+              <TableCell>{new Date(follower.followedAt).toLocaleDateString()}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    ) : (
+      <Typography>No followers yet.</Typography>
+    )}
+  </DialogContent>
+</Dialog>
     </Box>
   );
 };

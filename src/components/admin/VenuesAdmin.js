@@ -25,9 +25,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import axios from 'axios';
 import { VenuesContext } from '../../contexts/VenuesContext';
 
-const VENUES_API_URL = 'http://localhost:5000/api/venues';
-const USERS_API_URL = 'http://localhost:5000/api/users';
-const BOOKINGS_API_URL = 'http://localhost:5000/api/venue_bookings';
+const API_URL = process.env.REACT_APP_API_URL;
+const VENUES_API_URL = `${API_URL}/api/venues`;
+const USERS_API_URL = `${API_URL}/api/users`;
+const BOOKINGS_API_URL = `${API_URL}/api/venue_bookings`;
 
 const VenuesAdmin = () => {
   const [venues, setVenues] = useState([]);

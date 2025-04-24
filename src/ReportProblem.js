@@ -10,6 +10,9 @@ import {
   Alert,
 } from '@mui/material';
 
+const API_URL = process.env.REACT_APP_API_URL;
+const PROBLEM_API_URL = `${API_URL}/api/report/problem`;
+
 const ReportProblem = () => {
   const [problem, setProblem] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,10 +28,10 @@ const ReportProblem = () => {
     }
 
     setLoading(true);
-    setAlertMessage(''); // Clear any previous messages
+    setAlertMessage('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/report/problem', {
+      const response = await axios.post(PROBLEM_API_URL, {
         userId, // Use the logged-in user ID
         problemDescription: problem,
       });

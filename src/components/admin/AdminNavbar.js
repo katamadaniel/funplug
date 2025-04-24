@@ -4,7 +4,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const PROFILE_API_URL = 'http://localhost:5000/api/admins/profile';
+const API_URL = process.env.REACT_APP_API_URL;
+const PROFILE_API_URL = `${API_URL}/api/admins/profile`;
 
 const AdminNavbar = ({ admin, setAdminAuthenticated, setAdmin }) => {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ const AdminNavbar = ({ admin, setAdminAuthenticated, setAdmin }) => {
           {/* Admin Avatar */}
           <Avatar
             alt={admin?.name || 'Admin'}
-            src={admin?.avatarUrl ? `http://localhost:5000${admin.avatarUrl}` : '/default-avatar.png'}
+            src={admin?.avatarUrl ? `${API_URL}${admin.avatarUrl}` : '/default-avatar.png'}
             sx={{ mr: 2, bgcolor: 'secondary.main', width: 40, height: 40 }}
           />
 

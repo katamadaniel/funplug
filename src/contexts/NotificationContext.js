@@ -3,6 +3,11 @@ import axios from 'axios';
 
 const NotificationContext = createContext();
 
+const API_URL = process.env.REACT_APP_API_URL;
+const TICKET_PURCHASES_API_URL = `${API_URL}/api/ticket_purchases`;
+const VENUE_BOOKINGS_API_URL = `${API_URL}/api/venue_bookings`;
+const NOTIFICATION_API_URL = `${API_URL}/api/notifications`;
+
 const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unseenCount, setUnseenCount] = useState(0);
@@ -14,10 +19,10 @@ const NotificationProvider = ({ children }) => {
       if (token) {
         try {
           const [ticketPurchasesResponse, venueBookingsResponse] = await Promise.all([
-            axios.get(`http://localhost:5000/api/ticket_purchases/user/${userId}`, {
+            axios.get(`${TICKET_PURCHASES_API_URL}/user/${userId}`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
-            axios.get(`http://localhost:5000/api/venue_bookings/user/${userId}`, {
+            axios.get(`${VENUE_BOOKINGS_API_URL}/user/${userId}`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
           ]);
@@ -72,7 +77,7 @@ const NotificationProvider = ({ children }) => {
     if (token) {
       try {
         await axios.put(
-          `http://localhost:5000/api/notifications/${id}/seen`,
+          `${NOTIFICATION_API_URL}/${id}/seen`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },

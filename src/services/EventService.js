@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-const EVENTS_API_URL = 'http://localhost:5000/api/events';
-const TICKET_PURCHASES_API_URL = 'http://localhost:5000/api/ticket_purchases';
+const API_URL = process.env.REACT_APP_API_URL;
+const EVENTS_API_URL = `${API_URL}/api/events`;
+const TICKET_PURCHASES_API_URL = `${API_URL}/api/ticket_purchases`;
 
 export const createEvent = async (formData) => {
   try {

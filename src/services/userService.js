@@ -1,5 +1,6 @@
 import axios from 'axios';
-const USERS_API_URL = 'http://localhost:5000/api/users';
+const API_URL = process.env.REACT_APP_API_URL;
+const USERS_API_URL = `${API_URL}/api/users`;
 
 // User related APIs
 export const signup = async (formData) => {
@@ -87,16 +88,11 @@ export const changePassword = async ({ currentPassword, newPassword }) => {
   }
 };
 
-export const deleteUser = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    await axios.delete(`${USERS_API_URL}/profile`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-  } catch (error) {
-    console.error('Error deleting user:', error.response ? error.response.data : error.message);
-    throw error;
-  }
+export const deleteUser = async (password, token) => {
+  await axios.delete(`${USERS_API_URL}/profile`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    data: { password },
+  });
 };

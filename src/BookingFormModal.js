@@ -3,6 +3,8 @@ import Modal from 'react-modal';
 import axios from 'axios';
 import './BookingFormModal.css';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const BookingFormModal = ({ venue, onClose }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -53,7 +55,7 @@ const BookingFormModal = ({ venue, onClose }) => {
     };
 
     try {
-      const response = await axios.post('http://localhost:5000/api/venue_bookings', bookingData);
+      const response = await axios.post(`${API_URL}/api/venue_bookings`, bookingData);
 
       if (response.data.available) {
         setSuccessMessage('Booking successful!');

@@ -20,6 +20,97 @@
   position: relative;
 }
 
+.follower-count {
+  font-size: 0.9rem;
+  color: gray;
+}
+
+.follow-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 16px;
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.follow-button:hover {
+  background-color: #0056b3;
+}
+
+.follow-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.follow-form input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.submit-follow-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.submit-follow-button:hover {
+  background-color: #0056b3;
+}
+
+.share-modal {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f7f7f7;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.share-icons {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.share-button {
+  border: 1px solid #e0e0e0;
+  border-radius: 50%;
+  padding: 6px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  top: 10px;
+  right: 60px;
+}
+
+.share-button:hover {
+  background-color: #f5f5f5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.share-button svg {
+  font-size: 20px; 
+}
+
+.close-share-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between share button and close button */
+}
+
 .close-button {
   position: absolute;
   color: black;
@@ -44,6 +135,11 @@
   height: 40px;
   border-radius: 50%;
   margin-right: 10px;
+}
+
+.creator-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .creator-name {

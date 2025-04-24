@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { Settings as SettingsIcon } from '@mui/icons-material';
+import { getAvatarUrl } from './utils/avatar';
 import './Header.css';
 
-const DEFAULT_AVATAR_URL = '/uploads/avatars/default-avatar.png';
 const Header = ({ isAuthenticated, onLogout, user }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleImageError = (e) => {
+    e.target.onerror = null;
+    e.target.src = process.env.REACT_APP_AVATAR_URL;
+  };
 
   const handleLogin = () => {
     navigate('/login');
@@ -51,9 +56,10 @@ const Header = ({ isAuthenticated, onLogout, user }) => {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <IconButton onClick={handleSettingsClick}>
                   <Avatar
-                    src={user.avatar ? `http://localhost:5000${user.avatar}` : DEFAULT_AVATAR_URL}
+                    src={getAvatarUrl(user)}
                     alt={user.username ? `${user.username}'s avatar` : 'User avatar'}
                     sx={{ width: 40, height: 40 }}
+                    onError={handleImageError}
                   />
                   <SettingsIcon />
                 </IconButton>

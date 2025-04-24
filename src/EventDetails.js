@@ -4,8 +4,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import EventModal from './EventModal';
 import TicketPurchase from './TicketPurchase';
 
-const EVENTS_API_URL = 'http://localhost:5000/api/events';
-const USERS_API_URL = 'http://localhost:5000/api/users';
+const API_URL = process.env.REACT_APP_API_URL;
+const EVENTS_API_URL = `${API_URL}/api/events`;
+const USERS_API_URL = `${API_URL}/api/users`;
 
 const EventDetails = () => {
   const { id } = useParams();
