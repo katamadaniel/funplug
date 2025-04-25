@@ -115,6 +115,14 @@ const Signup = () => {
             value={formData.gender}
             onChange={handleChange}
             error={!!errors.gender}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            PaperProps={{
+              sx: {
+                maxWidth: '90vw',
+                overflow: 'hidden'
+              }
+            }}
           >
             <MenuItem value=""><em>Select Gender</em></MenuItem>
             <MenuItem value="male">Male</MenuItem>

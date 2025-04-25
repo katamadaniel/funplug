@@ -3,24 +3,33 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  padding: 0 16px; /* Margin from screen edge */
 }
 
 .hamburger {
-  font-size: 24px;
+  font-size: 32px; /* Enlarged */
   background: none;
   border: none;
+  color: #007bff;
   cursor: pointer;
+  margin: 8px 0;
+  padding: 8px;
+  transition: transform 0.2s ease;
+}
+
+.hamburger:hover {
+  transform: scale(1.1);
+  background-color: #0056b3;
 }
 
 .menu-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
-  display: none;
 }
 
 .menu-list.open {
@@ -29,11 +38,22 @@
 
 .menu-item {
   margin: 10px 0;
+  width: 100%;
 }
 
 .menu-item a {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
   text-decoration: none;
-  color: #000;
+  color: #333;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.menu-item a:hover {
+  background-color: #1976d2;
+  color: #fff;
 }
 
 .main-search-box {
@@ -45,6 +65,7 @@
   .menu {
     flex-direction: row;
     align-items: center;
+    padding: 0 24px;
   }
 
   .hamburger {
@@ -55,10 +76,16 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    width: auto;
   }
 
   .menu-item {
     margin: 0 15px;
+    width: auto;
+  }
+
+  .menu-item a {
+    padding: 6px 10px;
   }
 
   .main-search-box {

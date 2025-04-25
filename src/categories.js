@@ -7,6 +7,6 @@ export const categories = [
     { name: 'Media', path: '/category/media', image: process.env.PUBLIC_URL + '/images/media.jpg' },
     { name: 'Dance', path: '/category/dance', image: process.env.PUBLIC_URL + '/images/dance.jpg' },
     { name: 'Fashion', path: '/category/fashion', image: process.env.PUBLIC_URL + '/images/fashion.jpg' },
-    { name: 'Kids Fun', path: '/category/kids-fun', image: process.env.PUBLIC_URL + '/images/funday.jpg' }
+    { name: 'Kids Fun', path: '/category/kids-fun', image: process.env.PUBLIC_URL + '/images/kidsfun.jpg' }
   ];
   

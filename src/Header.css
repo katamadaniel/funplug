@@ -6,6 +6,9 @@
   align-items: center;
   padding: 10px 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .logo {
@@ -14,10 +17,11 @@
   background-image: url(../public/FunPlug.png);
   background-size: contain;
   background-repeat: no-repeat;
-  font-size: 30px;
+  font-size: 2.0rem;
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
   display: flex;
   align-items: center;
+  white-space: nowrap;
 }
 
 .nav {
@@ -30,9 +34,10 @@
   border: none;
   background-color: #007bff;
   color: white;
-  font-size: 16px;
+  font-size: 0.9rem;
   border-radius: 5px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .nav-button:hover {
@@ -92,9 +97,10 @@
 @media (max-width: 768px) {
 
   .logo {
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
-    margin-bottom: 10px;
+    font-size: 2.0rem;
+    margin-bottom: 8px;
+  }
+  nav-button{
+    font-size: 1.5rem;
   }
 }

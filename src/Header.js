@@ -67,6 +67,14 @@ const Header = ({ isAuthenticated, onLogout, user }) => {
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
                   onClose={handleCloseSettings}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  PaperProps={{
+                    sx: {
+                      maxWidth: '90vw',
+                      overflow: 'hidden'
+                    }
+                  }}
                 >
                   <MenuItem onClick={() => handleMenuItemClick('/change-password')}>Change Password</MenuItem>
                   <MenuItem onClick={() => handleMenuItemClick('/delete-account')}>Delete Account</MenuItem>

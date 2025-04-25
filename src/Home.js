@@ -172,7 +172,7 @@ const Home = () => {
   }
   
   return (
-    <div className="landing-page">
+    <div className="home-page">
       <h3>User Profiles</h3>
       {users.length > 0 ? (
         <UserProfileCarousel users={users} />
