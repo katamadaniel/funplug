@@ -111,6 +111,38 @@
   background-color: #0056b3;
 }
 
+.button-group{
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.button-group button {
+  padding: 8px 16px;
+  width: 30%;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-group button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.button-group button:nth-child(2) {
+  background-color: #dc3545;
+}
+
+.button-group button:nth-child(2):hover {
+  background-color: #c82333;
+}
+
 button#add{
   width:30%;
   margin: auto;

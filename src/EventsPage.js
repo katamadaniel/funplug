@@ -391,8 +391,10 @@ const EventPage = ({ token }) => {
                     {event.vvipPrice > 0 && <p><strong>VVIP Price:</strong> Ksh.{event.vvipPrice}</p>}
                   </>
                 )}
+                <div className = "button-group">
                 <button onClick={() => handleEditClick(event)}>Edit</button>
                 <button onClick={() => handleDeleteClick(event._id)}>Delete</button>
+                </div>
                 <p className="event-created-at">
                   <strong>Created on:</strong> <i>{format(new Date(event.createdAt), 'PPP')}</i>
                 </p>

@@ -179,8 +179,10 @@ const VenuesPage = ({ token }) => {
                   <p><strong>Status: </strong>{venue.bookingStatus}</p>
                   <p><strong>Duration: </strong>{venue.bookingDuration}</p>
                   <p><strong>Charges: </strong>Ksh.{venue.charges}/hour</p>
+                  <div className = "button-group">
                   <button onClick={() => handleEdit(venue)}>Edit</button>
                   <button onClick={() => handleDelete(venue._id)}>Delete</button>
+                  </div>
                 </div>
               </div>
             ))}

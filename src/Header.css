@@ -17,7 +17,7 @@
   background-image: url(../public/FunPlug.png);
   background-size: contain;
   background-repeat: no-repeat;
-  font-size: 2.0rem;
+  font-size: 2.5rem;
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
   display: flex;
   align-items: center;
@@ -34,7 +34,7 @@
   border: none;
   background-color: #007bff;
   color: white;
-  font-size: 0.9rem;
+  font-size: 1.5rem;
   border-radius: 5px;
   cursor: pointer;
   white-space: nowrap;
@@ -97,10 +97,10 @@
 @media (max-width: 768px) {
 
   .logo {
-    font-size: 2.0rem;
+    font-size: 3.0rem;
     margin-bottom: 8px;
   }
   nav-button{
-    font-size: 1.5rem;
+    font-size: 2.0rem;
   }
 }

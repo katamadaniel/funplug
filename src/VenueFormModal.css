@@ -38,52 +38,6 @@
   align-items: center;
 }
 
-.close-share-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px; /* space between share and close buttons */
-}
-
-.share-button {
-  border: 1px solid #e0e0e0;
-  border-radius: 50%;
-  padding: 4px;
-  margin-right: 8px;
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-  width: 40px;
-  height: 40px;
-  top: 10px;
-  right: 60px;
-}
-
-.share-button:hover {
-  background-color: #f5f5f5;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.share-button svg {
-  font-size: 20px; 
-}
-
-.close-button {
-  background: transparent;
-  border: none;
-  font-size: 1.2em;
-  cursor: pointer;
-  top: 10px;
-  right: 10px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s, box-shadow 0.2s;
-}
-
 .venue-form input,
 .venue-form textarea {
   display: block;
@@ -94,9 +48,43 @@
   border-radius: 3px;
 }
 
-.venue-form .form-buttons {
+.venue-form{
   display: flex;
   justify-content: space-between;
+}
+
+.button-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.button-container button {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 1em;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button-container button[type="submit"] {
+  background-color: #007bff;
+}
+
+.button-container button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+.button-container button[type="button"] {
+  background-color: #6c757d;
+}
+
+.button-container button[type="button"]:hover {
+  background-color: #565e64;
 }
 
 @media (max-width: 768px) {
@@ -104,21 +92,5 @@
     width: 95%;
     padding: 15px;
     border-radius: 8px;
-  }
-
-  .modal-header {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .creator-image {
-    width: 50px;
-    height: 50px;
-    margin: 0 0 10px 0;
-  }
-
-  .creator-name {
-    font-size: 1.4em;
-    text-align: center;
   }
 }
