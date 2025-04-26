@@ -54,7 +54,7 @@ const UserProfileCarousel = ({ users }) => {
       <Slider {...settings}>
         {users.slice(0, 10).map(user => (
           <div 
-            key={user.id} 
+            key={user._id} 
             className="user-profile-card"
             onClick={() => handleProfileClick(user._id)}
             style={{ cursor: 'pointer' }}

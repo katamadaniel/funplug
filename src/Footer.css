@@ -24,7 +24,9 @@
   }
 
   .map iframe {
-    display: none;
+    width: 100%;
+    max-width: 300px;
+    height: 150px;
   }
 
   .social-media {

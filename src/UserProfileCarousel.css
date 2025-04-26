@@ -52,7 +52,6 @@
   color: #666;
 }
 
-/* Make the page and components mobile responsive */
 @media (max-width: 768px) {
   .avatar0 {
     width: 100px;

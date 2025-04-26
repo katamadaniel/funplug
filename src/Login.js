@@ -103,7 +103,7 @@ const Login = ({ setIsAuthenticated, setUser }) => {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={togglePasswordVisibility} edge="end">
+                <IconButton onClick={togglePasswordVisibility}>
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>

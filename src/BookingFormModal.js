@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Modal from 'react-modal';
 import axios from 'axios';
 import './BookingFormModal.css';
 
@@ -82,7 +81,9 @@ const BookingFormModal = ({ venue, onClose }) => {
   };
   
   return (
-    <Modal isOpen={true} onRequestClose={onClose} className="booking-form-modal">
+    <div className="modal-overlay">
+      <div className="modal-content">
+      <button className="close-button" onClick={onClose}>X</button>
       <h2>Book {venue.name}</h2>
       {error && <p className="error">{error}</p>}
       {successMessage && <p className="success">{successMessage}</p>}
@@ -169,9 +170,9 @@ const BookingFormModal = ({ venue, onClose }) => {
           />
         </div>
         <button type="submit">Book Venue</button>
-        <button type="button" onClick={onClose}>Close</button>
       </form>
-    </Modal>
+      </div>
+      </div>
   );
 };
 

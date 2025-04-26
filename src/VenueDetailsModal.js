@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Modal from 'react-modal';
 import ImageGallery from 'react-image-gallery';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
@@ -77,9 +76,8 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
   }, [user]);
 
   return (
-    <Modal isOpen={!!venue} onRequestClose={onClose} className="venue-details-modal">
-      {venue && (
-        <>
+    <div className="modal-overlay">
+      <div className="modal-content">
           <div className="modal-header">
             <div className="modal-header-left">
               <Avatar
@@ -156,9 +154,8 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
           <p><strong>Duration:</strong> {venue.bookingDuration} hours</p>
           <p><strong>Charges:</strong> Ksh.{venue.charges}/hour</p>
           <button onClick={onBookVenue}>Book Venue</button>
-        </>
-      )}
-    </Modal>
+        </div>
+        </div>
   );
 };
 

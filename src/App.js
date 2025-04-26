@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Modal from 'react-modal';
 import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import Login from './Login';
 import Signup from './Signup';
@@ -48,6 +49,8 @@ import AdminInvoices from './components/admin/AdminInvoices';
 import AdminSettings from './components/admin/AdminSettings';
 import AdminLogin from './components/admin/AdminLogin';
 import AdminNavbar from './components/admin/AdminNavbar';
+
+Modal.setAppElement('#root');
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));

@@ -232,10 +232,9 @@ const EventPage = ({ token }) => {
 
   return (
     <div className="event-page">
-      <h1>My Events</h1>
       <div className="button-container">
         <button id="add" onClick={openModal}>
-          Add Event
+          Create Event
         </button>
         <button id="toggle" onClick={toggleView}>
           {showPastEvents ? 'Upcoming Events' : 'Past Events'}

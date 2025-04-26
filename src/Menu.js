@@ -11,47 +11,51 @@ const Menu = ({ onSearch, isAuthenticated }) => {
   };
 
   return (
-    <nav className="menu">
-      <div className="hamburger" onClick={toggleMenu}>
-        {isOpen ? '✖' : '☰'}
-      </div>
-      <ul className={`menu-list ${isOpen ? 'open' : ''}`}>
-        <li className="menu-item">
-          <Link to="/" onClick={toggleMenu}>Home</Link>
-        </li>
-        {isAuthenticated ? (
-          <>
-            <li className="menu-item">
-              <Link to="/profile" onClick={toggleMenu}>Profile</Link>
-            </li>
-            <li className="menu-item">
-              <Link to="/events" onClick={toggleMenu}>Events</Link>
-            </li>
-            <li className="menu-item">
-              <Link to="/venues" onClick={toggleMenu}>Venues</Link>
-            </li>
-            <li className="menu-item">
-              <Link to="/notifications" onClick={toggleMenu}>Notifications</Link>
-            </li>
+    <div className="top-bar">
+      <div className="menu">
+        <button className={`hamburger ${isOpen ? 'open' : ''}`} onClick={toggleMenu}>
+          {isOpen ? '✖' : '☰'}
+        </button>
+
+        <ul className={`menu-list ${isOpen ? 'open' : ''}`}>
+          <li className="menu-item">
+            <Link to="/" onClick={toggleMenu}>Home</Link>
+          </li>
+          {isAuthenticated ? (
+            <>
+              <li className="menu-item">
+                <Link to="/profile" onClick={toggleMenu}>Profile</Link>
+              </li>
+              <li className="menu-item">
+                <Link to="/events" onClick={toggleMenu}>Events</Link>
+              </li>
+              <li className="menu-item">
+                <Link to="/venues" onClick={toggleMenu}>Venues</Link>
+              </li>
+              <li className="menu-item">
+                <Link to="/notifications" onClick={toggleMenu}>Notifications</Link>
+              </li>
             </>
-        ) : (
-          <>
-            <li className="menu-item">
-              <Link to="/category" onClick={toggleMenu}>Category</Link>
-            </li>
-            <li className="menu-item">
-              <Link to="/about" onClick={toggleMenu}>About</Link>
-            </li>
-            <li className="menu-item">
-              <Link to="/faq" onClick={toggleMenu}>FAQ</Link>
-            </li>
-          </>
-        )}
-      </ul>
+          ) : (
+            <>
+              <li className="menu-item">
+                <Link to="/category" onClick={toggleMenu}>Category</Link>
+              </li>
+              <li className="menu-item">
+                <Link to="/about" onClick={toggleMenu}>About</Link>
+              </li>
+              <li className="menu-item">
+                <Link to="/faq" onClick={toggleMenu}>FAQ</Link>
+              </li>
+            </>
+          )}
+        </ul>
+      </div>
+
       <div className="main-search-box">
         <SearchBar onSearch={onSearch} />
       </div>
-    </nav>
+    </div>
   );
 };
 

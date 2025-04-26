@@ -84,21 +84,6 @@
   transition: background-color 0.2s, box-shadow 0.2s;
 }
 
-.share-modal {
-  background-color: #fafafa;
-  padding: 15px;
-  margin: 10px 0;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.share-icons {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 10px;
-}
-
 .venue-form input,
 .venue-form textarea {
   display: block;

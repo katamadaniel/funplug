@@ -144,11 +144,10 @@ const VenuesPage = ({ token }) => {
 
   return (
     <div className="venues-container">
-      <h1>My Venues</h1>
       <div className="venues-header">
-        <button className="add-venue-button" id="add" onClick={handleAddVenue}>Add Venue</button>
+        <button className="add-venue-button" id="add" onClick={handleAddVenue}>Create Venue</button>
         <button className="toggle-button" id="bookings" onClick={() => setShowBookings(!showBookings)}>
-          {showBookings ? 'Show My Venues' : 'Show Bookings'}
+          {showBookings ? 'Hide Bookings' : 'Show Bookings'}
         </button>
       </div>
       {statusMessage && <p className="status-message">{statusMessage}</p>}
