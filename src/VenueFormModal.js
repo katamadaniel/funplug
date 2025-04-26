@@ -65,7 +65,7 @@ const VenueFormModal = ({ isOpen, onRequestClose, onSubmit, initialVenue }) => {
         <input type="text" name="bookingDuration" placeholder="Booking Duration" value={venue.bookingDuration} onChange={handleInputChange} />
         <input type="number" name="charges" placeholder="Charges per hour" value={venue.charges} onChange={handleInputChange} />
         <input type="file" multiple accept="image/*" onChange={handleImageChange} />
-        <div className="buttons-container">
+        <div className="button-container">
           <button type="submit">Save</button>
           <button type="button" onClick={onRequestClose}>Cancel</button>
         </div>
