@@ -74,6 +74,7 @@ const ReportProblem = () => {
         <Button
           variant="contained"
           color="primary"
+          sx={{ display: 'block', margin: '20px auto' }}
           onClick={handleReportProblem}
           disabled={loading}
           startIcon={loading && <CircularProgress size={20} />}

@@ -7,3 +7,9 @@ body{
     display: flex;
     margin: auto;
 }
+
+.venues{
+    align-items: center;
+    display: flex;
+    margin: auto;
+}

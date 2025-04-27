@@ -121,6 +121,7 @@ const ContactSupport = () => {
         <Button
           variant="contained"
           color="primary"
+          sx={{ display: 'block', margin: '20px auto' }}
           onClick={handleContactSupport}
           disabled={loading}
           startIcon={loading && <CircularProgress size={20} />}

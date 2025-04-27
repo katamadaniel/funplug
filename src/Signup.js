@@ -189,100 +189,100 @@ This User Agreement ("Agreement") governs your use of the FunPlug platform. By c
 
 <p><strong>2. User Accounts & Responsibilities</strong>
   <ol>
-    <li>- You must be at least 18 years old to create an account.</li>
-    <li>- You are responsible for providing accurate and up-to-date information.</li>
-    <li>- You agree not to share your account credentials or allow unauthorized access.</li>
-    <li>- Prohibited activities include fraud, abuse, or any unlawful use of the platform.</li>
+    <li> You must be at least 18 years old to create an account.</li>
+    <li> You are responsible for providing accurate and up-to-date information.</li>
+    <li> You agree not to share your account credentials or allow unauthorized access.</li>
+    <li> Prohibited activities include fraud, abuse, or any unlawful use of the platform.</li>
     </ol>
 </p>
  
 <p><strong>3. Event & Ticketing Policies</strong>
   <ol>
-    <li>- Event organizers are responsible for setting ticket prices and managing event details.</li>
-    <li>- Users purchasing tickets must ensure all details are correct before completing transactions.</li>
-    <li>- Refund policies are determined by the event organizer and must be clearly stated on the event page.</li>
-    <li>- The platform is not responsible for event cancellations, delays, or changes.</li>
+    <li> Event organizers are responsible for setting ticket prices and managing event details.</li>
+    <li> Users purchasing tickets must ensure all details are correct before completing transactions.</li>
+    <li> Refund policies are determined by the event organizer and must be clearly stated on the event page.</li>
+    <li> The platform is not responsible for event cancellations, delays, or changes.</li>
     </ol>
 </p>
 
 <p><strong>4. Venue Booking Policies</strong>
 <ol>
-    <li>- Users booking venues must adhere to the venue's terms and conditions.</li>
-    <li>- Bookings may require payment upfront, subject to refund and cancellation policies.</li>
-    <li>- Users are responsible for any damages or breaches of venue policies during the booking period.</li>
+    <li> Users booking venues must adhere to the venue's terms and conditions.</li>
+    <li> Bookings may require payment upfront, subject to refund and cancellation policies.</li>
+    <li> Users are responsible for any damages or breaches of venue policies during the booking period.</li>
     </ol>
 </p>
 
 <p><strong>5. Payment Processing & Fees</strong>
 <ol>
-    <li>- The platform supports multiple payment methods for ticket purchases and venue bookings.</li>
-    <li>- Service fees may apply and will be clearly disclosed before payment.</li>
-    <li>- Refunds are subject to the policies set by event organizers or venue providers.</li>
+    <li> The platform supports multiple payment methods for ticket purchases and venue bookings.</li>
+    <li> Service fees may apply and will be clearly disclosed before payment.</li>
+    <li> Refunds are subject to the policies set by event organizers or venue providers.</li>
     </ol>
 </p>
 
 <p><strong>6. Cancellations & Refunds</strong>
   <ol>
-    <li>- Event cancellations are the responsibility of the event organizer.</li>
-    <li>- Venue cancellations are subject to the venue provider’s terms.</li>
-    <li>- Refund requests must be submitted within the stated timeframe and are subject to approval.</li>
+    <li> Event cancellations are the responsibility of the event organizer.</li>
+    <li> Venue cancellations are subject to the venue provider’s terms.</li>
+    <li> Refund requests must be submitted within the stated timeframe and are subject to approval.</li>
   </ol>
 </p>
 
 <p><strong>7. User Conduct & Community Guidelines</strong>
   <ol>
-    <li>- Users must respect community guidelines and refrain from harassment or disruptive behavior.</li>
-    <li>- Misrepresentation of events or venues is strictly prohibited.</li>
-    <li>- The platform reserves the right to remove content or suspend accounts violating these policies.</li>
+    <li> Users must respect community guidelines and refrain from harassment or disruptive behavior.</li>
+    <li> Misrepresentation of events or venues is strictly prohibited.</li>
+    <li> The platform reserves the right to remove content or suspend accounts violating these policies.</li>
   </ol>
 </p>
 
 <p><strong>8. Content Ownership & Intellectual Property</strong>
   <ol>
-    <li>- Users retain ownership of the content they upload but grant the platform a license to use it for promotional purposes.</li>
-    <li>- Unauthorized use of copyrighted materials is prohibited.</li>
+    <li> Users retain ownership of the content they upload but grant the platform a license to use it for promotional purposes.</li>
+    <li> Unauthorized use of copyrighted materials is prohibited.</li>
   </ol>
 </p>
 
 <p><strong>9. Privacy & Data Protection</strong>
   <ol>
-    <li>- User data is collected, stored, and protected per our [Privacy Policy].</li>
-    <li>- The platform may share data with third-party services for payment processing and analytics.</li>
+    <li> User data is collected, stored, and protected per our [Privacy Policy].</li>
+    <li> The platform may share data with third-party services for payment processing and analytics.</li>
   </ol>
 </p>
 
 <p><strong>10. Dispute Resolution</strong>
   <ol>
-    <li>- Disputes between users should be resolved amicably. If not, the platform may mediate but is not liable for user disputes.</li>
-    <li>- Legal disputes related to transactions will be handled under the applicable governing law.</li>
+    <li> Disputes between users should be resolved amicably. If not, the platform may mediate but is not liable for user disputes.</li>
+    <li> Legal disputes related to transactions will be handled under the applicable governing law.</li>
   </ol>
 </p>
 
 <p><strong>11. Termination & Account Suspension</strong>
   <ol>
-    <li>- The platform reserves the right to suspend or terminate accounts for policy violations.</li>
-    <li>- Users may appeal account suspensions by contacting customer support.</li>
+    <li> The platform reserves the right to suspend or terminate accounts for policy violations.</li>
+    <li> Users may appeal account suspensions by contacting customer support.</li>
   </ol>
 </p>
 
 <p><strong>12. Limitation of Liability</strong>
   <ol>
-    <li>- The platform is not liable for any losses arising from canceled events, incorrect bookings, or technical issues.</li>
-    <li>- Users acknowledge they assume the risks associated with attending events and booking venues.</li>
+    <li> The platform is not liable for any losses arising from canceled events, incorrect bookings, or technical issues.</li>
+    <li> Users acknowledge they assume the risks associated with attending events and booking venues.</li>
   </ol>
 </p>
 
 <p><strong>13. Modifications to the Agreement</strong>
   <ol>
-    <li>- The platform may update this Agreement from time to time. Users will be notified of significant changes.</li>
-    <li>- Continued use of the platform after changes take effect constitutes acceptance of the new terms.</li>
+    <li> The platform may update this Agreement from time to time. Users will be notified of significant changes.</li>
+    <li> Continued use of the platform after changes take effect constitutes acceptance of the new terms.</li>
   </ol>
 </p>
 
 <p><strong>14. Governing Law & Jurisdiction</strong>
   <ol>
-    <li>- This Agreement shall be governed by the laws of The Republic of Kenya.</li>
-    <li>- Any legal disputes shall be resolved in the courts of The Republic of Kenya.</li>
+    <li> This Agreement shall be governed by the laws of The Republic of Kenya.</li>
+    <li> Any legal disputes shall be resolved in the courts of The Republic of Kenya.</li>
   </ol>
 </p>
 
@@ -292,7 +292,7 @@ By using FunPlug, you agree to these terms. If you have any questions, contact u
 
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setTermsOpen(false)} color="primary">Close</Button>
+          <Button variant="contained" sx={{ display: 'block', margin: '20px auto' }} onClick={() => setTermsOpen(false)} color="primary">Close</Button>
         </DialogActions>
       </Dialog>
     </Container>
