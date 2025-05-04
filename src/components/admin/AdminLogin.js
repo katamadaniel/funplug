@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Avatar, Link } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL;
-const ADMIN_API_URL = `${API_URL}/api/admins`;
+import { loginAdmin, registerAdmin, fetchAdminProfile } from '../../services/adminService';
 
 const AdminLogin = ({ setAdminAuthenticated, setAdmin }) => {
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -18,63 +16,35 @@ const AdminLogin = ({ setAdminAuthenticated, setAdmin }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const fetchProfile = async (token, adminId) => {
-    try {
-      const response = await axios.get(`${ADMIN_API_URL}/profile/${adminId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAdmin(response.data); // Store the fetched profile data
-    } catch (error) {
-      console.error('Failed to fetch admin profile:', error);
-      setError('Failed to fetch profile. Please try again.');
-    }
-  };
-
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${ADMIN_API_URL}/login`, {
-        email: formData.email,
-        password: formData.password,
-      });
+      const { token } = await loginAdmin(formData.email, formData.password);
+      
+      if (!token) throw new Error('Missing token in login response.');
 
-      const { token, adminId } = response.data;
-
-      if (token && adminId) {
-        // Store token and adminId in localStorage
-        localStorage.setItem('adminToken', token);
-        localStorage.setItem('adminId', adminId);
-
-        setAdminAuthenticated(true);
-
-        // Fetch and set admin profile
-        await fetchProfile(token, adminId);
-
-        navigate('/dashboard');
-      } else {
-        throw new Error('Missing token or admin ID in response');
-      }
+      // Fetch and set admin profile
+      const adminProfile = await fetchAdminProfile();
+      setAdmin(adminProfile);
+      setAdminAuthenticated(true);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password');
+      setError(err.message || 'Login failed.');
     }
   };
 
   const handleRegister = async () => {
     try {
-      await axios.post(`${ADMIN_API_URL}/register`, {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-      });
-      setIsLoginMode(true); // Switch back to login mode after successful registration
-      setError(''); // Clear any errors
+      await registerAdmin(formData.name, formData.email, formData.password);
+      setIsLoginMode(true);
+      setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create an admin account.');
+      setError(err.message || 'Registration failed.');
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError(''); // Clear previous errors
+    setError('');
     if (isLoginMode) {
       handleLogin();
     } else {

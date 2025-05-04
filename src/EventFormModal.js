@@ -2,6 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import './EventFormModal.css';
 
+const categoryData = {
+  'Social Event': ['Casual Gathering', 'Celebration', 'Reunion', 'Charity/Fundraiser', 'Activity-Based Event'],
+  'Corporate Event': ['Company meeting', 'Team-building', 'Networking event', 'Seminar/Workshop', 'Trade Show', 'Conference'],
+  'Community Event': ['Fundraiser', 'Community Outreach', 'Cultural Event'],
+  'Food and Drinks Event': ['Food festival', 'Wine tasting'],
+  'Festival': ['Music festival', 'Beer festival'],
+  'Performance': ['Theatre performance', 'Dance performance', 'Music performance', 'Comedy performance'],
+  'Virtual Event': ['Webinar', 'Virtual quizze', 'Virtual conference'],
+  'Outdoor Event': ['Guided tour', 'Sports event', 'Outdoor cinema'],
+  'Kids Event': ['Fun festival', 'Bootcamp', 'Class']
+};
+
 const EventFormModal = ({
   isOpen,
   onClose,
@@ -12,7 +24,7 @@ const EventFormModal = ({
   statusMessage,
   onTicketTypeChange,
 }) => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: formData,
   });
 
@@ -23,24 +35,35 @@ const EventFormModal = ({
     vvip: false,
   });
 
+  const [selectedCategory, setSelectedCategory] = useState('');
+
   useEffect(() => {
     reset(formData);
+    if (formData?.category) {
+      setSelectedCategory(formData.category);
+    }
   }, [formData, reset]);
 
-  if (!isOpen) return null;
+  const handleCategoryChange = (e) => {
+    const category = e.target.value;
+    setSelectedCategory(category);
+    setValue('category', category);
+    setValue('subCategory', ''); // Reset sub-category
+  };
 
   const handleFormSubmit = (data) => {
     onSubmit(data);
     reset();
   };
 
-  // Toggle selection of ticket types
   const toggleOption = (option) => {
     setSelectedOptions((prev) => ({
       ...prev,
       [option]: !prev[option],
     }));
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
@@ -64,6 +87,37 @@ const EventFormModal = ({
             {...register('title', { required: 'Title is required' })}
           />
           {errors.title && <span className="error">{errors.title.message}</span>}
+
+          <div className="dropdown-group">
+            <label>Category</label>
+            <select
+              {...register('category', { required: 'Category is required' })}
+              onChange={handleCategoryChange}
+              value={selectedCategory}
+            >
+              <option value="">Select Category</option>
+              {Object.keys(categoryData).map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            {errors.category && <span className="error">{errors.category.message}</span>}
+          </div>
+
+          {/* Sub-Category Dropdown */}
+          {selectedCategory && (
+            <div className="dropdown-group">
+              <label>Sub-Category</label>
+              <select
+                {...register('subCategory', { required: 'Sub-category is required' })}
+              >
+                <option value="">Select Sub-category</option>
+                {categoryData[selectedCategory].map((sub) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
+              {errors.subCategory && <span className="error">{errors.subCategory.message}</span>}
+            </div>
+          )}
 
           <input
             type="file"

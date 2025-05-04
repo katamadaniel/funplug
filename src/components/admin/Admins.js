@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Button, Table, TableBody, TableCell, TableHead, TableRow, TextField, Alert } from '@mui/material';
-import axios from 'axios';
+import {
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+  Alert
+} from '@mui/material';
 
-const API_URL = process.env.REACT_APP_API_URL;
-const ADMINS_API_URL = `${API_URL}/api/admins`;
+import {
+  fetchAllAdmins,
+  createAdmin,
+  deleteAdminById
+} from '../../services/adminService';
 
 const Admins = () => {
   const [admins, setAdmins] = useState([]);
@@ -15,23 +27,20 @@ const Admins = () => {
   const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     if (!token) {
       navigate('/admin-login');
     } else {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Set token for requests
       fetchAdmins();
     }
   }, [navigate]);
 
-  // Function to fetch the list of admins from the backend
   const fetchAdmins = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(ADMINS_API_URL);
-      setAdmins(response.data);
+      const data = await fetchAllAdmins();
+      setAdmins(data);
     } catch (err) {
       setError('Error fetching admins. Please try again later.');
     } finally {
@@ -39,12 +48,10 @@ const Admins = () => {
     }
   };
 
-  // Function to handle input changes for the new admin form
   const handleInputChange = (e) => {
     setNewAdmin({ ...newAdmin, [e.target.name]: e.target.value });
   };
 
-  // Validation function
   const validateForm = () => {
     let formErrors = {};
     if (!newAdmin.name) formErrors.name = 'Name is required';
@@ -62,29 +69,27 @@ const Admins = () => {
     return Object.keys(formErrors).length === 0;
   };
 
-  // Function to add a new admin
   const addAdmin = async () => {
-    if (!validateForm()) return; // Stop if form is invalid
+    if (!validateForm()) return;
     setError(null);
     setSuccess(null);
 
     try {
-      const response = await axios.post(ADMINS_API_URL, newAdmin);
-      setAdmins([...admins, response.data]); // Add new admin to the state
-      setNewAdmin({ name: '', email: '', password: '' }); // Clear form inputs
+      const addedAdmin = await createAdmin(newAdmin);
+      setAdmins([...admins, addedAdmin]);
+      setNewAdmin({ name: '', email: '', password: '' });
       setSuccess('Admin added successfully');
     } catch (err) {
       setError('Error adding admin. Please try again.');
     }
   };
 
-  // Function to delete an admin
   const deleteAdmin = async (adminId) => {
     setError(null);
     setSuccess(null);
     try {
-      await axios.delete(`${ADMINS_API_URL}/${adminId}`);
-      setAdmins(admins.filter((admin) => admin._id !== adminId)); // Remove deleted admin from state
+      await deleteAdminById(adminId);
+      setAdmins(admins.filter((admin) => admin._id !== adminId));
       setSuccess('Admin deleted successfully');
     } catch (err) {
       setError('Error deleting admin. Please try again.');
@@ -95,12 +100,10 @@ const Admins = () => {
     <div>
       <Typography variant="h4" gutterBottom>Manage Admins</Typography>
 
-      {/* Display loading, error, or success message */}
-      {loading ? <p>Loading...</p> : null}
-      {error ? <Alert severity="error" sx={{ marginBottom: '1rem' }}>{error}</Alert> : null}
-      {success ? <Alert severity="success" sx={{ marginBottom: '1rem' }}>{success}</Alert> : null}
+      {loading && <p>Loading...</p>}
+      {error && <Alert severity="error" sx={{ marginBottom: '1rem' }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ marginBottom: '1rem' }}>{success}</Alert>}
 
-      {/* Admins Table */}
       <Table>
         <TableHead>
           <TableRow>
@@ -115,7 +118,7 @@ const Admins = () => {
             <TableRow key={admin._id}>
               <TableCell>{admin.name}</TableCell>
               <TableCell>{admin.email}</TableCell>
-              <TableCell>••••••••</TableCell> {/* Hides password */}
+              <TableCell>••••••••</TableCell>
               <TableCell>
                 <Button variant="contained" color="secondary" onClick={() => deleteAdmin(admin._id)}>
                   Delete
@@ -126,7 +129,6 @@ const Admins = () => {
         </TableBody>
       </Table>
 
-      {/* Add New Admin Form */}
       <div style={{ marginTop: '20px' }}>
         <Typography variant="h6">Add New Admin</Typography>
         <TextField

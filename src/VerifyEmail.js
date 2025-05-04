@@ -10,26 +10,26 @@ import {
   Button,
 } from '@mui/material';
 
-const USERS_API_URL = 'http://localhost:5000/api/users';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const VerifyEmail = () => {
   const { token } = useParams(); // Extract token from the URL
-  const navigate = useNavigate(); // Navigation hook
+  const navigate = useNavigate();
   const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(true); // Add loading state
-  const [success, setSuccess] = useState(false); // Track success status
+  const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState(false); 
 
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        const response = await axios.get(`${USERS_API_URL}/verify-email/${token}`);
+        const response = await axios.get(`${API_URL}api/users/verify-email/${token}`);
         setMessage(response.data.message);
-        setSuccess(true); // Email verification successful
+        setSuccess(true);
       } catch (error) {
         setMessage(error.response?.data?.message || 'Email verification failed.');
-        setSuccess(false); // Email verification failed
+        setSuccess(false);
       } finally {
-        setLoading(false); // Stop loading once the API call is complete
+        setLoading(false); 
       }
     };
 
@@ -37,7 +37,7 @@ const VerifyEmail = () => {
   }, [token]);
 
   const handleNavigateToLogin = () => {
-    navigate('/login'); // Navigate to the login page
+    navigate('/login');
   };
 
   if (loading) {

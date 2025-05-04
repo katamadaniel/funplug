@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const ADMIN_API_URL = `${API_URL}/api/admins`;
-
+const PROFILE_API_URL = `${API_URL}/api/admins/profile`;
 /**
  * Log in an admin user.
  * @param {string} email - Admin's email
@@ -70,3 +70,53 @@ export const logoutAdmin = () => {
 export const isAdminAuthenticated = () => {
   return !!localStorage.getItem('adminToken');
 };
+
+export const fetchAllAdmins = async () => {
+  const response = await axios.get(ADMIN_API_URL);
+  return response.data;
+};
+
+export const createAdmin = async (adminData) => {
+  const response = await axios.post(ADMIN_API_URL, adminData);
+  return response.data;
+};
+
+export const deleteAdminById = async (adminId) => {
+  await axios.delete(`${ADMIN_API_URL}/${adminId}`);
+};
+
+const getToken = () => localStorage.getItem('adminToken');
+
+const getProfile = async () => {
+  const response = await axios.get(PROFILE_API_URL, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  return response.data;
+};
+
+const updateProfile = async (data) => {
+  const response = await axios.put(PROFILE_API_URL, data, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  return response.data;
+};
+
+const uploadAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const response = await axios.post(`${PROFILE_API_URL}/avatar`, formData, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+};
+
+export default {
+  getProfile,
+  updateProfile,
+  uploadAvatar,
+}

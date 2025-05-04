@@ -4,62 +4,43 @@ import axios from 'axios';
 import EventModal from './EventModal';
 import TicketPurchase from './TicketPurchase';
 import CircularProgress from '@mui/material/CircularProgress';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import './CategoryDetails.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
-
 const EVENTS_API_URL = `${API_URL}/api/events`;
 const USERS_API_URL = `${API_URL}/api/users`;
-const DEFAULT_AVATAR_URL = process.env.REACT_APP_AVATAR_URL; 
+const DEFAULT_AVATAR_URL = process.env.REACT_APP_AVATAR_URL;
 
 const CategoryDetails = () => {
   const { category } = useParams();
-  const [filteredUserIds, setFilteredUserIds] = useState([]);
+  const [groupedEvents, setGroupedEvents] = useState({});
   const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isTicketPurchaseOpen, setIsTicketPurchaseOpen] = useState(false);
 
   useEffect(() => {
-    // Fetch all users and all events from the server
     const fetchData = async () => {
       try {
-        const usersResponse = await axios.get(USERS_API_URL);
-        setUsers(usersResponse.data);
-
-        const eventsResponse = await axios.get(EVENTS_API_URL);
-
-        // Filter users based on category and extract their IDs
-        const filteredUsers = usersResponse.data.filter(user => user.category === category);
-        const userIds = filteredUsers.map(user => user._id);
-        setFilteredUserIds(userIds);
-
-        // Get today's date for comparison
-        const today = new Date().setHours(0, 0, 0, 0);
-
-        // Filter events to include only upcoming events associated with the filtered user IDs
-        const userUpcomingEvents = eventsResponse.data
-          .filter(event => userIds.includes(event.userId) && new Date(event.date).getTime() >= today);
-
-        setEvents(userUpcomingEvents);
+        const [usersRes, eventsRes] = await Promise.all([
+          axios.get(USERS_API_URL),
+          axios.get(`${EVENTS_API_URL}/category/${encodeURIComponent(category)}`)
+        ]);
+        setUsers(usersRes.data);
+        setGroupedEvents(eventsRes.data);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching category data:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [category]);
 
-  // Show CircularProgress while loading
-  if (loading) return <div className="loading-container"><CircularProgress /></div>;
-
-  // Function to handle viewing event details
   const handleViewEventDetails = (event) => {
     const user = users.find(user => user._id === event.userId);
     setSelectedEvent(event);
@@ -67,41 +48,81 @@ const CategoryDetails = () => {
     setIsEventModalOpen(true);
   };
 
-  // Function to handle opening the ticket purchase modal from the event modal
   const handleBuyTicket = () => {
     setIsEventModalOpen(false);
-    setIsTicketPurchaseOpen(true); 
+    setIsTicketPurchaseOpen(true);
   };
 
-  // Function to close the ticket purchase modal
   const handleCloseTicketPurchase = () => {
     setIsTicketPurchaseOpen(false);
     setSelectedEvent(null);
   };
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  const CollapsibleSubcategory = ({ subcategory, events }) => {
+    const [open, setOpen] = useState(true);
+    const toggleOpen = () => setOpen(prev => !prev);
+
+    return (
+      <div className="subcategory-section">
+        <div
+          className="subcategory-header"
+          onClick={toggleOpen}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && toggleOpen()}
+        >
+          <h2>{subcategory}</h2>
+          {open ? <ExpandLess className="toggle-icon" /> : <ExpandMore className="toggle-icon" />}
+        </div>
+
+        {open && (
+          <div className="events-group">
+            {events.map(event => (
+              <div key={event._id} className="event-card">
+                <img
+                  src={event.image ? `${IMAGE_BASE_URL}/events/${event.image}` : '/default-event-image.png'}
+                  alt={event.title}
+                  className="event-image"
+                />
+                <h3>{event.title}</h3>
+                <p>{event.description}</p>
+                <p><strong>Venue:</strong> {event.venue}</p>
+                <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
+                <p><strong>Time:</strong> {event.startTime}</p>
+                <button
+                  className="view-details-btn"
+                  onClick={() => handleViewEventDetails(event)}
+                >
+                  View Details
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="events-container">
-      {filteredUserIds.length > 0 && events.length > 0 ? (
-        events.map(event => (
-          <div key={event._id} className="event-card">
-            <img
-              src={event.image ? `${IMAGE_BASE_URL}/events/${event.image}` : '/default-event-image.png'}
-              alt={event.title}
-              className="event-image"
-            />
-            <h3>{event.title}</h3>
-            <p>{event.description}</p>
-            <p><strong>Venue:</strong> {event.venue}</p>
-            <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
-            <p><strong>Time:</strong> {event.startTime}</p>
-            <button 
-              className="view-details-btn" onClick={() => handleViewEventDetails(event)}>
-              View Details
-            </button>
-          </div>
+      {Object.keys(groupedEvents).length > 0 ? (
+        Object.entries(groupedEvents).map(([subCategory, events]) => (
+          <CollapsibleSubcategory
+            key={subCategory}
+            subcategory={subCategory}
+            events={events}
+          />
         ))
       ) : (
-        <p>No upcoming events found for users in this category.</p>
+        <p>No upcoming events found for this category.</p>
       )}
 
       {selectedEvent && isEventModalOpen && (

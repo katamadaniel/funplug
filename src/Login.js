@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, fetchProfile } from './services/userService';
+import { login, fetchProfile, resendVerification } from './services/userService';
 import {
   Container,
   Typography,
@@ -18,6 +18,9 @@ const Login = ({ setIsAuthenticated, setUser }) => {
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -44,34 +47,53 @@ const Login = ({ setIsAuthenticated, setUser }) => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-    } else {
-      setErrors({});
-      setError('');
-      try {
-        const { token } = await login(formData);
-        localStorage.setItem('token', token);
-
-        // Fetch and set user profile
-        const profile = await fetchProfile(token);
-        
-        // Check for warnings and banned status
-        if (profile.warningCount >= 3) {
-          setError('Your account has been banned due to multiple warnings. Please contact support.');
+      return;
+    }
+  
+    setErrors({});
+    setError('');
+    setResendMessage('');
+    setLoading(true);
+  
+    try {
+      const { token } = await login(formData);
+      localStorage.setItem('token', token);
+  
+      const profile = await fetchProfile(token);
+  
+      if (profile.warningCount >= 3) {
+        setError('Your account has been banned due to multiple warnings. Please contact support.');
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        return;
+      }
+  
+      if (!profile.isVerified) {
+        const createdAt = new Date(profile.createdAt);
+        const hoursSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+  
+        if (hoursSinceSignup > 24) {
+          // Token expired — trigger resend
+          await resendVerification(formData.email);
+          setError('Your verification link has expired. A new verification email has been sent.');
+          setResendMessage('Please check your inbox and verify your account before logging in.');
           localStorage.removeItem('token');
           setIsAuthenticated(false);
           return;
         }
-
-        setUser(profile);
-        setIsAuthenticated(true);
-        navigate('/profile'); // Redirect to profile after successful login
-      } catch (error) {
-        console.error('Error logging in:', error);
-        setError(error.response?.data?.message || 'Error logging in');
       }
+  
+      setUser(profile);
+      setIsAuthenticated(true);
+      navigate('/profile');
+    } catch (error) {
+      console.error('Error logging in:', error);
+      setError(error.response?.data?.message || 'Error logging in');
+    } finally {
+      setLoading(false);
     }
   };
-
+  
   return (
     <Container maxWidth="xs" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" component="h2" gutterBottom align="center">
@@ -115,15 +137,24 @@ const Login = ({ setIsAuthenticated, setUser }) => {
             {error}
           </Typography>
         )}
+        
+        {resendMessage && (
+          <Typography color="primary" sx={{ mt: 1, mb: 2 }}>
+            {resendMessage}
+          </Typography>
+        )}
+
         <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          sx={{ mt: 2 }}
+        type="submit"
+        variant="contained"
+        color="primary"
+        fullWidth
+        sx={{ mt: 2 }}
+        disabled={loading}
         >
-          Login
+          {loading ? <i className="fas fa-spinner fa-spin"></i> : 'Login'}
         </Button>
+
       </Box>
       {/* <Button variant="outlined" color="primary" fullWidth sx={{ mt: 2 }}>
         Login with Google

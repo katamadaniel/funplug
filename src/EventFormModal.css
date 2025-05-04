@@ -78,6 +78,23 @@
   flex: 1;
 }
 
+.dropdown-group {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0;
+}
+
+.dropdown-group label {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.dropdown-group select {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
 .button-container {
   display: flex;
   gap: 15px;

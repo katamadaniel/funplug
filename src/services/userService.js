@@ -69,6 +69,11 @@ export const logoutUser = async () => {
   }
 };
 
+export const resendVerification = async (email) => {
+  const response = await axios.post(`${USERS_API_URL}/resend-verification`, { email });
+  return response.data;
+};
+
 export const changePassword = async ({ currentPassword, newPassword }) => {
   try {
     const token = localStorage.getItem('token');

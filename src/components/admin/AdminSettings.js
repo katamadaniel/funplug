@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Avatar, IconButton, Grid } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import axios from 'axios';
+import adminService from '../../services/adminService';
 
 const API_URL = process.env.REACT_APP_API_URL;
-const PROFILE_API_URL = `${API_URL}/api/admins/profile`;
 
 const AdminSettings = ({ initialAdmin }) => {
   const [admin, setAdmin] = useState(initialAdmin || null);
@@ -17,29 +16,19 @@ const AdminSettings = ({ initialAdmin }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-          alert('You are not authorized. Please log in again.');
-          return;
-        }
-
-        const response = await axios.get(PROFILE_API_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setAdmin(response.data);
-        setFormData((prev) => ({ ...prev, name: response.data.name }));
+        const data = await adminService.getProfile();
+        setAdmin(data);
+        setFormData((prev) => ({ ...prev, name: data.name }));
       } catch (error) {
         console.error('Error fetching admin profile:', error);
-        if (error.response && error.response.status === 401) {
+        if (error.response?.status === 401) {
           alert('Unauthorized access. Please log in again.');
-          // Handle re-authentication or redirection
         }
       }
     };
 
     if (!admin) fetchProfile();
-  }, [admin, setAdmin]);
+  }, [admin]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -58,34 +47,17 @@ const AdminSettings = ({ initialAdmin }) => {
 
   const handleSaveChanges = async () => {
     try {
-      // Update profile information
       const updateData = { ...formData };
-      if (formData.password === '') delete updateData.password; // Omit password if not being changed
+      if (!formData.password) delete updateData.password;
 
-      await axios.put(PROFILE_API_URL, updateData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
-        },
-      });
+      await adminService.updateProfile(updateData);
 
-      // Upload avatar if a new file is selected
       if (selectedFile) {
-        const avatarData = new FormData();
-        avatarData.append('avatar', selectedFile);
-        await axios.post(`${PROFILE_API_URL}/avatar`, avatarData, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        await adminService.uploadAvatar(selectedFile);
       }
 
-      // Fetch updated profile
-      const response = await axios.get(PROFILE_API_URL, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` },
-      });
-      setAdmin(response.data);
-
+      const updated = await adminService.getProfile();
+      setAdmin(updated);
       alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -98,50 +70,40 @@ const AdminSettings = ({ initialAdmin }) => {
       <Typography variant="h4" mb={3}>Settings</Typography>
 
       {admin?.name && (
-        <Typography variant="h6" mb={3}>
-          Welcome, {admin.name}!
-        </Typography>
+        <Typography variant="h6" mb={3}>Welcome, {admin.name}!</Typography>
       )}
 
       <Grid container spacing={3}>
-        {/* Profile Details Form */}
         <Grid item xs={12} md={8}>
-          <Box>
-            <Typography variant="h6" mb={2}>Profile Details</Typography>
-            <TextField
-              fullWidth
-              label="Name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              sx={{ mb: 2 }}
-              inputProps={{ maxLength: 50 }}
-            />
-            <TextField
-              fullWidth
-              label="New Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder="Leave blank to keep current password"
-              sx={{ mb: 2 }}
-            />
-          </Box>
+          <Typography variant="h6" mb={2}>Profile Details</Typography>
+          <TextField
+            fullWidth
+            label="Name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            sx={{ mb: 2 }}
+            inputProps={{ maxLength: 50 }}
+          />
+          <TextField
+            fullWidth
+            label="New Password"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            placeholder="Leave blank to keep current password"
+            sx={{ mb: 2 }}
+          />
         </Grid>
 
-        {/* Avatar Section */}
         <Grid item xs={12} md={4}>
           <Typography variant="subtitle1" mb={1}>Avatar</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Avatar
               src={admin?.avatarUrl ? `${API_URL}${admin.avatarUrl}` : '/default-avatar.png'}
               alt="Admin Avatar"
-              sx={{
-                width: { xs: 70, md: 100 },
-                height: { xs: 70, md: 100 },
-                mb: 2,
-              }}
+              sx={{ width: { xs: 70, md: 100 }, height: { xs: 70, md: 100 }, mb: 2 }}
             />
             <label htmlFor="avatar-upload">
               <input
@@ -159,13 +121,12 @@ const AdminSettings = ({ initialAdmin }) => {
         </Grid>
       </Grid>
 
-      {/* Save Changes Button */}
       <Box mt={4}>
         <Button
           variant="contained"
           color="primary"
           onClick={handleSaveChanges}
-          fullWidth={true}
+          fullWidth
           sx={{ maxWidth: { xs: '100%', md: '200px' }, mx: 'auto' }}
         >
           Save Changes

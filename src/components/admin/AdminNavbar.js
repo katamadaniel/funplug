@@ -1,17 +1,16 @@
-import React, { useEffect } from 'react'
+import React, { useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Avatar, Box, Button } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { fetchAdminProfile } from '../../services/adminService';
 
 const API_URL = process.env.REACT_APP_API_URL;
-const PROFILE_API_URL = `${API_URL}/api/admins/profile`;
 
 const AdminNavbar = ({ admin, setAdminAuthenticated, setAdmin }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchAdminProfile = async () => {
+    const loadProfile = async () => {
       try {
         const token = localStorage.getItem('adminToken');
         if (!token) {
@@ -20,55 +19,44 @@ const AdminNavbar = ({ admin, setAdminAuthenticated, setAdmin }) => {
           return;
         }
 
-        const response = await axios.get(PROFILE_API_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setAdmin(response.data); // Set fetched admin data
+        const adminData = await fetchAdminProfile();
+        setAdmin(adminData);
       } catch (error) {
         console.error('Error fetching admin profile:', error);
-        if (error.response && error.response.status === 401) {
-          // If unauthorized, log out and navigate to the admin login page
-          handleLogout();
-        }
+        handleLogout(); // If token is invalid or expired
       }
     };
 
     if (!admin) {
-      fetchAdminProfile(); // Fetch admin profile only if not already set
+      loadProfile();
     }
   }, [admin, setAdmin, setAdminAuthenticated, navigate]);
 
   const handleLogout = () => {
-    // Clear the admin token from localStorage
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminId');
-    setAdminAuthenticated(false); // Update authentication state
+    setAdminAuthenticated(false);
     setAdmin(null);
     navigate('/admin');
   };
 
   return (
     <AppBar position="static" sx={{ backgroundColor: 'primary.dark' }}>
-        <Toolbar>
-        {/* Logo or Title on the left */}
+      <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           Admin Portal
         </Typography>
 
-        {/* Avatar and Logout Button on the right */}
         <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
-          {/* Admin Avatar */}
           <Avatar
             alt={admin?.name || 'Admin'}
             src={admin?.avatarUrl ? `${API_URL}${admin.avatarUrl}` : '/default-avatar.png'}
             sx={{ mr: 2, bgcolor: 'secondary.main', width: 40, height: 40 }}
           />
 
-          {/* Logout Button */}
           <Button
             color="inherit"
-            onClick={handleLogout}  // Use the new handleLogout function
+            onClick={handleLogout}
             startIcon={<LogoutIcon />}
             sx={{ textTransform: 'none' }}
           >

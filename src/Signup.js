@@ -4,8 +4,8 @@ import { signup } from './services/userService';
 import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl, Typography, IconButton, InputAdornment, Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
-const categories = [
-  'Music', 'Art', 'Games', 'Media', 'Dance', 'Fashion', 'Kids Fun'
+const category = [
+  'Creative', 'Host', 'Planner', 'Vendor'
 ];
 
 const Signup = () => {
@@ -140,7 +140,7 @@ const Signup = () => {
             error={!!errors.category}
           >
             <MenuItem value=""><em>Select Category</em></MenuItem>
-            {categories.map((category) => (
+            {category.map((category) => (
               <MenuItem key={category} value={category}>{category}</MenuItem>
             ))}
           </Select>
