@@ -199,14 +199,10 @@ const Profile = ({ token }) => {
                   label="Category"
                 >
                   <MenuItem value="">Select Category</MenuItem>
-                  <MenuItem value="Music">Music</MenuItem>
-                  <MenuItem value="Art">Art</MenuItem>
-                  <MenuItem value="Games">Games</MenuItem>
-                  <MenuItem value="Movies">Movies</MenuItem>
-                  <MenuItem value="Media">Media</MenuItem>
-                  <MenuItem value="Dance">Dance</MenuItem>
-                  <MenuItem value="Fashion">Fashion</MenuItem>
-                  <MenuItem value="Kids Fun">Kids Fun</MenuItem>
+                  <MenuItem value="Cretive Artist">Creative Artist</MenuItem>
+                  <MenuItem value="Event Host">Event Host</MenuItem>
+                  <MenuItem value="Event Planner">Event Planner</MenuItem>
+                  <MenuItem value="Vendor Services">Vendor services</MenuItem>
                 </Select>
               </FormControl>
               <Button variant="contained" color="primary" type="submit" fullWidth sx={{ mt: 2 }}>

@@ -38,9 +38,8 @@ form .form-buttons {
 .events {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center; /* Center horizontally */
-  gap: 20px; /* Spacing between cards */
-  padding: 20px;
+  justify-content: center;
+  gap: 20px;
 }
 
 .card {
@@ -48,10 +47,12 @@ form .form-buttons {
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 16px;
+  width: 23%;
   width: 300px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  text-align: left;
-  transition: transform 0.2s;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover {
@@ -60,9 +61,9 @@ form .form-buttons {
 
 .card img {
   width: 100%;
-  height: 180px;
+  height: 150px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 5px;
   margin-bottom: 10px;
 }
 

@@ -6,7 +6,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const category = [
-  'Creative', 'Host', 'Planner', 'Vendor'
+  'Creative Artist', 'Event Host', 'Event Planner', 'Vendor Services'
 ];
 
 const Signup = () => {
