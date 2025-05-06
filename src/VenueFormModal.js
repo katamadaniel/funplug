@@ -59,8 +59,8 @@ const VenueFormModal = ({ isOpen, onRequestClose, onSubmit, initialVenue }) => {
         <input type="number" name="capacity" placeholder="Capacity" value={venue.capacity} onChange={handleInputChange} />
         <select name="bookingStatus" value={venue.bookingStatus} onChange={handleInputChange}>
           <option value="">Select Status</option>
-          <option value="available">Available</option>
-          <option value="booked">Booked</option>
+          <option value="open">Open</option>
+          <option value="closed">Closed</option>
         </select>
         <input type="text" name="bookingDuration" placeholder="Booking Duration" value={venue.bookingDuration} onChange={handleInputChange} />
         <input type="number" name="charges" placeholder="Charges per hour" value={venue.charges} onChange={handleInputChange} />

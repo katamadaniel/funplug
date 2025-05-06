@@ -22,6 +22,23 @@ const EventModal = ({ event, user, onClose, onBuyTicket }) => {
     setIsFollowFormOpen(!isFollowFormOpen);
   };
 
+  // Determine sold-out status using ticket remaining values
+  const isRegularSoldOut = event.regularTicketsRemaining <= 0;
+  const isVipSoldOut = event.vipTicketsRemaining <= 0;
+  const isVvipSoldOut = event.vvipTicketsRemaining <= 0;
+  const isFreeSoldOut = event.freeTicketsRemaining <= 0;
+
+  // Check if all available ticket types are sold out
+  const allPaidOptionsSoldOut =
+    event.ticketType === 'paid' &&
+    (!event.regularPrice || isRegularSoldOut) &&
+    (!event.vipPrice || isVipSoldOut) &&
+    (!event.vvipPrice || isVvipSoldOut);
+
+  const isBuyDisabled =
+    (event.ticketType === 'paid' && allPaidOptionsSoldOut) ||
+    (event.ticketType === 'free' && isFreeSoldOut);
+
   const handleFollowSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -152,33 +169,54 @@ const EventModal = ({ event, user, onClose, onBuyTicket }) => {
         {/* Tickets */}
         <div className="ticket-selection">
           <h3>Tickets</h3>
-          {event.regularPrice > 0 && (
-            <div className="ticket-option">
-              <span>Regular</span>
-              <span>Ksh.{event.regularPrice}</span>
-            </div>
+
+          {event.ticketType === 'paid' && (
+            <>
+              {event.regularPrice && (
+                <div className="ticket-option">
+                  <span>Regular</span>
+                  <span className={isRegularSoldOut ? 'sold-out' : ''}>
+                    {isRegularSoldOut ? 'Sold Out' : `Ksh.${event.regularPrice}`}
+                  </span>
+                </div>
+              )}
+              {event.vipPrice && (
+                <div className="ticket-option">
+                  <span>VIP</span>
+                  <span className={isVipSoldOut ? 'sold-out' : ''}>
+                    {isVipSoldOut ? 'Sold Out' : `Ksh.${event.vipPrice}`}
+                  </span>
+                </div>
+              )}
+              {event.vvipPrice && (
+                <div className="ticket-option">
+                  <span>VVIP</span>
+                  <span className={isVvipSoldOut ? 'sold-out' : ''}>
+                    {isVvipSoldOut ? 'Sold Out' : `Ksh.${event.vvipPrice}`}
+                  </span>
+                </div>
+              )}
+            </>
           )}
-          {event.vipPrice > 0 && (
+
+          {event.ticketType === 'free' && (
             <div className="ticket-option">
-              <span>VIP</span>
-              <span>Ksh.{event.vipPrice}</span>
-            </div>
-          )}
-          {event.vvipPrice > 0 && (
-            <div className="ticket-option">
-              <span>VVIP</span>
-              <span>Ksh.{event.vvipPrice}</span>
-            </div>
-          )}
-          {event.regularPrice === 0 && (
-            <div className="ticket-option">
-              <span>Regular</span>
-              <span>Free</span>
+              <span>Free Ticket</span>
+              <span className={isFreeSoldOut ? 'sold-out' : ''}>
+                {isFreeSoldOut ? 'Sold Out' : 'Free'}
+              </span>
             </div>
           )}
         </div>
 
-        <button className="buy-ticket-button" onClick={onBuyTicket}>Buy Ticket</button>
+        <button
+          className="buy-ticket-button"
+          onClick={onBuyTicket}
+          disabled={isBuyDisabled}
+        >
+          {isBuyDisabled ? 'All Tickets Sold Out' : 'Buy Ticket'}
+        </button>
+
       </div>
     </div>
   );

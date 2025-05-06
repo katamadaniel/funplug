@@ -35,46 +35,47 @@ form .form-buttons {
   justify-content: space-between;
 }
 
-.events-container {
+.events {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
+  justify-content: center; /* Center horizontally */
+  gap: 20px; /* Spacing between cards */
+  padding: 20px;
 }
 
-.event-card {
+.card {
   background-color: #fff;
   border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 20px;
-  width: 23%;
-  max-width: 300px;
-  text-align: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 12px;
+  padding: 16px;
+  width: 300px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  transition: transform 0.2s;
 }
 
-.event-card img {
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card img {
   width: 100%;
-  height: 150px;
-  border-radius: 5px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
 }
 
-.event-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.event-card h3 {
+.card h3 {
   margin: 10px 0;
   font-size: 1.2em;
 }
 
-.event-card p {
+.card p {
   margin: 5px 0;
 }
 
-.event-card button {
+.card button {
   margin-top: 10px;
   padding: 10px 15px;
   border: none;
@@ -84,7 +85,7 @@ form .form-buttons {
   border-radius: 3px;
 }
 
-.event-card button:hover {
+.card button:hover {
   background-color: #0056b3;
 }
 
@@ -174,7 +175,7 @@ button#add:hover{
 }
 
 @media (max-width: 768px) {
-  .event-card {
+  .card {
     width: 90%;
   }
 

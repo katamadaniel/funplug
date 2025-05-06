@@ -144,7 +144,7 @@ const EventPage = ({ token }) => {
       }
       fetchEvents();
       closeModal();
-    } catch (error) {
+    } catch (error) { 
       console.error('Error saving event:', error.message);
       setStatusMessage('Error saving event');
     }
@@ -361,9 +361,9 @@ const EventPage = ({ token }) => {
           ) : (
             <>
           <h2>Upcoming Events</h2>
-          <div className="events-container">
+          <div className="events">
             {upcomingEvents.map((event) => (
-              <div key={event._id} className="event-card">
+              <div key={event._id} className="card">
                 <img
                   src={`${IMAGE_BASE_URL}/events/${event.image}`}
                   alt={event.title}

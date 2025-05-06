@@ -188,6 +188,12 @@
   background-color: #0056b3;
 }
 
+.sold-out {
+  color: red;
+  font-weight: bold;
+  font-style: italic;
+}
+
 /* Mobile Responsive Styles */
 @media (max-width: 600px) {
   .modal-content {

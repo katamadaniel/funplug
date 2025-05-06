@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { signup } from './services/userService';
 import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl, Typography, IconButton, InputAdornment, Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const category = [
   'Creative', 'Host', 'Planner', 'Vendor'
@@ -21,6 +22,7 @@ const Signup = () => {
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -62,6 +64,7 @@ const Signup = () => {
     } else {
       setErrors({});
       setError('');
+      setLoading(true);
       try {
         await signup(formData);
         alert('User signed up successfully');
@@ -69,6 +72,8 @@ const Signup = () => {
       } catch (error) {
         console.error('Error signing up:', error);
         setError(error.response?.data?.message || 'Error signing up');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -171,7 +176,16 @@ const Signup = () => {
           label={<Typography> I agree to the <span style={{ color: 'blue', cursor: 'pointer' }} onClick={() => setTermsOpen(true)}>Terms and Conditions</span></Typography>}
         />
         {error.agreedToTerms && <Typography color="error">{error.agreedToTerms}</Typography>}
-        <Button fullWidth variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>Signup</Button>
+        <Button
+        type="submit"
+        variant="contained"
+        color="primary"
+        fullWidth
+        sx={{ mt: 2 }}
+        disabled={loading}
+        >
+          {loading ? <i className="fas fa-spinner fa-spin"></i> : 'Signup'}
+        </Button>
       </form>
       <Dialog open={termsOpen} onClose={() => setTermsOpen(false)}>
         <DialogTitle>Terms and Conditions</DialogTitle>

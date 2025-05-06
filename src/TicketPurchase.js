@@ -146,21 +146,20 @@ const TicketPurchase = ({ event, onClose }) => {
             }
           >
             <option value="">Select Ticket Type</option>
-            {event.ticketType === 'free' ? (
-              <option value="Free" disabled={event.freeTicketsRemaining <= 0}>
-                Free {event.freeTicketsRemaining <= 0 && '(Sold Out)'}
-              </option>
-            ) : (
+            {event.ticketType === 'free' && event.freeTicketsRemaining > 0 && (
+              <option value="Free">Free</option>
+            )}
+            {event.ticketType !== 'free' && (
               <>
-                <option value="Regular" disabled={event.regularTicketsRemaining <= 0}>
-                  Regular - Ksh.{event.regularPrice} {event.regularTicketsRemaining <= 0 && '(Sold Out)'}
-                </option>
-                <option value="VIP" disabled={event.vipTicketsRemaining <= 0}>
-                  VIP - Ksh.{event.vipPrice} {event.vipTicketsRemaining <= 0 && '(Sold Out)'}
-                </option>
-                <option value="VVIP" disabled={event.vvipTicketsRemaining <= 0}>
-                  VVIP - Ksh.{event.vvipPrice} {event.vvipTicketsRemaining <= 0 && '(Sold Out)'}
-                </option>
+                {event.regularTicketsRemaining > 0 && (
+                  <option value="Regular">Regular - Ksh.{event.regularPrice}</option>
+                )}
+                {event.vipTicketsRemaining > 0 && (
+                  <option value="VIP">VIP - Ksh.{event.vipPrice}</option>
+                )}
+                {event.vvipTicketsRemaining > 0 && (
+                  <option value="VVIP">VVIP - Ksh.{event.vvipPrice}</option>
+                )}
               </>
             )}
           </select>

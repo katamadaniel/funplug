@@ -150,10 +150,40 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
           <ImageGallery items={venue.images.map((img) => ({ original: `${IMAGE_BASE_URL}/venues/${img}` }))} />
           <p><strong>Size:</strong> {venue.size} square ft.</p>
           <p><strong>Capacity:</strong> {venue.capacity} people</p>
-          <p><strong>Status:</strong> {venue.bookingStatus}</p>
+          <p>
+            <strong>Status:</strong>{' '}
+            <span
+              style={{
+                padding: '4px 8px',
+                backgroundColor: venue.bookingStatus === 'closed' ? '#f44336' : '#4caf50',
+                color: '#fff',
+                borderRadius: '6px',
+                fontWeight: 'bold',
+                textTransform: 'capitalize'
+              }}
+            >
+              {venue.bookingStatus}
+            </span>
+          </p>
           <p><strong>Duration:</strong> {venue.bookingDuration} hours</p>
           <p><strong>Charges:</strong> Ksh.{venue.charges}/hour</p>
-          <button onClick={onBookVenue}>Book Venue</button>
+
+          <button
+            onClick={onBookVenue}
+            disabled={venue.bookingStatus === 'closed'}
+            style={{
+              backgroundColor: venue.bookingStatus === 'closed' ? '#ccc' : '#1976d2',
+              color: '#fff',
+              padding: '10px 16px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: venue.bookingStatus === 'closed' ? 'not-allowed' : 'pointer',
+              marginTop: '10px',
+              fontWeight: 'bold'
+            }}
+          >
+            Book Venue
+          </button>
         </div>
         </div>
   );
