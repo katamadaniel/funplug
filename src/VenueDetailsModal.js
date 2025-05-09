@@ -13,7 +13,6 @@ import axios from 'axios';
 import './VenueDetailsModal.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
-const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
 
 const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -147,7 +146,10 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
 
           <h2>{venue.name}</h2>
           <p>{venue.location}</p>
-          <ImageGallery items={venue.images.map((img) => ({ original: `${IMAGE_BASE_URL}/venues/${img}` }))} />
+          <ImageGallery 
+                    items={venue.images.map((img) => ({
+                      original: img.url,
+                    }))} />
           <p><strong>Size:</strong> {venue.size} square ft.</p>
           <p><strong>Capacity:</strong> {venue.capacity} people</p>
           <p>

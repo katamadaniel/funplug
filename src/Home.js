@@ -12,7 +12,6 @@ import { CircularProgress } from '@mui/material';
 import './Home.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
-const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
 
 const EVENTS_API_URL = `${API_URL}/api/events`;
 const USERS_API_URL = `${API_URL}/api/users`;
@@ -184,7 +183,14 @@ const Home = () => {
         <div className={`events ${animate}`}>
           {paginatedEvents.map((event) => (
             <div key={event._id} className="card">
-              <img src={`${IMAGE_BASE_URL}/events/${event.image}`} alt={event.title} className="card-image" />
+              <img
+                src={event.image || '/default-event.jpg'}
+                alt={event.title}
+                className="card-image"
+                loading="lazy"
+                style={{ filter: 'blur(0)', transition: 'filter 0.3s ease-in-out' }}
+                onLoad={(e) => (e.target.style.filter = 'none')}
+              />
               <h3 className="event-title">{event.title}</h3>
               <div className="card-content">
                 <p>{event.description}</p>
@@ -212,7 +218,14 @@ const Home = () => {
         <div className={`venues ${animate}`}>
           {paginatedVenues.map((venue) => (
             <div key={venue._id} className="venue-card">
-              <img src={`${IMAGE_BASE_URL}/venues/${venue.images[0]}`} alt={venue.name} className="venue-image" />
+              <img
+              src={venue.images[0]?.url || '/default-venue.jpg'}
+              alt={venue.name}
+              className="venue-image"
+              loading="lazy"
+              style={{ filter: 'blur(0)', transition: 'filter 0.3s ease-in-out' }}
+              onLoad={(e) => (e.target.style.filter = 'none')}
+            />
               <div className="venue-info">
                 <h3>{venue.name}</h3>
                 <p>{venue.location}</p>

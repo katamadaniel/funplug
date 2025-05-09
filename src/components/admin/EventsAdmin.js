@@ -37,10 +37,10 @@ const EventsAdmin = () => {
   const [usersMap, setUsersMap] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredEvents, setFilteredEvents] = useState([]);
-  const [selectedEventPurchases, setSelectedEventPurchases] = useState([]); // Purchases for selected event
-  const [openModal, setOpenModal] = useState(false); // Modal state for report
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // Delete dialog state
-  const [eventToDelete, setEventToDelete] = useState(null); // Event to delete
+  const [selectedEventPurchases, setSelectedEventPurchases] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,7 +49,7 @@ const EventsAdmin = () => {
       navigate('/admin-login');
       return;
     } else {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Set token for requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     fetchUsers();
     fetchEvents();
     fetchEventsWithSales();
@@ -116,7 +116,7 @@ const EventsAdmin = () => {
       setEvents(mergedEvents);
       setUpcomingEvents(upcoming);
       setPastEvents(past);
-      setFilteredEvents(mergedEvents); // Initialize filtered events with all events
+      setFilteredEvents(mergedEvents);
     } catch (error) {
       console.error('Failed to fetch events or sales:', error);
     }
@@ -151,8 +151,8 @@ const EventsAdmin = () => {
 
   // Handle delete event button click
   const handleDelete = (eventId) => {
-    setEventToDelete(eventId); // Set the event to delete
-    setDeleteDialogOpen(true); // Open delete confirmation dialog
+    setEventToDelete(eventId);
+    setDeleteDialogOpen(true);
   };
 
   // Confirm deletion
@@ -160,7 +160,7 @@ const EventsAdmin = () => {
     if (!eventToDelete) return;
 
     try {
-      const token = localStorage.getItem('token'); // Assume token is stored in localStorage
+      const token = localStorage.getItem('token');
       // Delete event and its associated ticket purchases
       await axios.delete(`${EVENTS_API_URL}/${eventToDelete}`, {
         headers: {
@@ -169,10 +169,10 @@ const EventsAdmin = () => {
       });
 
       console.log('Event and its purchases deleted successfully');
-      setEvents(events.filter((event) => event._id !== eventToDelete)); // Update events list
-      setFilteredEvents(filteredEvents.filter((event) => event._id !== eventToDelete)); // Update filtered list
-      setDeleteDialogOpen(false); // Close dialog
-      setEventToDelete(null); // Reset state
+      setEvents(events.filter((event) => event._id !== eventToDelete));
+      setFilteredEvents(filteredEvents.filter((event) => event._id !== eventToDelete));
+      setDeleteDialogOpen(false);
+      setEventToDelete(null);
     } catch (error) {
       console.error('Failed to delete event and its purchases:', error);
     }

@@ -56,9 +56,13 @@
 }
 
 .status-message {
+  color: green;
+  margin-bottom: 1rem;
+}
+
+.error-message {
   color: red;
-  text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
 }
 
 .venue-list, .venue-bookings  {

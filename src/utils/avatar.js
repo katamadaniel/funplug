@@ -1,20 +1,19 @@
 const DEFAULT_AVATAR_URL = process.env.REACT_APP_AVATAR_URL;
-const API_URL = process.env.REACT_APP_API_URL;
 
 export const getAvatarUrl = (profile) => {
   if (!profile) {
     return DEFAULT_AVATAR_URL;
   }
 
-  // Check for both user and admin avatar fields
-  if (profile.avatar) {
-    return `${API_URL}${profile.avatar}`;
+  // Cloudinary URLs are complete, so use as-is if present
+  if (profile.avatar && profile.avatar.startsWith('http')) {
+    return profile.avatar;
   }
 
-  if (profile.avatarUrl) {
-    return `${API_URL}${profile.avatarUrl}`;
+  if (profile.avatarUrl && profile.avatarUrl.startsWith('http')) {
+    return profile.avatarUrl;
   }
 
-  // Default fallback
+  // Fallback to default
   return DEFAULT_AVATAR_URL;
 };

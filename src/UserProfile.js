@@ -8,7 +8,6 @@ import TicketPurchase from './TicketPurchase';
 import './UserProfile.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
-const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -139,8 +138,6 @@ const UserProfile = () => {
 
         <div className="user-info">
           <p><strong>Category:</strong> {user.category}</p>
-          <p><strong>Gender:</strong> {user.gender}</p>
-          <p><strong>Email:</strong> {user.email}</p>
         </div>
       </div>
 
@@ -150,7 +147,7 @@ const UserProfile = () => {
         {upcomingEvents.length > 0 ? (
           upcomingEvents.map(event => (
             <div key={event._id} className="user-event-card">
-              <img src={`${IMAGE_BASE_URL}/events/${event.image}`} alt={event.title} className="event-image" />
+              <img src={event.image} alt={event.title} className="event-image" />
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <p><strong>Venue:</strong> {event.venue}</p>
@@ -172,7 +169,7 @@ const UserProfile = () => {
         {pastEvents.length > 0 ? (
           pastEvents.map(event => (
             <div key={event._id} className="user-event-card">
-              <img src={`${IMAGE_BASE_URL}/events/${event.image}`} alt={event.title} className="event-image" />
+              <img src={event.image} alt={event.title} className="event-image" />
               <h3>{event.title}</h3>
               <p>{event.description}</p>
               <p><strong>Venue:</strong> {event.venue}</p>

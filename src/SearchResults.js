@@ -12,7 +12,6 @@ import './SearchResults.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const USERS_API_URL = `${API_URL}/api/users`;
-const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
 
 const SearchResults = ({ results, onViewProfile }) => {
   const [users, setUsers] = useState([]);
@@ -124,7 +123,7 @@ const SearchResults = ({ results, onViewProfile }) => {
               </>
             ) : result.type === 'event' ? (
               <>
-                <img src={`${IMAGE_BASE_URL}/events/${result.image}`} alt={result.title} className="result-image" />
+                <img src={result.image} alt={result.title} className="result-image" />
                 <h3>{result.title}</h3>
                 <p>{result.description}</p>
                 <p><strong>Venue:</strong> {result.venue}</p>
@@ -136,7 +135,13 @@ const SearchResults = ({ results, onViewProfile }) => {
               </>
             ) : result.type === 'venue' ? (
               <>
-                <img src={`${IMAGE_BASE_URL}/venues/${result.images[0]}`} alt={result.name} className="venue-image" />
+                <img src={result.images[0]?.url || '/default-venue.jpg'}
+                 alt={result.name}
+                 className="venue-image"
+                 loading="lazy"
+                 style={{ filter: 'blur(0)', transition: 'filter 0.3s ease-in-out' }}
+                 onLoad={(e) => (e.target.style.filter = 'none')}
+                />
                 <div className="venue-info">
                   <h3>{result.name}</h3>
                   <p>{result.location}</p>

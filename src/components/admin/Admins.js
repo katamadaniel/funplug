@@ -15,7 +15,8 @@ import {
 import {
   fetchAllAdmins,
   createAdmin,
-  deleteAdminById
+  deleteAdminById,
+  fetchAdminProfile
 } from '../../services/adminService';
 
 const Admins = () => {
@@ -28,12 +29,17 @@ const Admins = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin-login');
-    } else {
-      fetchAdmins();
-    }
+    const initialize = async () => {
+      try {
+        await fetchAdminProfile();
+        await fetchAdmins();
+      } catch (err) {
+        console.error('Error fetching admin profile:', err);
+        navigate('/admin');
+      }
+    };
+
+    initialize();
   }, [navigate]);
 
   const fetchAdmins = async () => {

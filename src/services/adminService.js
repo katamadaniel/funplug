@@ -5,6 +5,9 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL;
 const ADMIN_API_URL = `${API_URL}/api/admins`;
 const PROFILE_API_URL = `${API_URL}/api/admins/profile`;
+
+const getToken = () => localStorage.getItem('adminToken');
+
 /**
  * Log in an admin user.
  * @param {string} email - Admin's email
@@ -41,18 +44,13 @@ export const loginAdmin = async (email, password) => {
  * @returns {Promise<Object>} The admin's profile data.
  */
 export const fetchAdminProfile = async () => {
-  const token = localStorage.getItem('adminToken');
-  if (!token) throw new Error('Admin token not found.');
-
   try {
-    const response = await axios.get(`${ADMIN_API_URL}/profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await axios.get(PROFILE_API_URL, {
+      headers: { Authorization: `Bearer ${getToken()}` },
     });
     return response.data;
   } catch (error) {
-    throw error.response ? error.response.data : new Error('Failed to fetch admin profile.');
+    throw error.response?.data || new Error('Failed to fetch profile.');
   }
 };
 
@@ -85,15 +83,6 @@ export const deleteAdminById = async (adminId) => {
   await axios.delete(`${ADMIN_API_URL}/${adminId}`);
 };
 
-const getToken = () => localStorage.getItem('adminToken');
-
-const getProfile = async () => {
-  const response = await axios.get(PROFILE_API_URL, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  return response.data;
-};
-
 const updateProfile = async (data) => {
   const response = await axios.put(PROFILE_API_URL, data, {
     headers: { Authorization: `Bearer ${getToken()}` },
@@ -108,15 +97,22 @@ const uploadAvatar = async (file) => {
   const response = await axios.post(`${PROFILE_API_URL}/avatar`, formData, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
-      'Content-Type': 'multipart/form-data',
     },
   });
 
   return response.data;
 };
 
+const removeAvatar = async () => {
+  const response = await axios.delete(`${PROFILE_API_URL}/avatar`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  return response.data;
+};
+
 export default {
-  getProfile,
+  fetchAdminProfile,
   updateProfile,
   uploadAvatar,
+  removeAvatar,
 }

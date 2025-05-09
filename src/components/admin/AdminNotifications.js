@@ -69,7 +69,7 @@ const AdminNotifications = () => {
       await axios.put(`${API_URL}/api/report/problem/${reportId}`, {
         resolved: !currentStatus,
       });
-      fetchProblemReports(); // Refresh after update
+      fetchProblemReports();
     } catch (error) {
       console.error('Error updating report status:', error);
     }
@@ -82,8 +82,8 @@ const AdminNotifications = () => {
         userId: selectedUserId,
         message: adminMessage,
       });
-      fetchSupportChats(); // Refresh after sending a message
-      setAdminMessage(''); // Clear input field
+      fetchSupportChats();
+      setAdminMessage('');
     } catch (error) {
       console.error('Error sending admin message:', error);
     }

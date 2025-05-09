@@ -8,7 +8,6 @@ import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import './CategoryDetails.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
-const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
 const EVENTS_API_URL = `${API_URL}/api/events`;
 const USERS_API_URL = `${API_URL}/api/users`;
 const DEFAULT_AVATAR_URL = process.env.REACT_APP_AVATAR_URL;
@@ -88,7 +87,7 @@ const CategoryDetails = () => {
             {events.map(event => (
               <div key={event._id} className="event-card">
                 <img
-                  src={event.image ? `${IMAGE_BASE_URL}/events/${event.image}` : '/default-event-image.png'}
+                  src={event.image || '/default-event.jpg'}
                   alt={event.title}
                   className="event-image"
                 />

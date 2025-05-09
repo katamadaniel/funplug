@@ -18,8 +18,6 @@ import { fetchMyVenues, createVenue, updateVenue, deleteVenue, fetchVenueBooking
 import VenueFormModal from './VenueFormModal';
 import './VenuesPage.css';
 
-const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
-
 const VenuesPage = ({ token }) => {
   const [venues, setVenues] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -165,7 +163,9 @@ const VenuesPage = ({ token }) => {
               <div key={venue._id} className="venue-card">
                 <div className="image-gallery-container">
                   <ImageGallery
-                    items={venue.images.map((img) => ({ original: `${IMAGE_BASE_URL}/venues/${img}` }))}
+                    items={venue.images.map((img) => ({
+                      original: img.url,
+                    }))}
                     showFullscreenButton={true}
                     showPlayButton={false}
                     showThumbnails={false}

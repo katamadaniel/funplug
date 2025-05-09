@@ -3,8 +3,6 @@ import { Box, Typography, TextField, Button, Avatar, IconButton, Grid } from '@m
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import adminService from '../../services/adminService';
 
-const API_URL = process.env.REACT_APP_API_URL;
-
 const AdminSettings = ({ initialAdmin }) => {
   const [admin, setAdmin] = useState(initialAdmin || null);
   const [formData, setFormData] = useState({
@@ -12,13 +10,15 @@ const AdminSettings = ({ initialAdmin }) => {
     password: '',
   });
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await adminService.getProfile();
+        const data = await adminService.fetchAdminProfile();
         setAdmin(data);
         setFormData((prev) => ({ ...prev, name: data.name }));
+        setPreviewUrl(data.avatarUrl); // Use Cloudinary URL directly
       } catch (error) {
         console.error('Error fetching admin profile:', error);
         if (error.response?.status === 401) {
@@ -40,7 +40,7 @@ const AdminSettings = ({ initialAdmin }) => {
     if (file) {
       setSelectedFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => setAdmin((prev) => ({ ...prev, avatarUrl: reader.result }));
+      reader.onloadend = () => setPreviewUrl(reader.result);
       reader.readAsDataURL(file);
     }
   };
@@ -53,17 +53,33 @@ const AdminSettings = ({ initialAdmin }) => {
       await adminService.updateProfile(updateData);
 
       if (selectedFile) {
-        await adminService.uploadAvatar(selectedFile);
+        const formData = new FormData();
+        formData.append('avatar', selectedFile);
+        await adminService.uploadAvatar(formData);
       }
 
-      const updated = await adminService.getProfile();
+      const updated = await adminService.fetchAdminProfile();
       setAdmin(updated);
+      setPreviewUrl(updated.avatarUrl);
       alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('Failed to update profile. Please try again.');
     }
   };
+
+  const handleRemoveAvatar = async () => {
+  if (!window.confirm('Are you sure you want to remove your avatar?')) return;
+  try {
+    await adminService.removeAvatar();
+    const updated = await adminService.fetchAdminProfile();
+    setAdmin(updated);
+    alert('Avatar removed successfully!');
+  } catch (error) {
+    console.error('Error removing avatar:', error);
+    alert('Failed to remove avatar.');
+  }
+};
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
@@ -101,7 +117,7 @@ const AdminSettings = ({ initialAdmin }) => {
           <Typography variant="subtitle1" mb={1}>Avatar</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Avatar
-              src={admin?.avatarUrl ? `${API_URL}${admin.avatarUrl}` : '/default-avatar.png'}
+              src={previewUrl || '/default-avatar.png'}
               alt="Admin Avatar"
               sx={{ width: { xs: 70, md: 100 }, height: { xs: 70, md: 100 }, mb: 2 }}
             />
@@ -118,6 +134,14 @@ const AdminSettings = ({ initialAdmin }) => {
               </IconButton>
             </label>
           </Box>
+          <Button
+            color="error"
+            variant="outlined"
+            onClick={handleRemoveAvatar}
+            sx={{ mt: 1 }}
+          >
+            Remove Avatar
+          </Button>
         </Grid>
       </Grid>
 

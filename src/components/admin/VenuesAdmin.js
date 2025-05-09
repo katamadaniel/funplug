@@ -130,8 +130,8 @@ const VenuesAdmin = () => {
 
   // Handle delete venue button click
   const handleDelete = (venueId) => {
-    setVenueToDelete(venueId); // Set the venue to delete
-    setDeleteDialogOpen(true); // Open delete confirmation dialog
+    setVenueToDelete(venueId);
+    setDeleteDialogOpen(true);
   };
 
   // Confirm deletion
@@ -139,7 +139,7 @@ const VenuesAdmin = () => {
     if (!venueToDelete) return;
 
     try {
-      const token = localStorage.getItem('token'); // Assume token is stored in localStorage
+      const token = localStorage.getItem('token');
       const response = await axios.delete(`${VENUES_API_URL}/${venueToDelete}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -147,10 +147,10 @@ const VenuesAdmin = () => {
       });
 
       console.log('Venue deleted successfully:', response.data);
-      setVenues(venues.filter((venue) => venue._id !== venueToDelete)); // Update venue list
-      setFilteredVenues(filteredVenues.filter((venue) => venue._id !== venueToDelete)); // Update filtered list
-      setDeleteDialogOpen(false); // Close dialog
-      setVenueToDelete(null); // Reset state
+      setVenues(venues.filter((venue) => venue._id !== venueToDelete));
+      setFilteredVenues(filteredVenues.filter((venue) => venue._id !== venueToDelete));
+      setDeleteDialogOpen(false);
+      setVenueToDelete(null);
     } catch (error) {
       console.error('Failed to delete venue:', error);
     }

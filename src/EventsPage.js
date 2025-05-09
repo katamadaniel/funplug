@@ -21,8 +21,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-const IMAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL;
-
 const EventPage = ({ token }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -365,7 +363,7 @@ const EventPage = ({ token }) => {
             {upcomingEvents.map((event) => (
               <div key={event._id} className="card">
                 <img
-                  src={`${IMAGE_BASE_URL}/events/${event.image}`}
+                  src={event.image}
                   alt={event.title}
                 />
                 <h3>{event.title}</h3>
