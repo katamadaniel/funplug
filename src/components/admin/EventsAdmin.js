@@ -22,13 +22,10 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
-import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL;
-const EVENTS_API_URL = `${API_URL}/api/events`;
-const USERS_API_URL = `${API_URL}/api/users`;
-const TICKET_SALES_API_URL = `${API_URL}/api/events/all-ticket-sales`;
-const TICKET_PURCHASES_API_URL = `${API_URL}/api/ticket_purchases`;
+import {getAllUsers} from '../../services/userService';
+import {fetchEvents, getAllTicketSales, purchaseByEventId, deleteEventById} from '../../services/eventService';
+import {fetchAdminProfile} from '../../services/adminService';
 
 const EventsAdmin = () => {
   const [events, setEvents] = useState([]);
@@ -47,52 +44,39 @@ const EventsAdmin = () => {
     const token = localStorage.getItem('adminToken');
     if (!token) {
       navigate('/admin-login');
-      return;
     } else {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    fetchUsers();
-    fetchEvents();
-    fetchEventsWithSales();
+      fetchInitialData();
     }
   }, [navigate]);
 
+  const fetchInitialData = async () => {
+    try {
+      await fetchAdminProfile();
+      await fetchUsers();
+      await fetchEventsWithSales();
+    } catch (error) {
+      console.error('Initialization failed:', error);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(USERS_API_URL);
-      const users = response.data;
-
-      // Create a mapping of userId to username
-      const userMapping = {};
+      const users = await getAllUsers();
+      const mapping = {};
       users.forEach((user) => {
-        userMapping[user._id] = user.username;
+        mapping[user._id] = user.username;
       });
-
-      setUsersMap(userMapping); // Store the user mapping in state
+      setUsersMap(mapping);
     } catch (error) {
       console.error('Failed to fetch users:', error);
     }
   };
 
-    const fetchEvents = async () => {
-    try {
-      const response = await axios.get(EVENTS_API_URL);
-      setEvents(response.data);
-    } catch (error) {
-      console.error('Failed to fetch events:', error);
-    }
-  };
-
   const fetchEventsWithSales = async () => {
     try {
-      // Fetch events data
-      const eventsResponse = await axios.get(EVENTS_API_URL);
-      const eventsData = eventsResponse.data;
+      const eventsData = await fetchEvents();
+      const salesData = await getAllTicketSales();
 
-      // Fetch ticket sales data
-      const salesResponse = await axios.get(TICKET_SALES_API_URL);
-      const salesData = salesResponse.data;
-
-      // Merge events data with sales data
       const mergedEvents = eventsData.map(event => {
         const salesInfo = salesData.find(sale => sale.eventId === event._id) || {};
         return {
@@ -104,14 +88,9 @@ const EventsAdmin = () => {
         };
       });
 
-      // Separate upcoming and past events
       const currentDate = new Date();
-      const upcoming = mergedEvents.filter(event => new Date(event.date) >= currentDate);
-      const past = mergedEvents.filter(event => new Date(event.date) < currentDate);
-
-      // Sort events by date
-      upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
-      past.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const upcoming = mergedEvents.filter(e => new Date(e.date) >= currentDate).sort((a, b) => new Date(a.date) - new Date(b.date));
+      const past = mergedEvents.filter(e => new Date(e.date) < currentDate).sort((a, b) => new Date(b.date) - new Date(a.date));
 
       setEvents(mergedEvents);
       setUpcomingEvents(upcoming);
@@ -122,7 +101,6 @@ const EventsAdmin = () => {
     }
   };
 
-  // Handle Search Input
   const handleSearch = () => {
     const query = searchQuery.toLowerCase();
     const filtered = events.filter(
@@ -133,44 +111,27 @@ const EventsAdmin = () => {
     setFilteredEvents(filtered);
   };
 
-    // Fetch ticket purchases for a specific event and open the modal
   const handleViewReport = async (eventId) => {
-    if (!eventId) {
-      console.error("Event ID: ", eventId);
-      return;
-    }
-
     try {
-      const response = await axios.get(`${TICKET_PURCHASES_API_URL}?eventId=${eventId}`);
-      setSelectedEventPurchases(response.data); // Set the fetched purchases
-      setOpenModal(true); // Open modal
+      const purchases = await purchaseByEventId(eventId);
+      setSelectedEventPurchases(purchases);
+      setOpenModal(true);
     } catch (error) {
       console.error('Failed to fetch event purchases:', error);
     }
   };
 
-  // Handle delete event button click
   const handleDelete = (eventId) => {
     setEventToDelete(eventId);
     setDeleteDialogOpen(true);
   };
 
-  // Confirm deletion
   const confirmDelete = async () => {
     if (!eventToDelete) return;
-
     try {
-      const token = localStorage.getItem('token');
-      // Delete event and its associated ticket purchases
-      await axios.delete(`${EVENTS_API_URL}/${eventToDelete}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log('Event and its purchases deleted successfully');
-      setEvents(events.filter((event) => event._id !== eventToDelete));
-      setFilteredEvents(filteredEvents.filter((event) => event._id !== eventToDelete));
+      await deleteEventById(eventToDelete);
+      setEvents(prev => prev.filter(e => e._id !== eventToDelete));
+      setFilteredEvents(prev => prev.filter(e => e._id !== eventToDelete));
       setDeleteDialogOpen(false);
       setEventToDelete(null);
     } catch (error) {

@@ -114,3 +114,23 @@ export const deleteVenue = async (id) => {
     throw error;
   }
 };
+
+  //Admin functions
+
+export const getAllVenues = async () => {
+  const response = await axiosInstance.get(VENUES_API_URL);
+  return response.data;
+};
+
+export const deleteVenueById = async (venueId) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await axiosInstance.delete(`${VENUES_API_URL}/${venueId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const getVenueBookingsByVenueId = async (venueId) => {
+  const response = await axiosInstance.get(`${BOOKINGS_API_URL}?venueId=${venueId}`);
+  return response.data;
+};

@@ -22,6 +22,16 @@ export const login = async (formData) => {
   }
 };
 
+export const fetchUsers = async () => {
+  try {
+    const response = await axiosInstance.get(USERS_API_URL);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching venues:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
 export const fetchProfile = async () => {
   try {
     const response = await axiosInstance.get(`${USERS_API_URL}/profile`);
@@ -84,3 +94,30 @@ export const logoutUser = async () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
   };
+
+    //Admin functions
+export const banUser = async (userId) => {
+  return await axiosInstance.put(`${USERS_API_URL}/${userId}/ban`);
+};
+
+export const unbanUser = async (userId) => {
+  return await axiosInstance.put(`${USERS_API_URL}/${userId}/unban`);
+};
+
+export const warnUser = async (userId, message) => {
+  return await axiosInstance.post(`${USERS_API_URL}/${userId}/warn`, { message });
+};
+
+export const resetUserPassword = async (userId, newPassword) => {
+  return await axiosInstance.put(`${USERS_API_URL}/${userId}/reset-password`, { newPassword });
+};
+
+export const getAllUsers = async () => {
+  const response = await axiosInstance.get(`${USERS_API_URL}`);
+  return response.data;
+};
+
+export const getUserById = async (userId) => {
+  const response = await axiosInstance.get(`${USERS_API_URL}/${userId}`);
+  return response.data;
+};

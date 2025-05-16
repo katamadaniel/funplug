@@ -22,13 +22,10 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import axios from 'axios';
 import { VenuesContext } from '../../contexts/VenuesContext';
-
-const API_URL = process.env.REACT_APP_API_URL;
-const VENUES_API_URL = `${API_URL}/api/venues`;
-const USERS_API_URL = `${API_URL}/api/users`;
-const BOOKINGS_API_URL = `${API_URL}/api/venue_bookings`;
+import { fetchAdminProfile } from '../../services/adminService';
+import { getAllUsers, getUserById } from '../../services/userService';
+import { getAllVenues, deleteVenueById, getVenueBookingsByVenueId } from '../../services/venuesService';
 
 const VenuesAdmin = () => {
   const [venues, setVenues] = useState([]);
@@ -47,23 +44,28 @@ const VenuesAdmin = () => {
     if (!token) {
       navigate('/admin-login');
     } else {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Set token for requests
-    fetchUsers();
-    fetchVenues();
+      fetchInitialData();
     }
   }, [navigate]);
 
+  const fetchInitialData = async () => {
+    try {
+      await fetchAdminProfile(); // Optional: Verify admin is valid
+      await fetchUsers();
+      await fetchVenues();
+    } catch (error) {
+      console.error('Initialization failed:', error);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(USERS_API_URL);
-      const users = response.data;
-
-      const userMapping = {};
+      const users = await getAllUsers();
+      const mapping = {};
       users.forEach((user) => {
-        userMapping[user._id] = user.username;
+        mapping[user._id] = user.username;
       });
-
-      setUsersMap(userMapping);
+      setUsersMap(mapping);
     } catch (error) {
       console.error('Failed to fetch users:', error);
     }
@@ -71,22 +73,19 @@ const VenuesAdmin = () => {
 
   const fetchVenues = async () => {
     try {
-      const response = await axios.get(VENUES_API_URL);
-      const venuesData = response.data;
+      const venuesData = await getAllVenues();
+      const updatedVenues = await Promise.all(
+        venuesData.map(async (venue) => {
+          try {
+            const user = await getUserById(venue.userId);
+            return { ...venue, username: user.username };
+          } catch {
+            return { ...venue, username: 'Unknown User' };
+          }
+        })
+      );
 
-      // Fetch usernames for each venue
-      const updatedVenuesData = await Promise.all(venuesData.map(async (venue) => {
-        try {
-          const userResponse = await axios.get(`${USERS_API_URL}/${venue.userId}`);
-          const username = userResponse.data.username; // Assuming the user data contains a `username` field
-          return { ...venue, username };
-        } catch (error) {
-          console.error('Failed to fetch user data:', error);
-          return { ...venue, username: 'Unknown User' };
-        }
-      }));
-
-      const mergedVenuesData = updatedVenuesData.map((venue) => {
+      const enrichedVenues = updatedVenues.map((venue) => {
         const bookingData = mostBookedVenues.find((v) => v._id === venue._id);
         return {
           ...venue,
@@ -95,8 +94,8 @@ const VenuesAdmin = () => {
         };
       });
 
-      setVenues(mergedVenuesData);
-      setFilteredVenues(mergedVenuesData);
+      setVenues(enrichedVenues);
+      setFilteredVenues(enrichedVenues);
     } catch (error) {
       console.error('Failed to fetch venues:', error);
     }
@@ -112,43 +111,26 @@ const VenuesAdmin = () => {
     setFilteredVenues(filtered);
   };
 
-  // Fetch bookings for a specific venue and open the modal
   const handleViewReport = async (venueId) => {
-    if (!venueId) {
-      console.error('Venue ID is missing!');
-      return;
-    }
-
     try {
-      const response = await axios.get(`${BOOKINGS_API_URL}?venueId=${venueId}`);
-      setSelectedVenueBookings(response.data); // Set the fetched bookings
-      setOpenModal(true); // Open modal
+      const bookings = await getVenueBookingsByVenueId(venueId);
+      setSelectedVenueBookings(bookings);
+      setOpenModal(true);
     } catch (error) {
       console.error('Failed to fetch venue bookings:', error);
     }
   };
 
-  // Handle delete venue button click
   const handleDelete = (venueId) => {
     setVenueToDelete(venueId);
     setDeleteDialogOpen(true);
   };
 
-  // Confirm deletion
   const confirmDelete = async () => {
-    if (!venueToDelete) return;
-
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.delete(`${VENUES_API_URL}/${venueToDelete}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log('Venue deleted successfully:', response.data);
-      setVenues(venues.filter((venue) => venue._id !== venueToDelete));
-      setFilteredVenues(filteredVenues.filter((venue) => venue._id !== venueToDelete));
+      await deleteVenueById(venueToDelete);
+      setVenues((prev) => prev.filter((v) => v._id !== venueToDelete));
+      setFilteredVenues((prev) => prev.filter((v) => v._id !== venueToDelete));
       setDeleteDialogOpen(false);
       setVenueToDelete(null);
     } catch (error) {

@@ -26,9 +26,13 @@ import WarningIcon from '@mui/icons-material/Warning';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL;
-const USERS_API_URL = `${API_URL}/api/users`;
+import {
+  fetchUsers as getUsers,
+  banUser,
+  unbanUser,
+  warnUser,
+  resetUserPassword,
+} from '../../services/userService';
 
 const UsersAdmin = () => {
   const [users, setUsers] = useState([]);
@@ -37,8 +41,8 @@ const UsersAdmin = () => {
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [warningDialogOpen, setWarningDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
-  const [warningMessage, setWarningMessage] = useState(''); // State for warning input
-  const [newPassword, setNewPassword] = useState(''); // State for new password input
+  const [warningMessage, setWarningMessage] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,14 +51,14 @@ const UsersAdmin = () => {
       navigate('/admin-login');
     } else {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUsers();
+      loadUsers();
     }
   }, [navigate]);
 
-  const fetchUsers = async () => {
+  const loadUsers = async () => {
     try {
-      const response = await axios.get(USERS_API_URL);
-      setUsers(response.data);
+      const data = await getUsers();
+      setUsers(data);
     } catch (error) {
       console.error('Failed to fetch users:', error);
     }
@@ -62,9 +66,9 @@ const UsersAdmin = () => {
 
   const handleBanUser = async (userId) => {
     try {
-      await axios.put(`${USERS_API_URL}/${userId}/ban`);
+      await banUser(userId);
       alert('User banned successfully');
-      fetchUsers();
+      loadUsers();
     } catch (error) {
       console.error('Error banning user:', error);
       alert('Failed to ban user');
@@ -73,8 +77,8 @@ const UsersAdmin = () => {
 
   const handleUnbanUser = async (userId) => {
     try {
-      await axios.put(`${USERS_API_URL}/${userId}/unban`);
-      fetchUsers();
+      await unbanUser(userId);
+      loadUsers();
     } catch (error) {
       console.error('Failed to unban user:', error);
     }
@@ -82,9 +86,9 @@ const UsersAdmin = () => {
 
   const handleSendWarning = async (userId, message) => {
     try {
-      await axios.post(`${USERS_API_URL}/${userId}/warn`, { message });
+      await warnUser(userId, message);
       alert('User warned successfully');
-      fetchUsers();
+      loadUsers();
     } catch (error) {
       console.error('Error warning user:', error);
       alert('Failed to warn user');
@@ -93,9 +97,9 @@ const UsersAdmin = () => {
 
   const handleResetPassword = async (userId, password) => {
     try {
-      await axios.put(`${USERS_API_URL}/${userId}/reset-password`, { newPassword: password });
+      await resetUserPassword(userId, password);
       alert('Password reset successfully');
-      fetchUsers();
+      loadUsers();
     } catch (error) {
       console.error('Error resetting password:', error);
       alert('Failed to reset password');
