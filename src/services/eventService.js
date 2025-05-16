@@ -114,3 +114,21 @@ export const deleteEvent = async (id) => {
     throw error;
   }
 };
+
+  // Admin functions
+export const getAllTicketSales = async () => {
+  const response = await axiosInstance.get(`${EVENTS_API_URL}/all-ticket-sales`);
+  return response.data;
+};
+
+export const deleteEventById = async (eventId) => {
+    const token = localStorage.getItem('adminToken');
+  const config = { headers: { Authorization: token } };
+  const response = await axiosInstance.delete(`${EVENTS_API_URL}/${eventId}`, config);
+  return response.data;
+};
+
+export const purchaseByEventId = async (eventId) => {
+  const response = await axiosInstance.get(`${TICKET_PURCHASES_API_URL}?eventId=${eventId}`);
+  return response.data;
+};
