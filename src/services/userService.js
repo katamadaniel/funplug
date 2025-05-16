@@ -1,11 +1,10 @@
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 const API_URL = process.env.REACT_APP_API_URL;
 const USERS_API_URL = `${API_URL}/api/users`;
 
-// User related APIs
 export const signup = async (formData) => {
   try {
-    const response = await axios.post(`${USERS_API_URL}/signup`, formData);
+    const response = await axiosInstance.post(`${USERS_API_URL}/signup`, formData);
     return response.data;
   } catch (error) {
     console.error('Error signing up:', error.response ? error.response.data : error.message);
@@ -15,7 +14,7 @@ export const signup = async (formData) => {
 
 export const login = async (formData) => {
   try {
-    const response = await axios.post(`${USERS_API_URL}/login`, formData);
+    const response = await axiosInstance.post(`${USERS_API_URL}/login`, formData);
     return response.data;
   } catch (error) {
     console.error('Error logging in:', error.response ? error.response.data : error.message);
@@ -23,11 +22,9 @@ export const login = async (formData) => {
   }
 };
 
-export const fetchProfile = async (token) => {
+export const fetchProfile = async () => {
   try {
-    const response = await axios.get(`${USERS_API_URL}/profile`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await axiosInstance.get(`${USERS_API_URL}/profile`);
     return response.data;
   } catch (error) {
     console.error('Error fetching user profile:', error.response ? error.response.data : error.message);
@@ -35,12 +32,11 @@ export const fetchProfile = async (token) => {
   }
 };
 
-export const updateProfile = async (formData, token) => {
+export const updateProfile = async (formData) => {
   try {
-    const response = await axios.put(`${USERS_API_URL}/profile`, formData, {
+    const response = await axiosInstance.put(`${USERS_API_URL}/profile`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${token}`,
       },
     });
     return response.data;
@@ -50,42 +46,22 @@ export const updateProfile = async (formData, token) => {
   }
 };
 
-export const logoutUser = async () => {
-  try {
-    localStorage.removeItem('token');
-
-    await fetch(`${USERS_API_URL}/logout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    return Promise.resolve();
-  } catch (error) {
-    console.error('Error logging out:', error);
-    return Promise.reject(error);
-  }
-};
-
 export const resendVerification = async (email) => {
-  const response = await axios.post(`${USERS_API_URL}/resend-verification`, { email });
-  return response.data;
+  try {
+    const response = await axiosInstance.post(`${USERS_API_URL}/resend-verification`, { email });
+    return response.data;
+  } catch (error) {
+    console.error('Error resending verification:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 };
 
 export const changePassword = async ({ currentPassword, newPassword }) => {
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.put(
-      `${USERS_API_URL}/change-password`,
-      { currentPassword, newPassword },
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await axiosInstance.put(`${USERS_API_URL}/change-password`, {
+      currentPassword,
+      newPassword,
+    });
     return response.data;
   } catch (error) {
     console.error('Error changing password:', error.response ? error.response.data : error.message);
@@ -93,11 +69,18 @@ export const changePassword = async ({ currentPassword, newPassword }) => {
   }
 };
 
-export const deleteUser = async (password, token) => {
-  await axios.delete(`${USERS_API_URL}/profile`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    data: { password },
-  });
+export const deleteUser = async (password) => {
+  try {
+    await axiosInstance.delete(`${USERS_API_URL}/profile`, {
+      data: { password },
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 };
+
+export const logoutUser = async () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+  };

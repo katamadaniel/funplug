@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const EVENTS_API_URL = `${API_URL}/api/events`;
@@ -13,7 +13,7 @@ export const createEvent = async (formData) => {
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.post(EVENTS_API_URL, formData, config);
+    const response = await axiosInstance.post(EVENTS_API_URL, formData, config);
     return response.data;
   } catch (error) {
     console.error('Error creating event:', error.response ? error.response.data : error.message);
@@ -23,7 +23,7 @@ export const createEvent = async (formData) => {
 
 export const fetchEvents = async () => {
   try {
-    const response = await axios.get(EVENTS_API_URL);
+    const response = await axiosInstance.get(EVENTS_API_URL);
     return response.data;
   } catch (error) {
     console.error('Error fetching events:', error.response ? error.response.data : error.message);
@@ -39,7 +39,7 @@ export const fetchMyEvents = async (logoutCallback) => {
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.get(`${EVENTS_API_URL}/myevents`, config);
+    const response = await axiosInstance.get(`${EVENTS_API_URL}/myevents`, config);
     return response.data;
   } catch (error) {
     if (error.response && error.response.status === 401) {
@@ -58,7 +58,7 @@ export const fetchAllTicketPurchases = async () => { // Fetch all ticket purchas
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.get(`${TICKET_PURCHASES_API_URL}/purchases`, config);
+    const response = await axiosInstance.get(`${TICKET_PURCHASES_API_URL}/purchases`, config);
     return response.data;
   } catch (error) {
     console.error('Error fetching all ticket purchases:', error.response ? error.response.data : error.message);
@@ -74,7 +74,7 @@ export const fetchTicketPurchases = async (eventId) => { // Fetch ticket purchas
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.get(`${TICKET_PURCHASES_API_URL}?eventId=${eventId}`, config);
+    const response = await axiosInstance.get(`${TICKET_PURCHASES_API_URL}?eventId=${eventId}`, config);
     return response.data;
   } catch (error) {
     console.error('Error fetching ticket purchases:', error.response ? error.response.data : error.message);
@@ -91,7 +91,7 @@ export const updateEvent = async (id, formData) => {
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.put(`${EVENTS_API_URL}/${id}`, formData, config);
+    const response = await axiosInstance.put(`${EVENTS_API_URL}/${id}`, formData, config);
     return response.data;
   } catch (error) {
     console.error('Error updating event:', error.response ? error.response.data : error.message);
@@ -107,7 +107,7 @@ export const deleteEvent = async (id) => {
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.delete(`${EVENTS_API_URL}/${id}`, config);
+    const response = await axiosInstance.delete(`${EVENTS_API_URL}/${id}`, config);
     return response.data;
   } catch (error) {
     console.error('Error deleting event:', error.response ? error.response.data : error.message);

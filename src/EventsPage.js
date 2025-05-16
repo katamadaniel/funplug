@@ -8,7 +8,7 @@ import {
   updateEvent,
   deleteEvent,
   fetchTicketPurchases,
-} from './services/EventService';
+} from './services/eventService';
 import {
   Table,
   TableBody,

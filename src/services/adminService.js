@@ -1,53 +1,40 @@
-// services/adminService.js
-
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const ADMIN_API_URL = `${API_URL}/api/admins`;
-const PROFILE_API_URL = `${API_URL}/api/admins/profile`;
-
-const getToken = () => localStorage.getItem('adminToken');
+const PROFILE_API_URL = `${ADMIN_API_URL}/profile`;
 
 /**
  * Log in an admin user.
- * @param {string} email - Admin's email
- * @param {string} password - Admin's password
- * @returns {Promise<Object>} The response containing the token and admin data.
  */
 export const loginAdmin = async (email, password) => {
   try {
-    const response = await axios.post(`${ADMIN_API_URL}/login`, { email, password });
-    // Store the token in localStorage
+    const response = await axiosInstance.post(`${ADMIN_API_URL}/login`, { email, password });
+
     if (response.data.token) {
       localStorage.setItem('adminToken', response.data.token);
     }
+
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : new Error('Admin login failed.');
   }
 };
 
- /**
-  * Register a new admin user.
- * @param {string} name - Admin's name.
- * @param {string} email - Admin's email.
- * @param {string} password - Admin's password.
- * @returns {Promise<Object>} The response from the registration request.
+/**
+ * Register a new admin user.
  */
- export const registerAdmin = async (name, email, password) => {
-  const response = await axios.post(`${ADMIN_API_URL}/register`, { name, email, password });
+export const registerAdmin = async (name, email, password) => {
+  const response = await axiosInstance.post(`${ADMIN_API_URL}/register`, { name, email, password });
   return response.data;
 };
 
 /**
  * Fetch the profile of the currently logged-in admin.
- * @returns {Promise<Object>} The admin's profile data.
  */
 export const fetchAdminProfile = async () => {
   try {
-    const response = await axios.get(PROFILE_API_URL, {
-      headers: { Authorization: `Bearer ${getToken()}` },
-    });
+    const response = await axiosInstance.get(PROFILE_API_URL);
     return response.data;
   } catch (error) {
     throw error.response?.data || new Error('Failed to fetch profile.');
@@ -63,50 +50,45 @@ export const logoutAdmin = () => {
 
 /**
  * Check if an admin is currently authenticated.
- * @returns {boolean} Whether the admin token is present in localStorage.
  */
 export const isAdminAuthenticated = () => {
   return !!localStorage.getItem('adminToken');
 };
 
 export const fetchAllAdmins = async () => {
-  const response = await axios.get(ADMIN_API_URL);
+  const response = await axiosInstance.get(ADMIN_API_URL);
   return response.data;
 };
 
 export const createAdmin = async (adminData) => {
-  const response = await axios.post(ADMIN_API_URL, adminData);
+  const response = await axiosInstance.post(ADMIN_API_URL, adminData);
   return response.data;
 };
 
 export const deleteAdminById = async (adminId) => {
-  await axios.delete(`${ADMIN_API_URL}/${adminId}`);
+  await axiosInstance.delete(`${ADMIN_API_URL}/${adminId}`);
 };
 
-const updateProfile = async (data) => {
-  const response = await axios.put(PROFILE_API_URL, data, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
+export const updateProfile = async (data) => {
+  const response = await axiosInstance.put(PROFILE_API_URL, data);
   return response.data;
 };
 
-const uploadAvatar = async (file) => {
+export const uploadAvatar = async (file) => {
   const formData = new FormData();
   formData.append('avatar', file);
 
-  const response = await axios.post(`${PROFILE_API_URL}/avatar`, formData, {
+  const response = await axiosInstance.post(`${PROFILE_API_URL}/avatar`, formData, {
     headers: {
-      Authorization: `Bearer ${getToken()}`,
+      'Content-Type': 'multipart/form-data',
     },
   });
 
   return response.data;
 };
 
-const removeAvatar = async () => {
-  const response = await axios.delete(`${PROFILE_API_URL}/avatar`, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
+export const removeAvatar = async () => {
+  const response = await axiosInstance.delete(`${PROFILE_API_URL}/avatar`);
   return response.data;
 };
 
@@ -115,4 +97,4 @@ export default {
   updateProfile,
   uploadAvatar,
   removeAvatar,
-}
+};

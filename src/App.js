@@ -49,6 +49,8 @@ import AdminInvoices from './components/admin/AdminInvoices';
 import AdminSettings from './components/admin/AdminSettings';
 import AdminLogin from './components/admin/AdminLogin';
 import AdminNavbar from './components/admin/AdminNavbar';
+import PrivateRoute from './PrivateRoute';
+import { decodeToken } from './utils/decodeToken';
 
 Modal.setAppElement('#root');
 
@@ -63,28 +65,50 @@ function App() {
   useEffect(() => {
     const loadUserProfile = async () => {
       if (token) {
+        const decoded = decodeToken(token);
+        const now = Date.now() / 1000; // in seconds
+
+      if (decoded?.exp) {
+        const timeout = (decoded.exp - now) * 1000; // ms
+        const logoutTimer = setTimeout(() => {
+          handleLogout();
+        }, timeout);
+
+        return () => clearTimeout(logoutTimer);
+        }
+
         try {
           const profile = await fetchProfile(token);
           setUser(profile);
           localStorage.setItem('userId', profile._id);
         } catch (error) {
           console.error('Error fetching user profile:', error);
-          localStorage.removeItem('token');
-          setIsAuthenticated(false);
+          handleLogout();
         }
       }
     };
 
     const loadAdminProfile = async () => {
       if (adminToken) {
+        const decoded = decodeToken(adminToken);
+        const now = Date.now() / 1000;
+
+      if (decoded?.exp) {
+        const timeout = (decoded.exp - now) * 1000; // ms
+        const logoutTimer = setTimeout(() => {
+          handleLogout();
+        }, timeout);
+
+        return () => clearTimeout(logoutTimer);
+        }
+
         try {
           const adminProfile = await fetchAdminProfile(adminToken);
           setAdmin(adminProfile);
           localStorage.setItem('adminId', adminProfile._id);
         } catch (error) {
           console.error('Error fetching admin profile:', error);
-          localStorage.removeItem('adminToken');
-          setAdminAuthenticated(false);
+          handleAdminLogout();
         }
       }
     };
@@ -119,7 +143,7 @@ function App() {
 
   return (
     <CacheProvider>
-    <NotificationProvider>
+    <NotificationProvider userId={user?._id} token={token}>
       <UsersProvider>
         <TicketsProvider>
           <EventsProvider>
@@ -162,17 +186,19 @@ function App() {
                           <Route path="/searchResults" element={<SearchResultsWrapper />} />
                           <Route path="/profile/:id" element={<UserProfile />} />
                           <Route path="/events/:id" element={<EventDetails />} />
-                          <Route path="/profile/*" element={<Profile token={localStorage.getItem('token')} />} />
                           <Route path="/category" element={<Category />} />
                           <Route path="/category/:category" element={<CategoryDetails />} />
-                          <Route path="/events" element={<EventsPage />} />
-                          <Route path="/venues" element={<VenuesPage />} />
-                          <Route path="/notifications" element={<Notifications />} />
-                          <Route path="/change-password" element={<ChangePassword />} />
-                          <Route path="/delete-account" element={<DeleteAccount />} />
-                          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                          <Route path="/report-problem" element={<ReportProblem />} />
-                          <Route path="/contact-support" element={<ContactSupport />} />
+
+                          {/* Protected routes */}
+                          <Route path="/profile/*" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Profile token={token} /> </PrivateRoute> } />
+                          <Route path="/events" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <EventsPage /> </PrivateRoute> } />
+                          <Route path="/venues" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <VenuesPage /> </PrivateRoute> } />
+                          <Route path="/notifications" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Notifications /> </PrivateRoute> } />
+                          <Route path="/change-password" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ChangePassword /> </PrivateRoute> } />
+                          <Route path="/delete-account" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <DeleteAccount /> </PrivateRoute> } />
+                          <Route path="/privacy-policy" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <PrivacyPolicy /> </PrivateRoute> } />
+                          <Route path="/report-problem" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ReportProblem /> </PrivateRoute> } />
+                          <Route path="/contact-support" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ContactSupport /> </PrivateRoute> } />
                           <Route path="*" element={<Navigate to="/" />} />
                         </Routes>
                       </div>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Container,
   Typography,
@@ -13,46 +12,60 @@ import {
   ListItemText,
   Divider,
 } from '@mui/material';
+import axiosInstance from './services/axiosInstance';
+import { fetchProfile } from './services/userService';
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL= process.env.REACT_APP_API_URL;
 const SUPPORT_API_URL = `${API_URL}/api/support/chat/`;
 
 const ContactSupport = () => {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState(null);
 
-  // Assuming the user ID is stored in localStorage after login
-  const userId = localStorage.getItem('userId');
+  // Get authenticated user profile
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const user = await fetchProfile();
+        setUserId(user._id);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      }
+    };
+    getUser();
+  }, []);
 
-  // Function to fetch chat history
+  // Fetch chat history
   const fetchChatHistory = async () => {
+    if (!userId) return;
     try {
-      const response = await axios.get(`${SUPPORT_API_URL}${userId}`);
+      const response = await axiosInstance.get(`${SUPPORT_API_URL}${userId}`);
       setChatHistory(response.data);
     } catch (error) {
       console.error('Error fetching chat history:', error);
     }
   };
 
-  // Function to send a message to support
+  // Send message
   const handleContactSupport = async () => {
-    if (!message) {
+    if (!message.trim()) {
       alert('Please enter a message.');
       return;
     }
+    if (!userId) return;
 
     setLoading(true);
-
     try {
-      const response = await axios.post(`${API_URL}/api/support/chat`, {
-        userId, // Send the logged-in user's ID
+      const response = await axiosInstance.post(SUPPORT_API_URL, {
+        userId,
         message,
       });
 
       if (response.status === 201) {
-        setMessage(''); // Clear the input field after sending the message
-        fetchChatHistory(); // Fetch the updated chat history
+        setMessage('');
+        fetchChatHistory();
       } else {
         alert('Failed to send message');
       }
@@ -64,20 +77,24 @@ const ContactSupport = () => {
     }
   };
 
-  // Fetch chat history on component mount
+  // Auto-refresh chat history every 5 seconds
   useEffect(() => {
+    if (!userId) return;
     fetchChatHistory();
-    // Set an interval to refresh chat every few seconds
-    const interval = setInterval(fetchChatHistory, 5000); // Fetch chat every 5 seconds
-    return () => clearInterval(interval); // Clear the interval on unmount
-  }, []);
+    const interval = setInterval(fetchChatHistory, 5000);
+    return () => clearInterval(interval);
+  }, [userId]);
 
   return (
     <Container maxWidth="sm" style={{ marginTop: '20px' }}>
       <Typography variant="h4" gutterBottom>
         Contact Support
       </Typography>
-      <Paper variant="outlined" style={{ height: '300px', overflowY: 'scroll', marginBottom: '16px', padding: '8px' }}>
+
+      <Paper
+        variant="outlined"
+        style={{ height: '300px', overflowY: 'scroll', marginBottom: '16px', padding: '8px' }}
+      >
         {chatHistory.length > 0 ? (
           <List>
             {chatHistory.map((chat, index) => (
@@ -107,6 +124,7 @@ const ContactSupport = () => {
           </Typography>
         )}
       </Paper>
+
       <TextField
         label="Your message"
         multiline
@@ -117,6 +135,7 @@ const ContactSupport = () => {
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Type your message here"
       />
+
       <Box mt={2} display="flex" justifyContent="flex-end">
         <Button
           variant="contained"

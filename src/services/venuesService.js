@@ -1,5 +1,4 @@
-// services/venuesService.js
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const VENUES_API_URL = `${API_URL}/api/venues`;
@@ -14,7 +13,7 @@ export const createVenue = async (formData) => {
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.post(VENUES_API_URL, formData, config);
+    const response = await axiosInstance.post(VENUES_API_URL, formData, config);
     return response.data;
   } catch (error) {
     console.error('Error creating venue:', error.response ? error.response.data : error.message);
@@ -24,7 +23,7 @@ export const createVenue = async (formData) => {
 
 export const fetchVenues = async () => {
   try {
-    const response = await axios.get(VENUES_API_URL);
+    const response = await axiosInstance.get(VENUES_API_URL);
     return response.data;
   } catch (error) {
     console.error('Error fetching venues:', error.response ? error.response.data : error.message);
@@ -40,7 +39,7 @@ export const fetchMyVenues = async (logoutCallback) => {
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.get(`${VENUES_API_URL}/myvenues`, config);
+    const response = await axiosInstance.get(`${VENUES_API_URL}/myvenues`, config);
     return response.data;
   } catch (error) {
     if (error.response && error.response.status === 401) {
@@ -59,7 +58,7 @@ export const fetchAllVenueBookings = async () => { // Fetch all bookings
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.get(`${BOOKINGS_API_URL}/bookings`, config);
+    const response = await axiosInstance.get(`${BOOKINGS_API_URL}/bookings`, config);
     return response.data;
   } catch (error) {
     console.error('Error fetching all venue bookings:', error.response ? error.response.data : error.message);
@@ -75,7 +74,7 @@ export const fetchVenueBookings = async (venueId) => { // Fetch bookings for a s
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.get(`${BOOKINGS_API_URL}?venueId=${venueId}`, config);
+    const response = await axiosInstance.get(`${BOOKINGS_API_URL}?venueId=${venueId}`, config);
     return response.data;
   } catch (error) {
     console.error('Error fetching venue bookings:', error.response ? error.response.data : error.message);
@@ -92,7 +91,7 @@ export const updateVenue = async (id, formData) => {
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.put(`${VENUES_API_URL}/${id}`, formData, config);
+    const response = await axiosInstance.put(`${VENUES_API_URL}/${id}`, formData, config);
     return response.data;
   } catch (error) {
     console.error('Error updating venue:', error.response ? error.response.data : error.message);
@@ -108,7 +107,7 @@ export const deleteVenue = async (id) => {
         'Authorization': `Bearer ${token}`
       }
     };
-    const response = await axios.delete(`${VENUES_API_URL}/${id}`, config);
+    const response = await axiosInstance.delete(`${VENUES_API_URL}/${id}`, config);
     return response.data;
   } catch (error) {
     console.error('Error deleting venue:', error.response ? error.response.data : error.message);
