@@ -229,7 +229,7 @@ const Home = () => {
               <div className="venue-info">
                 <h3>{venue.name}</h3>
                 <p>{venue.location}</p>
-                <button onClick={() => handleViewVenueDetails(venue)}>Explore Venue</button>
+                <button className="view-details-button" onClick={() => handleViewVenueDetails(venue)}>Explore Venue</button>
               </div>
             </div>
           ))}

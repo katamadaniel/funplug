@@ -172,6 +172,7 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
 
           <button
             onClick={onBookVenue}
+            className="venue-booking-button"
             disabled={venue.bookingStatus === 'closed'}
             style={{
               backgroundColor: venue.bookingStatus === 'closed' ? '#ccc' : '#1976d2',

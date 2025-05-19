@@ -20,7 +20,7 @@ const PurchaseDetailsModal = ({ isOpen, onClose, eventId, eventTitle }) => {
         },
       };
 
-      const response = await axios.get(`${PURCHASES_API_URL}/event/${eventId}`, config); // Pass config here
+      const response = await axios.get(`${PURCHASES_API_URL}/event/${eventId}`, config);
       setPurchaseDetails(response.data);
       setLoading(false);
     } catch (error) {
@@ -34,7 +34,7 @@ const PurchaseDetailsModal = ({ isOpen, onClose, eventId, eventTitle }) => {
     if (isOpen && eventId) {
       fetchPurchaseDetails();
     }
-  }, [isOpen, eventId, fetchPurchaseDetails]); // Add fetchPurchaseDetails as a dependency
+  }, [isOpen, eventId, fetchPurchaseDetails])
 
   return (
     isOpen && (

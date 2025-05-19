@@ -60,10 +60,11 @@
   justify-content: center;
 }
 
-.button-container button {
+.venue-booking-button {
   flex: 1;
   padding: 12px 20px;
   font-size: 1em;
+  width: 80%;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -71,20 +72,8 @@
   transition: background-color 0.3s ease;
 }
 
-.button-container button[type="submit"] {
-  background-color: #007bff;
-}
-
-.button-container button[type="submit"]:hover {
+.venue-booking-button:hover {
   background-color: #0056b3;
-}
-
-.button-container button[type="button"] {
-  background-color: #6c757d;
-}
-
-.button-container button[type="button"]:hover {
-  background-color: #565e64;
 }
 
 @media (max-width: 768px) {

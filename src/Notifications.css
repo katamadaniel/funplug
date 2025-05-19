@@ -104,7 +104,11 @@ th {
 button{
   margin: auto;
   display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
 }
+
 /* Mobile Responsiveness */
 @media (max-width: 600px) {
   .notifications {

@@ -169,7 +169,7 @@ const BookingFormModal = ({ venue, onClose }) => {
             readOnly
           />
         </div>
-        <button type="submit">Book Venue</button>
+        <button className="venue-booking-button" type="submit">Book Venue</button>
       </form>
       </div>
       </div>

@@ -58,7 +58,7 @@ input, select {
   border-radius: 5px;
 }
 
-.book-button {
+.venue-booking-button {
   padding: 10px 20px;
   background-color: #007bff;
   color: #fff;
@@ -66,12 +66,11 @@ input, select {
   border-radius: 5px;
   cursor: pointer;
   margin-top: 20px;
-  width: 100%;
   display: flex;
   justify-content: center;
 }
 
-.book-button:hover {
+.venue-booking-button:hover {
   background-color: #0056b3;
 }
 
@@ -101,7 +100,7 @@ input, select {
     font-size: 0.9rem;
   }
 
-  .book-button {
+  .venue-booking-button {
     padding: 10px;
     font-size: 1em;
   }
