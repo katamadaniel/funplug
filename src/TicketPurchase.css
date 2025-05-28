@@ -100,6 +100,26 @@
   margin-right: 5px;
 }
 
+.blink {
+  animation: blinker 1.2s linear infinite;
+}
+@keyframes blinker {
+  50% { opacity: 0.6; }
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.confirmation-code {
+  margin-top: 8px;
+  font-size: 1.1em;
+  color: #0c7426;
+}
 @media (max-width: 768px) {
   .modal-content {
     width: 95%;

@@ -74,6 +74,11 @@ input, select {
   background-color: #0056b3;
 }
 
+.venue-booking-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .modal-content {
     width: 95%;
