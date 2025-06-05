@@ -20,7 +20,7 @@
   background-color: #f9f9f9;
   border-radius: 8px;
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
 }
@@ -43,42 +43,78 @@
   color: #555;
 }
 
-.follow-section {
-  margin-top: 10px;
-}
-
-.followers-count {
-  font-size: 14px;
-  color: #888;
-  margin: 5px 0;
-}
-
-.follow-button {
-  background-color: #007bff;
-  color: #fff;
+/* Collapsible Section Buttons */
+.toggle-section-button {
+  background-color: #e0e0e0;
+  color: #333;
   border: none;
-  padding: 8px 16px;
-  margin-top: 8px;
-  border-radius: 50px;
-  font-size: 16px;
+  padding: 10px 16px;
+  margin-top: 16px;
+  border-radius: 6px;
+  font-size: 1em;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
 }
 
-.follow-button:hover {
-  background-color: #0056b3;
+.toggle-section-button:hover {
+  background-color: #cfcfcf;
 }
 
+.collapsible-section {
+  width: 100%;
+  max-width: 700px;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.collapsible-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.collapsible-content.open {
+  max-height: 500px; /* Adjust if content is larger */
+  opacity: 1;
+}
+
+/* Collapsible content spacing */
+.user-biography, .user-background {
+  margin-top: 10px;
+  padding: 0 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.follow-section{
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  align-items: center;
+}
+
+/* Refined follow form styling */
 .follow-form {
   margin-top: 15px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .follow-form input {
+  width: 100%;
   padding: 10px;
-  font-size: 16px;
+  font-size: 1em;
   border: 1px solid #ddd;
   border-radius: 8px;
 }
@@ -87,10 +123,11 @@
   background-color: #2196F3;
   color: white;
   border: none;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 10px 16px;
+  border-radius: 50px;
+  font-size: 1em;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .submit-follow-button:hover {
@@ -102,6 +139,22 @@
   flex-direction: column;
   align-items: center;
   padding: 20px;
+}
+
+.user-biography, .user-background {
+  margin-top: 1rem;
+}
+
+.user-biography h3,
+.user-background h3 {
+  font-size: 1em;
+  margin-bottom: 0.5rem;
+}
+
+.user-biography p,
+.user-background p {
+  font-size: 0.9em;
+  line-height: 1.4;
 }
 
 /* Events grid */
@@ -154,7 +207,7 @@
   .user-events {
     grid-template-columns: repeat(2, 1fr);
   }
-
+  
   .user-details-card img.avatar {
     width: 150px;
     height: 150px;
@@ -164,12 +217,6 @@
 @media (min-width: 1024px) {
   .user-events {
     grid-template-columns: repeat(4, 1fr);
-  }
-  
-  .user-details-card {
-    flex-direction: row;
-    justify-content: space-around;
-    text-align: left;
   }
 
   .user-details-card img.avatar {
@@ -184,4 +231,9 @@
   .user-details-card p {
     font-size: 1.1em;
   }
+
+ .user-biography, .user-background {
+  margin-top: 5px;
+  padding: 0 10px;
+  } 
 }

@@ -179,7 +179,7 @@ const TicketPurchase = ({ event, onClose }) => {
     <div className="modal-overlay">
       <div className="modal-content">
         <button className="close-button" onClick={onClose}>X</button>
-        <h2>Purchase Tickets for {event.title}</h2>
+        <h2>Buy {event.title} tickets</h2>
         {errors.general && typeof errors.general === 'string' && (
           <p className="error">{errors.general}</p>
         )}

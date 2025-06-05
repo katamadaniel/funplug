@@ -27,6 +27,7 @@ const VenuesPage = ({ token }) => {
   const [showBookings, setShowBookings] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
  const loadVenues = useCallback(async () => {
     setLoading(true);
@@ -191,8 +192,31 @@ const VenuesPage = ({ token }) => {
       ) : (
         <div>
           <h2>Venue Bookings</h2>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+            <input
+              type="text"
+              placeholder="Search by phone or email"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ padding: '6px', marginRight: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+            <button
+              onClick={() => setSearchTerm(searchTerm.trim())}
+              style={{ padding: '6px 12px', borderRadius: '4px', background: '#1976d2', color: 'white', border: 'none' }}
+            >
+              Search
+            </button>
+          </div>
           {venues.map((venue) => {
-            const venueBookings = bookings.filter((booking) => booking.venueId === venue._id);
+            const venueBookings = bookings.filter(
+              (booking) =>
+                booking.venueId === venue._id &&
+                booking.paymentStatus === 'Success' &&
+                (
+                  booking.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  booking.phone.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+            );
 
             return (
               <Box key={venue._id} sx={{ my: 3 }}>
@@ -208,11 +232,13 @@ const VenuesPage = ({ token }) => {
                         <TableCell>From</TableCell>
                         <TableCell>To</TableCell>
                         <TableCell>Duration (hours)</TableCell>
-                        <TableCell>Total Paid (Ksh.)</TableCell>
+                        <TableCell>Total (Ksh.)</TableCell>
+                        <TableCell>Action</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {venueBookings.map((booking) => (
+                    {venueBookings.length > 0 ? (
+                      venueBookings.map((booking) => (
                         <TableRow key={booking._id}>
                           <TableCell>{booking.name}</TableCell>
                           <TableCell>{booking.phone}</TableCell>
@@ -222,8 +248,18 @@ const VenuesPage = ({ token }) => {
                           <TableCell>{booking.endTime}</TableCell>
                           <TableCell>{booking.duration}</TableCell>
                           <TableCell>Ksh.{booking.total.toFixed(2)}</TableCell>
+                          <TableCell>
+                          <a href={`tel:${booking.phone}`} className="call-button">📞 Call</a>
+                          </TableCell>
                         </TableRow>
-                      ))}
+                      ))
+                      ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center">
+                          No bookings found.
+                        </TableCell>
+                      </TableRow>
+                    )}
                     </TableBody>
                   </Table>
                 </TableContainer>

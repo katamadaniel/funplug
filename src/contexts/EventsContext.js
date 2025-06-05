@@ -14,7 +14,7 @@ export const EventsProvider = ({ children }) => {
   useEffect(() => {
     const fetchHighestSellingEvents = async () => {
       try {
-        const response = await axios.get(`${EVENTS_API_URL}/highest-selling`);
+        const response = await axios.get(`${EVENTS_API_URL}/highest-selling?paymentStatus=Success`);
         setHighestSellingEvents(response.data);
         setLoading(false);
       } catch (err) {

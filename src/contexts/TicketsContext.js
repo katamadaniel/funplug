@@ -16,11 +16,11 @@ export const TicketsProvider = ({ children }) => {
     const fetchTicketsData = async () => {
       try {
         // Fetch total tickets sold weekly
-        const weeklyResponse = await axios.get(`${TICKET_PURCHASES_API_URL}/total/weekly`);
+        const weeklyResponse = await axios.get(`${TICKET_PURCHASES_API_URL}/total/weekly?paymentStatus=Success`);
         setTotalTicketsWeekly(weeklyResponse.data);
 
         // Fetch total tickets sold monthly
-        const monthlyResponse = await axios.get(`${TICKET_PURCHASES_API_URL}/total/monthly`);
+        const monthlyResponse = await axios.get(`${TICKET_PURCHASES_API_URL}/total/monthly?paymentStatus=Success`);
         setTotalTicketsMonthly(monthlyResponse.data);
 
         setLoading(false); // Set loading to false once data is fetched

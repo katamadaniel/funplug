@@ -15,34 +15,34 @@ export const VenuesProvider = ({ children }) => {
   const API_URL = process.env.REACT_APP_API_URL;
   const VENUE_BOOKINGS_API_URL = `${API_URL}/api/venue_bookings`;
 
-  useEffect(() => {
-    const fetchVenueStats = async () => {
-      setLoading(true);
-      try {
-        const [
-          totalBookingsRes,
-          mostBookedVenuesRes,
-          totalBookingAmountRes,
-        ] = await Promise.all([
-          axios.get(`${VENUE_BOOKINGS_API_URL}/total-bookings`),
-          axios.get(`${VENUE_BOOKINGS_API_URL}/most-booked-venues`),
-          axios.get(`${VENUE_BOOKINGS_API_URL}/total-booking-amount`),
-        ]);
+useEffect(() => {
+  const fetchVenueStats = async () => {
+    setLoading(true);
+    try {
+      const [
+        totalBookingsRes,
+        mostBookedVenuesRes,
+        totalBookingAmountRes,
+      ] = await Promise.all([
+        axios.get(`${VENUE_BOOKINGS_API_URL}/total-bookings?paymentStatus=Success`),
+        axios.get(`${VENUE_BOOKINGS_API_URL}/most-booked-venues?paymentStatus=Success`),
+        axios.get(`${VENUE_BOOKINGS_API_URL}/total-booking-amount?paymentStatus=Success`),
+      ]);
 
-        setTotalBookings(totalBookingsRes.data.totalBookings);
-        setMostBookedVenues(mostBookedVenuesRes.data.mostBookedVenues);
-        setTotalBookingAmount(totalBookingAmountRes.data.totalBookingAmount);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching venue stats:', err);
-        setError(err.message || 'An error occurred while fetching venue stats.');
-      } finally {
-        setLoading(false);
-      }
-    };
+      setTotalBookings(totalBookingsRes.data.totalBookings);
+      setMostBookedVenues(mostBookedVenuesRes.data.mostBookedVenues);
+      setTotalBookingAmount(totalBookingAmountRes.data.totalBookingAmount);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching venue stats:', err);
+      setError(err.message || 'An error occurred while fetching venue stats.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchVenueStats();
-  }, []);
+  fetchVenueStats();
+}, []);
 
   return (
     <VenuesContext.Provider

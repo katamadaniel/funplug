@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Typography,
@@ -22,7 +22,6 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { VenuesContext } from '../../contexts/VenuesContext';
 import { fetchAdminProfile } from '../../services/adminService';
 import { getAllUsers, getUserById } from '../../services/userService';
 import { getAllVenues, deleteVenueById, getVenueBookingsByVenueId } from '../../services/venuesService';
@@ -36,7 +35,6 @@ const VenuesAdmin = () => {
   const [openModal, setOpenModal] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [venueToDelete, setVenueToDelete] = useState(null);
-  const { mostBookedVenues } = useContext(VenuesContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,7 +48,7 @@ const VenuesAdmin = () => {
 
   const fetchInitialData = async () => {
     try {
-      await fetchAdminProfile(); // Optional: Verify admin is valid
+      await fetchAdminProfile();
       await fetchUsers();
       await fetchVenues();
     } catch (error) {
@@ -71,35 +69,39 @@ const VenuesAdmin = () => {
     }
   };
 
-  const fetchVenues = async () => {
-    try {
-      const venuesData = await getAllVenues();
-      const updatedVenues = await Promise.all(
-        venuesData.map(async (venue) => {
-          try {
-            const user = await getUserById(venue.userId);
-            return { ...venue, username: user.username };
-          } catch {
-            return { ...venue, username: 'Unknown User' };
-          }
-        })
-      );
+const fetchVenues = async () => {
+  try {
+    const venuesData = await getAllVenues();
 
-      const enrichedVenues = updatedVenues.map((venue) => {
-        const bookingData = mostBookedVenues.find((v) => v._id === venue._id);
-        return {
-          ...venue,
-          bookingCount: bookingData ? bookingData.bookingCount : 0,
-          totalAmount: bookingData ? bookingData.totalAmount : 0,
-        };
-      });
+    const enrichedVenues = await Promise.all(
+      venuesData.map(async (venue) => {
+        let username = 'Unknown User';
+        try {
+          const user = await getUserById(venue.userId);
+          username = user.username;
+        } catch {/* ignore */}
 
-      setVenues(enrichedVenues);
-      setFilteredVenues(enrichedVenues);
-    } catch (error) {
-      console.error('Failed to fetch venues:', error);
-    }
-  };
+        const allBookings = await getVenueBookingsByVenueId(venue._id);
+        const successBookings = allBookings.filter(
+          (b) => b.paymentStatus === 'Success'
+        );
+
+        const bookingCount = successBookings.length;
+        const totalAmount = successBookings.reduce(
+          (sum, b) => sum + (b.total || 0),
+          0
+        );
+
+        return { ...venue, username, bookingCount, totalAmount };
+      })
+    );
+
+    setVenues(enrichedVenues);
+    setFilteredVenues(enrichedVenues);
+  } catch (error) {
+    console.error('Failed to fetch venues:', error);
+  }
+};
 
   const handleSearch = () => {
     const query = searchQuery.toLowerCase();
@@ -114,7 +116,10 @@ const VenuesAdmin = () => {
   const handleViewReport = async (venueId) => {
     try {
       const bookings = await getVenueBookingsByVenueId(venueId);
-      setSelectedVenueBookings(bookings);
+          const successBookings = bookings.filter(
+      (b) => b.paymentStatus === 'Success'
+    );
+      setSelectedVenueBookings(successBookings);
       setOpenModal(true);
     } catch (error) {
       console.error('Failed to fetch venue bookings:', error);

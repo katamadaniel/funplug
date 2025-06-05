@@ -67,9 +67,9 @@ const EventPage = ({ token }) => {
       const purchasesByEvent = {};
       for (const event of events) {
         const purchases = await fetchTicketPurchases(event._id);
-        purchasesByEvent[event._id] = purchases.sort(
-          (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate)
-        );
+        purchasesByEvent[event._id] = purchases
+          .filter((purchase) => purchase.paymentStatus === 'Success')
+          .sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate));
       }
       setPurchases(purchasesByEvent);
     } catch (error) {
@@ -277,27 +277,31 @@ const EventPage = ({ token }) => {
                         <TableCell>Quantity</TableCell>
                         <TableCell>Total Amount (Ksh.)</TableCell>
                         <TableCell>Purchase Date</TableCell>
+                        <TableCell>Action</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {purchasesForEvent.length > 0 ? (
-                        purchasesForEvent.map((purchase) => (
-                          <TableRow key={purchase._id}>
-                            <TableCell>{purchase.email}</TableCell>
-                            <TableCell>{purchase.phone}</TableCell>
-                            <TableCell>{purchase.ticketType}</TableCell>
-                            <TableCell>{purchase.quantity}</TableCell>
-                            <TableCell>{purchase.totalAmount.toFixed(2)}</TableCell>
-                            <TableCell>{new Date(purchase.purchaseDate).toLocaleString()}</TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} align="center">
-                            No purchases for this event.
-                          </TableCell>
+                    {purchasesForEvent.length > 0 ? (
+                      purchasesForEvent.map((purchase) => (
+                        <TableRow key={purchase._id}>
+                          <TableCell>{purchase.email}</TableCell>
+                          <TableCell>{purchase.phone}</TableCell>
+                          <TableCell>{purchase.ticketType}</TableCell>
+                          <TableCell>{purchase.quantity}</TableCell>
+                          <TableCell>{purchase.totalAmount.toFixed(2)}</TableCell>
+                          <TableCell>{new Date(purchase.purchaseDate).toLocaleString()}</TableCell>
+                          <TableCell>
+                          <a href={`tel:${purchase.phone}`} className="call-button">📞 Call</a>
+                        </TableCell>
                         </TableRow>
-                      )}
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center">
+                          No purchases found.
+                        </TableCell>
+                      </TableRow>
+                    )}
 
                       {/* Total Revenue Row */}
                       {purchasesForEvent.length > 0 && (

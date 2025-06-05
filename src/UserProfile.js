@@ -5,6 +5,7 @@ import Avatar from '@mui/material/Avatar';
 import { getAvatarUrl } from './utils/avatar';
 import EventModal from './EventModal';
 import TicketPurchase from './TicketPurchase';
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import './UserProfile.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -20,6 +21,8 @@ const UserProfile = () => {
   const [followName, setFollowName] = useState('');
   const [followEmail, setFollowEmail] = useState('');
   const [followersCount, setFollowersCount] = useState(0);
+  const [showBiography, setShowBiography] = useState(false);
+  const [showBackground, setShowBackground] = useState(false);
 
   const handleFollowClick = () => {
     setIsFollowFormOpen(!isFollowFormOpen);
@@ -139,6 +142,55 @@ const UserProfile = () => {
         <div className="user-info">
           <p><strong>Category:</strong> {user.category}</p>
         </div>
+        {user.biography && (
+          <div className="collapsible-section">
+            <button
+              className="toggle-section-button"
+              onClick={() => setShowBiography(!showBiography)}
+            >
+              {showBiography ? (
+                <>
+                  Hide Biography <FaChevronUp style={{ marginLeft: '8px' }} />
+                </>
+              ) : (
+                <>
+                  Show Biography <FaChevronDown style={{ marginLeft: '8px' }} />
+                </>
+              )}
+            </button>
+            <div className={`collapsible-content ${showBiography ? 'open' : ''}`}>
+              <div className="user-biography">
+                <h3>Biography</h3>
+                <p>{user.biography}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {user.background && (
+          <div className="collapsible-section">
+            <button
+              className="toggle-section-button"
+              onClick={() => setShowBackground(!showBackground)}
+            >
+              {showBackground ? (
+                <>
+                  Hide Background <FaChevronUp style={{ marginLeft: '8px' }} />
+                </>
+              ) : (
+                <>
+                  Show Background <FaChevronDown style={{ marginLeft: '8px' }} />
+                </>
+              )}
+            </button>
+            <div className={`collapsible-content ${showBackground ? 'open' : ''}`}>
+              <div className="user-background">
+                <h3>Background</h3>
+                <p>{user.background}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Upcoming Events */}

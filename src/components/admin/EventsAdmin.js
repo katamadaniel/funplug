@@ -99,7 +99,7 @@ const EventsAdmin = () => {
     } catch (error) {
       console.error('Failed to fetch events or sales:', error);
     }
-  };
+  }
 
   const handleSearch = () => {
     const query = searchQuery.toLowerCase();
@@ -114,7 +114,8 @@ const EventsAdmin = () => {
   const handleViewReport = async (eventId) => {
     try {
       const purchases = await purchaseByEventId(eventId);
-      setSelectedEventPurchases(purchases);
+      const success = purchases.filter((p) => p.paymentStatus === 'Success');
+      setSelectedEventPurchases(success);
       setOpenModal(true);
     } catch (error) {
       console.error('Failed to fetch event purchases:', error);
@@ -189,7 +190,7 @@ const EventsAdmin = () => {
             </TableHead>
             <TableBody>
               {filteredEvents
-                .filter((event) => new Date(event.date) >= new Date()) // Upcoming events filter
+                .filter((event) => new Date(event.date) >= new Date())
                 .map((event) => (
                   <TableRow key={event._id}>
                     <TableCell>{usersMap[event.userId] || 'Unknown User'}</TableCell>

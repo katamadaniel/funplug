@@ -180,7 +180,20 @@ button#add:hover{
 .month-bookings th {
   background-color: #f2f2f2;
 }
-/* Make the page and components mobile responsive */
+
+.call-button {
+  text-decoration: none;
+  background-color: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: inline-block;
+}
+.call-button:hover {
+  background-color: #0056b3;
+}
+
 @media (max-width: 768px) {
   .venue-list {
     flex-direction: column;
