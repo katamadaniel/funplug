@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import usePaymentPolling from './hooks/usePaymentPolling';
 import './BookingFormModal.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -27,6 +28,7 @@ const BookingFormModal = ({ venue, onClose }) => {
   const [confirmationCode, setConfirmationCode] = useState('');
   const [lastBookingId, setLastBookingId] = useState(null);
   const [checkoutRequestId, setCheckoutRequestId] = useState(null);
+  const [pollingKey, setPollingKey] = useState(0);
 
   useEffect(() => {
     if (!socket.connected) socket.connect();
@@ -120,34 +122,6 @@ const BookingFormModal = ({ venue, onClose }) => {
       setLastBookingId(booking._id);
       setCheckoutRequestId(checkoutRequestId);
       setBookingStatus('pending');
-
-      // Poll for status every 20s for up to 2 minutes
-      let attempts = 0;
-      const maxAttempts = 8;
-      const pollInterval = setInterval(async () => {
-        try {
-          const res = await axios.get(`${API_URL}/api/venue_bookings/status/${booking._id}`);
-          const { status, confirmationCode, failureReason } = res.data;
-
-          if (status === 'success') {
-            clearInterval(pollInterval);
-            setBookingStatus('success');
-            if (confirmationCode) setConfirmationCode(confirmationCode);
-            setSuccessMessage('Booking confirmed! Confirmation sent to your email.');
-            setTimeout(() => onClose(), 10000);
-          } else if (status === 'failed') {
-            clearInterval(pollInterval);
-            setBookingStatus('failed');
-            setErrors({ general: failureReason || 'Payment failed.' });
-          } else if (++attempts >= maxAttempts) {
-            clearInterval(pollInterval);
-            setErrors({ general: 'Payment timeout. Try again.' });
-            setBookingStatus('failed');
-          }
-        } catch (pollErr) {
-          console.error('Polling error:', pollErr);
-        }
-      }, 15000);
     } catch (err) {
       console.error('Booking error:', err);
       setErrors({ general: err?.response?.data?.message || 'Booking failed.' });
@@ -157,7 +131,34 @@ const BookingFormModal = ({ venue, onClose }) => {
     }
   };
 
+  const handleSuccess = useCallback((mpesaCode) => {
+    setBookingStatus('success');
+    if (mpesaCode) setConfirmationCode(mpesaCode);
+    setSuccessMessage('Booking confirmed! Confirmation sent to your email.');
+    setTimeout(() => onClose(), 10000);
+  }, [onClose]);
+
+  const handleFailure = useCallback((reason) => {
+    setBookingStatus('failed');
+    setErrors({ general: reason || 'Payment failed.' });
+  }, []);
+
+  const handleTimeout = useCallback(() => {
+    setBookingStatus('failed');
+    setErrors({ general: 'Payment timeout. Try again.' });
+  }, []);
+
+  usePaymentPolling({
+  transactionId: lastBookingId,
+  type: 'booking',
+  onSuccess: handleSuccess,
+  onFailure: handleFailure,
+  onTimeout: handleTimeout,
+  pollingKey
+});
+
   const handleRetry = async () => {
+    setPollingKey(prev => prev + 1);
     if (!lastBookingId || !checkoutRequestId) return;
     setLoading(true);
     try {
@@ -240,7 +241,7 @@ const BookingFormModal = ({ venue, onClose }) => {
             <FaCheckCircle /> Booking Successful!
             {confirmationCode && (
               <div className="confirmation-code">
-                M-Pesa Code: <strong>{confirmationCode}</strong>
+                Confirmation Code: <strong>{confirmationCode}</strong>
               </div>
             )}
           </div>

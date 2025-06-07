@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import usePaymentPolling from './hooks/usePaymentPolling';
 import './TicketPurchase.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -21,6 +22,7 @@ const TicketPurchase = ({ event, onClose }) => {
   const [lastPurchaseId, setLastPurchaseId] = useState(null);
   const [checkoutRequestId, setCheckoutRequestId] = useState(null);
   const [confirmationCode, setConfirmationCode] = useState('');
+  const [pollingKey, setPollingKey] = useState(0);
 
       useEffect(() => {
       if (!socket.connected) socket.connect();
@@ -112,34 +114,6 @@ const TicketPurchase = ({ event, onClose }) => {
         setLastPurchaseId(purchase._id);
         setCheckoutRequestId(checkoutRequestId);
         setPurchaseStatus('pending');
-
-        // Poll for payment status every 20s
-        let attempts = 0;
-        const maxAttempts = 8;
-        const pollInterval = setInterval(async () => {
-          try{
-        const statusResponse = await axios.get(`${API_URL}/api/ticket_purchases/status/${purchase._id}`);
-        const { status, confirmationCode, failureReason } = statusResponse.data;
-
-          if (status === 'success') {
-            clearInterval(pollInterval);
-            setPurchaseStatus('success');
-            setConfirmationCode(confirmationCode);
-            setSuccessMessage('Ticket purchase confirmed! Confirmation sent to your email.');
-            setTimeout(() => onClose(), 10000);
-          } else if (status === 'failed') {
-            clearInterval(pollInterval);
-            setPurchaseStatus('failed');
-            setErrors({ general: failureReason || 'Payment failed. Please try again.' });
-          } else if (++attempts >= maxAttempts) {
-            clearInterval(pollInterval);
-            setErrors({ general: 'Payment timeout. Try again.' });
-            setPurchaseStatus('failed');
-          }
-        } catch (pollErr) {
-          console.error('Polling error:', pollErr);
-        }
-        }, 15000);
       }
     } catch (error) {
       console.error('Error purchasing ticket:', error.message);
@@ -149,7 +123,34 @@ const TicketPurchase = ({ event, onClose }) => {
     }
   };
   
+    const handleSuccess = useCallback((mpesaCode) => {
+    setPurchaseStatus('success');
+    if (mpesaCode) setConfirmationCode(mpesaCode);
+    setSuccessMessage('Booking confirmed! Confirmation sent to your email.');
+    setTimeout(() => onClose(), 10000);
+  }, [onClose]);
+
+  const handleFailure = useCallback((reason) => {
+    setPurchaseStatus('failed');
+    setErrors({ general: reason || 'Payment failed.' });
+  }, []);
+
+  const handleTimeout = useCallback(() => {
+    setPurchaseStatus('failed');
+    setErrors({ general: 'Payment timeout. Try again.' });
+  }, []);
+
+  usePaymentPolling({
+  transactionId: lastPurchaseId,
+  type: 'booking',
+  onSuccess: handleSuccess,
+  onFailure: handleFailure,
+  onTimeout: handleTimeout,
+  pollingKey
+});
+
   const handleRetry = async () => {
+  setPollingKey(prev => prev + 1);
     if (!lastPurchaseId || !checkoutRequestId) return;
     setLoading(true);
     try {
@@ -293,7 +294,7 @@ const TicketPurchase = ({ event, onClose }) => {
           <div className="purchase-status success fade-in">
             <FaCheckCircle /> Ticket Purchase Successful!
             {confirmationCode && (
-              <div className="confirmation-code">M-Pesa Code: <strong>{confirmationCode}</strong></div>
+              <div className="confirmation-code">Confirmation Code: <strong>{confirmationCode}</strong></div>
             )}
           </div>
         )}
