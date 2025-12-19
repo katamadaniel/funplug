@@ -1,93 +1,174 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Avatar, Box, IconButton, Menu, MenuItem } from '@mui/material';
-import { Settings as SettingsIcon } from '@mui/icons-material';
-import { getAvatarUrl } from './utils/avatar';
-import './Header.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Typography,
+  Button,
+  IconButton,
+  Avatar,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Skeleton,
+  useMediaQuery,
+} from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout";
+import SettingsIcon from "@mui/icons-material/Settings";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 
-const Header = ({ isAuthenticated, onLogout, user }) => {
+import { useThemeMode } from "./theme/ThemeContext";
+import { getAvatarUrl } from "./utils/avatar";
+import funplugIcon from "./funplug-icon.png";
+
+const Header = ({ isAuthenticated, user, onLogout }) => {
   const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width:768px)");
+  const { mode, toggleTheme } = useThemeMode();
+
   const [anchorEl, setAnchorEl] = useState(null);
+  const [mobileMenu, setMobileMenu] = useState(null);
 
-  const handleImageError = (e) => {
-    e.target.onerror = null;
-    e.target.src = process.env.REACT_APP_AVATAR_URL;
-  };
-
-  const handleLogin = () => {
-    navigate('/login');
-  };
-
-  const handleSignup = () => {
-    navigate('/signup');
-  };
+  const avatarSrc = user?.avatar ? getAvatarUrl(user) : null;
 
   const handleLogout = () => {
     onLogout();
-    navigate('/login');
-  };
-
-  const handleSettingsClick = (event) => {
-    setAnchorEl(event.currentTarget); // Open menu at clicked element
-  };
-
-  const handleCloseSettings = () => {
-    setAnchorEl(null); // Close the menu
-  };
-
-  const handleMenuItemClick = (path) => {
-    navigate(path);
-    handleCloseSettings(); // Close menu after clicking an option
+    setAnchorEl(null);
+    navigate("/login");
   };
 
   return (
-    <header className="header">
-      <div className="logo">FunPlug</div>
-      <nav className="nav">
+    <AppBar position="sticky" elevation={1} color="default">
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        {/* LOGO */}
+        <Box
+          onClick={() => navigate("/")}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            cursor: "pointer",
+            gap: 1,
+          }}
+        >
+          <Box
+                component="img"
+                src={funplugIcon}
+                alt="FunPlug logo"
+            sx={{
+              width: 40,
+              height: 40,
+              backgroundSize: "contain",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+            }}
+          />
+          <Typography variant="h6" fontWeight={800}>
+            FunPlug
+          </Typography>
+        </Box>
+
+        {/* RIGHT */}
         {!isAuthenticated ? (
-          <>
-            <button className="nav-button" onClick={handleLogin}>Login</button>
-            <button className="nav-button" onClick={handleSignup}>Signup</button>
-          </>
+          <Box>
+            <Button onClick={() => navigate("/login")}>Login</Button>
+            <Button variant="contained" onClick={() => navigate("/signup")}>
+              Signup
+            </Button>
+          </Box>
         ) : (
-          <>
-            <button className="nav-button" onClick={handleLogout}>Logout</button>
-            {user && (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <IconButton onClick={handleSettingsClick}>
-                  <Avatar
-                    src={getAvatarUrl(user)}
-                    alt={user.username ? `${user.username}'s avatar` : 'User avatar'}
-                    sx={{ width: 40, height: 40 }}
-                    onError={handleImageError}
-                  />
-                  <SettingsIcon />
+          <Box display="flex" alignItems="center" gap={1}>
+            {/* THEME TOGGLE */}
+            <Tooltip title="Toggle theme">
+              <IconButton onClick={toggleTheme}>
+                {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+              </IconButton>
+            </Tooltip>
+
+            {/* MOBILE */}
+            {isMobile ? (
+              <>
+                <IconButton onClick={(e) => setMobileMenu(e.currentTarget)}>
+                      <Avatar
+                        src={avatarSrc}
+                        alt={user?.username}
+                        sx={{ width: 36, height: 36 }}
+                      />
+                    <SettingsIcon sx={{ ml: 0.5 }} />
                 </IconButton>
+
+                <Menu
+                  anchorEl={mobileMenu}
+                  open={Boolean(mobileMenu)}
+                  onClose={() => setMobileMenu(null)}
+                >
+                  <MenuItem onClick={() => navigate("/contact-support")}>
+                    Contact Support
+                  </MenuItem>
+                  <MenuItem onClick={() => navigate("/change-password")}>
+                    Change Password
+                  </MenuItem>
+                  <MenuItem onClick={() => navigate("/delete-account")}>
+                    Delete Account
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    <LogoutIcon sx={{ mr: 1 }} /> Logout
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <>
+                {/* DESKTOP */}
+                <Tooltip title="Account settings">
+                  <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                    {avatarSrc ? (
+                      <Avatar
+                        src={avatarSrc}
+                        alt={user?.username}
+                        sx={{ width: 36, height: 36 }}
+                      />
+                    ) : (
+                      <Skeleton
+                        variant="circular"
+                        width={36}
+                        height={36}
+                      />
+                    )}
+                    <SettingsIcon sx={{ ml: 0.5 }} />
+                  </IconButton>
+                </Tooltip>
+
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
-                  onClose={handleCloseSettings}
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  PaperProps={{
-                    sx: {
-                      maxWidth: '90vw',
-                      overflow: 'hidden'
-                    }
-                  }}
+                  onClose={() => setAnchorEl(null)}
                 >
-                  <MenuItem onClick={() => handleMenuItemClick('/change-password')}>Change Password</MenuItem>
-                  <MenuItem onClick={() => handleMenuItemClick('/delete-account')}>Delete Account</MenuItem>
-                  <MenuItem onClick={() => handleMenuItemClick('/privacy-policy')}>Privacy Policy</MenuItem>
-                  <MenuItem onClick={() => handleMenuItemClick('/report-problem')}>Report a Problem</MenuItem>
-                  <MenuItem onClick={() => handleMenuItemClick('/contact-support')}>Contact Support</MenuItem>
+                  <MenuItem onClick={() => navigate("/problem-report")}>
+                    Report Problem
+                  </MenuItem>
+                  <MenuItem onClick={() => navigate("/contact-support")}>
+                    Contact Support
+                  </MenuItem>
+                  <MenuItem onClick={() => navigate("/change-password")}>
+                    Change Password
+                  </MenuItem>
+                  <MenuItem onClick={() => navigate("/delete-account")}>
+                    Delete Account
+                  </MenuItem>
+                  <MenuItem onClick={() => navigate("/privacy-policy")}>
+                    Privacy Policy
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    <LogoutIcon sx={{ mr: 1 }} /> Logout
+                  </MenuItem>
                 </Menu>
-              </Box>
+              </>
             )}
-          </>
+          </Box>
         )}
-      </nav>
-    </header>
+      </Toolbar>
+    </AppBar>
   );
 };
 

@@ -1,106 +1,200 @@
-import React, { useContext, useState } from 'react';
-import Modal from 'react-modal';
-import { NotificationContext } from './contexts/NotificationContext';
-import './Notifications.css';
-import { format } from 'date-fns';
+import React, { useContext, useMemo, useState } from "react";
+import {
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  Badge,
+  List,
+  ListItemButton,
+  ListItemText,
+  Chip,
+  Drawer,
+  Divider,
+  Stack,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import MicIcon from "@mui/icons-material/Mic";
+import BuildIcon from "@mui/icons-material/Build";
+import { format } from "date-fns";
+import { NotificationContext } from "./contexts/NotificationContext";
+
+const CATEGORY_CONFIG = {
+  ticketPurchase: {
+    label: "Tickets",
+    icon: <ConfirmationNumberIcon />,
+  },
+  venueBooking: {
+    label: "Venues",
+    icon: <LocationOnIcon />,
+  },
+  performanceBooking: {
+    label: "Performance",
+    icon: <MicIcon />,
+  },
+  serviceBooking: {
+    label: "Services",
+    icon: <BuildIcon />,
+  },
+};
 
 const Notifications = () => {
-  const { notifications, unseenCount, markAsSeen } = useContext(NotificationContext);
-  const [selectedGroup, setSelectedGroup] = useState(null);
-  const [selectedNotification, setSelectedNotification] = useState(null);
+  const { notifications, unseenCount, markAsSeen, markAllAsSeen } =
+    useContext(NotificationContext);
 
-  // Count unseen notifications for each group
-  const unseenTicketCount = notifications.filter(n => n.type === 'ticketPurchase' && !n.seen).length;
-  const unseenVenueCount = notifications.filter(n => n.type === 'venueBooking' && !n.seen).length;
+  const [activeTab, setActiveTab] = useState("ticketPurchase");
+  const [selected, setSelected] = useState(null);
 
-  const handleGroupClick = (group) => {
-    setSelectedGroup(group);
-  };
+  const grouped = useMemo(() => {
+    const groups = {};
+    Object.keys(CATEGORY_CONFIG).forEach((key) => (groups[key] = []));
+    notifications.forEach((n) => {
+      if (groups[n.type]) groups[n.type].push(n);
+    });
+    return groups;
+  }, [notifications]);
 
-  const handleViewNotification = (notification) => {
-    setSelectedNotification(notification);
-    if (!notification.seen) {
-      markAsSeen(notification._id);
-      notification.seen = true; // Mark as seen in the local state
-    }
-  };
+  const unseenByType = (type) =>
+    grouped[type]?.filter((n) => !n.seen).length || 0;
 
-  const closeDetailView = () => {
-    setSelectedNotification(null);
+  const openDetails = (n) => {
+    setSelected(n);
+    if (!n.seen) markAsSeen(n);
   };
 
   return (
-    <div className="notifications">
-      <h2>Notifications ({unseenCount})</h2>
+    <Box maxWidth="900px" mx="auto" px={2} py={4}>
+      <Typography variant="h4" fontWeight={700} gutterBottom>
+        Notifications
+        {unseenCount > 0 && (
+          <Chip
+            label={`${unseenCount} new`}
+            color="error"
+            size="small"
+            sx={{ ml: 2 }}
+          />
+        )}
+      </Typography>
 
-      {/* Group Notification Headers */}
-      <div className="notification-groups">
-        <h3 onClick={() => handleGroupClick('ticketPurchase')}>
-          Ticket Purchases {unseenTicketCount > 0 && `(${unseenTicketCount} new)`}
-        </h3>
-        <h3 onClick={() => handleGroupClick('venueBooking')}>
-          Venue Bookings {unseenVenueCount > 0 && `(${unseenVenueCount} new)`}
-        </h3>
-      </div>
+      {/* CATEGORY TABS */}
+      <Tabs
+        value={activeTab}
+        onChange={(_, v) => setActiveTab(v)}
+        variant="scrollable"
+        scrollButtons="auto"
+        sx={{ mb: 3 }}
+      >
+      <Box display="flex" justifyContent="flex-end" mb={1}>
+        <Chip
+          label="Mark all as read"
+          clickable
+          onClick={() => markAllAsSeen(activeTab)}
+          disabled={unseenByType(activeTab) === 0}
+        />
+      </Box>
+       
+        {Object.entries(CATEGORY_CONFIG).map(([key, cfg]) => (
+          <Tab
+            key={key}
+            value={key}
+            icon={
+              <Badge
+                badgeContent={unseenByType(key)}
+                color="error"
+                invisible={unseenByType(key) === 0}
+              >
+                {cfg.icon}
+              </Badge>
+            }
+            label={cfg.label}
+          />
+        ))}
+      </Tabs>
 
-      {/* Display Notifications based on Selected Group */}
-      <div className="notification-list">
-        {notifications
-          .filter(n => n.type === selectedGroup)
-          .sort((a, b) => new Date(b.date) - new Date(a.date))
-          .map(notification => (
-            <div
-              key={notification._id}
-              className={`notification-item ${notification.seen ? 'seen' : 'unseen'}`}
-              onClick={() => handleViewNotification(notification)}
-              style={{
-                backgroundColor: notification.seen ? '#f9f9f9' : '#e6f7ff'
-              }}
+      {/* NOTIFICATION LIST */}
+      <List>
+        {grouped[activeTab]?.length === 0 ? (
+          <Typography color="text.secondary" textAlign="center" py={6}>
+            No {CATEGORY_CONFIG[activeTab].label.toLowerCase()} notifications
+            yet.
+          </Typography>
+        ) : (
+          grouped[activeTab]
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map((n) => (
+              <ListItemButton
+                key={n._id}
+                onClick={() => openDetails(n)}
+                sx={{
+                  mb: 1,
+                  borderRadius: 2,
+                  bgcolor: n.seen
+                    ? "background.paper"
+                    : "action.selected",
+                }}
+              >
+                <ListItemText
+                  primary={
+                    <Typography fontWeight={n.seen ? 500 : 700}>
+                      {n.message}
+                    </Typography>
+                  }
+                  secondary={format(new Date(n.date), "PPpp")}
+                />
+                {!n.seen && <Chip label="NEW" color="primary" size="small" />}
+              </ListItemButton>
+            ))
+        )}
+      </List>
+
+      {/* DETAILS DRAWER */}
+      <Drawer
+        anchor="right"
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        PaperProps={{ sx: { width: { xs: "100%", sm: 420 }, p: 3 } }}
+      >
+        {selected && (
+          <>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={2}
             >
-              <p>{notification.message}</p>
-              <small>{new Date(notification.date).toLocaleString()}</small>
-            </div>
-          ))}
-      </div>
+              <Typography variant="h6" fontWeight={700}>
+                Notification Details
+              </Typography>
+              <IconButton onClick={() => setSelected(null)}>
+                <CloseIcon />
+              </IconButton>
+            </Stack>
 
-      {/* Notification Details Modal */}
-      {selectedNotification && (
-        <Modal
-          isOpen={!!selectedNotification}
-          onRequestClose={closeDetailView}
-          contentLabel="Notification Details"
-          className="modal"
-          overlayClassName="overlay"
-        >
-          <div className="notification-detail">
-            <h3>Notification Details</h3>
-            <p>{selectedNotification.message}</p>
-            <p><strong>Date:</strong> {new Date(selectedNotification.date).toLocaleString()}</p>
-            {selectedNotification.type === 'ticketPurchase' && (
-              <div>
-                <p><strong>Ticket Type:</strong> {selectedNotification.details.ticketType}</p>
-                <p><strong>Quantity:</strong> {selectedNotification.details.quantity}</p>
-                <p><strong>Email:</strong> {selectedNotification.details.email}</p>
-                <p><strong>Phone:</strong> {selectedNotification.details.phone}</p>
-                <p><strong>Payment Option:</strong> {selectedNotification.details.paymentOption}</p>
-                <p><strong>Total Amount:</strong> Ksh.{selectedNotification.details.totalAmount}</p>
-              </div>
-            )}
-            {selectedNotification.type === 'venueBooking' && (
-              <div>
-                <p><strong>Name:</strong> {selectedNotification.details.name}</p>
-                <p><strong>Phone:</strong> {selectedNotification.details.phone}</p>
-                <p><strong>Email:</strong> {selectedNotification.details.email}</p>
-                <p><strong>Booked Date:</strong> {format(new Date(selectedNotification.details.bookingDate), 'dd/MM/yyyy')}</p>
-                <p><strong>Duration:</strong> {selectedNotification.details.duration} hours</p>
-                <p><strong>Total:</strong> Ksh.{selectedNotification.details.total}</p>
-              </div>
-            )}
-            <button onClick={closeDetailView}>Close</button>
-          </div>
-        </Modal>
-      )}
-    </div>
+            <Divider sx={{ mb: 2 }} />
+
+            <Typography mb={2}>{selected.message}</Typography>
+
+            <Typography variant="caption" color="text.secondary">
+              {format(new Date(selected.date), "PPpp")}
+            </Typography>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* TYPE-SPECIFIC DETAILS */}
+            <Stack spacing={1}>
+              {Object.entries(selected.details || {}).map(([k, v]) => (
+                <Typography key={k}>
+                  <strong>{k.replace(/([A-Z])/g, " $1")}:</strong> {String(v)}
+                </Typography>
+              ))}
+            </Stack>
+          </>
+        )}
+      </Drawer>
+    </Box>
   );
 };
 

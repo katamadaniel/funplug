@@ -1,103 +1,142 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axiosInstance from '../services/axiosInstance';
+import React, { createContext, useEffect, useState } from "react";
+import axiosInstance from "../services/axiosInstance";
 
-const NotificationContext = createContext();
+export const NotificationContext = createContext();
 
 const API_URL = process.env.REACT_APP_API_URL;
-const TICKET_PURCHASES_API_URL = `${API_URL}/api/ticket_purchases`;
-const VENUE_BOOKINGS_API_URL = `${API_URL}/api/venue_bookings`;
-const NOTIFICATION_API_URL = `${API_URL}/api/notifications`;
 
-const NotificationProvider = ({ children, userId, token }) => {
+const SOURCES = {
+  ticketPurchase: {
+    list: `${API_URL}/api/ticket_purchases`,
+    label: (p) => `Ticket purchased for event: ${p.eventTitle}`,
+    date: (p) => p.purchaseDate,
+    details: (p) => ({
+      ticketType: p.ticketType,
+      quantity: p.quantity,
+      email: p.email,
+      phone: p.phone,
+      paymentOption: p.paymentOption,
+      totalAmount: p.totalAmount,
+    }),
+  },
+  venueBooking: {
+    list: `${API_URL}/api/venue_bookings`,
+    label: (b) => `Venue booked: ${b.venueTitle}`,
+    date: (b) => b.createdAt,
+    details: (b) => ({
+      name: b.name,
+      phone: b.phone,
+      email: b.email,
+      bookingDate: b.bookingDate,
+      duration: b.duration,
+      total: b.total,
+    }),
+  },
+  performanceBooking: {
+    list: `${API_URL}/api/performance_bookings`,
+    label: (b) => `Performance booked: ${b.artType}`,
+    date: (b) => b.createdAt,
+    details: (b) => ({
+       name: b.clientName,
+      date: b.bookingDate,
+      duration: b.duration,
+      total: b.totalAmount,
+    }),
+  },
+  serviceBooking: {
+    list: `${API_URL}/api/service_bookings`,
+    label: (b) => `Service booked: ${b.serviceType}`,
+    date: (b) => b.createdAt,
+    details: (b) => ({
+      name: b.clientName,
+      date: b.bookingDate,
+      duration: b.duration,
+      total: b.totalAmount,
+    }),
+  },
+};
+
+export const NotificationProvider = ({ children, userId, token }) => {
   const [notifications, setNotifications] = useState([]);
   const [unseenCount, setUnseenCount] = useState(0);
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!token || !userId) return; // Prevent call if userId is null
+    if (!token || !userId) return;
 
-    try {
-      const [ticketPurchasesResponse, venueBookingsResponse] = await Promise.all([
-        axiosInstance.get(`${TICKET_PURCHASES_API_URL}/user/${userId}`),
-        axiosInstance.get(`${VENUE_BOOKINGS_API_URL}/user/${userId}`),
-      ]);
+    const fetchAll = async () => {
+      try {
+        const results = await Promise.all(
+          Object.entries(SOURCES).map(async ([type, cfg]) => {
+            const res = await axiosInstance.get(`${cfg.list}/user/${userId}`);
+            return res.data.map((item) => ({
+              _id: item._id,
+              type,
+              seen: item.seen,
+              message: cfg.label(item),
+              date: cfg.date(item),
+              details: cfg.details(item),
+            }));
+          })
+        );
 
-        const ticketPurchases = ticketPurchasesResponse.data.map(purchase => ({
-          _id: purchase._id,
-          type: 'ticketPurchase',
-          message: `Ticket purchased for event: ${purchase.eventTitle}`,
-          date: purchase.purchaseDate,
-          seen: purchase.seen,
-          details: {
-            ticketType: purchase.ticketType,
-            quantity: purchase.quantity,
-            email: purchase.email,
-            phone: purchase.phone,
-            paymentOption: purchase.paymentOption,
-            totalAmount: purchase.totalAmount,
-          },
-        }));
+        const merged = results.flat().sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
 
-        const venueBookings = venueBookingsResponse.data.map(booking => ({
-          _id: booking._id,
-          type: 'venueBooking',
-          message: `Venue booked: ${booking.venueTitle}`,
-          date: booking.createdAt,
-          seen: booking.seen,
-          details: {
-            name: booking.name,
-            phone: booking.phone,
-            email: booking.email,
-            bookingDate: booking.bookingDate,
-            duration: booking.duration,
-            total: booking.total,
-          },
-        }));
-
-        const allNotifications = [...ticketPurchases, ...venueBookings]
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        setNotifications(allNotifications);
-        setUnseenCount(allNotifications.filter(n => !n.seen).length);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
+        setNotifications(merged);
+        setUnseenCount(merged.filter((n) => !n.seen).length);
+      } catch (err) {
+        console.error("Notification fetch failed:", err);
       }
     };
 
-    fetchNotifications();
-  }, [token, userId]);
+    fetchAll();
+  }, [userId, token]);
 
-  const markAsSeen = async (id) => {
-    if (token) {
-      try {
-        await axiosInstance.put(
-          `${NOTIFICATION_API_URL}/${id}/seen`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+  const markAsSeen = async (notification) => {
+    if (notification.seen) return;
 
-        // Update seen status locally
-        setNotifications(prevNotifications =>
-          prevNotifications.map(notification =>
-            notification._id === id ? { ...notification, seen: true } : notification
-          )
-        );
+    const endpoint = SOURCES[notification.type].list;
 
-        // Adjust unseen count
-        setUnseenCount(prevUnseenCount => Math.max(prevUnseenCount - 1, 0));
-      } catch (error) {
-        console.error('Error marking notification as seen:', error);
-      }
-    }
+    await axiosInstance.put(`${endpoint}/${notification._id}/seen`);
+
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n._id === notification._id ? { ...n, seen: true } : n
+      )
+    );
+
+    setUnseenCount((c) => Math.max(c - 1, 0));
+  };
+
+  const markAllAsSeen = async (type) => {
+    const endpoint = SOURCES[type].list;
+
+    await axiosInstance.put(`${endpoint}/user/${userId}/seen`);
+
+    setNotifications((prev) =>
+      prev.map((n) => (n.type === type ? { ...n, seen: true } : n))
+    );
+
+    setUnseenCount((prev) =>
+      Math.max(
+        prev -
+          notifications.filter((n) => n.type === type && !n.seen).length,
+        0
+      )
+    );
   };
 
   return (
-    <NotificationContext.Provider value={{ notifications, unseenCount, markAsSeen }}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unseenCount,
+        markAsSeen,
+        markAllAsSeen,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
 };
-
-export { NotificationContext, NotificationProvider };

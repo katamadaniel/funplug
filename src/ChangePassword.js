@@ -98,7 +98,7 @@ const ChangePassword = () => {
           onChange={(e) => setConfirmNewPassword(e.target.value)}
           required
         />
-        <Button type="submit" variant="contained" color="primary" fullWidth style={{ marginTop: '16px' }}>
+        <Button type="submit" variant="contained" color="primary" sx={{ display: 'block', margin: '20px auto' }}>
           Change Password
         </Button>
       </form>

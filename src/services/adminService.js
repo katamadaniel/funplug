@@ -92,9 +92,57 @@ export const removeAvatar = async () => {
   return response.data;
 };
 
+export const fetchPendingReviews = async () => {
+  const res = await axiosInstance.get(
+    `${API_URL}/api/admin/reviews/pending`
+  );
+  return res.data;
+};
+
+export const approveReview = async (reviewId) => {
+  const res = await axiosInstance.post(
+    `${API_URL}/api/admin/reviews/${reviewId}/approve`
+  );
+  return res.data;
+};
+
+export const rejectReview = async (reviewId) => {
+  const res = await axiosInstance.post(
+    `${API_URL}/api/admin/reviews/${reviewId}/reject`
+  );
+  return res.data;
+};
+
+   //USER VERIFICATION
+export const fetchPendingVerifications = async () => {
+  const res = await axiosInstance.get(
+    `${API_URL}/api/admin/users/verifications`
+  );
+  return res.data;
+};
+
+export const approveVerification = async (userId) => {
+  const res = await axiosInstance.post(
+    `${API_URL}/api/admin/users/verifications/${userId}/approve`
+  );
+  return res.data;
+};
+
+export const rejectVerification = async (userId) => {
+  const res = await axiosInstance.post(
+    `${API_URL}/api/admin/users/verifications/${userId}/reject`
+  );
+  return res.data;
+};
 export default {
   fetchAdminProfile,
   updateProfile,
   uploadAvatar,
   removeAvatar,
+  fetchPendingReviews,
+  approveReview,
+  rejectReview,
+  fetchPendingVerifications,
+  approveVerification,
+  rejectVerification,
 };

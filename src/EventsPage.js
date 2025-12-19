@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import './EventsPage.css';
-import EventModal from './EventFormModal';
+import EventFormModal from './EventFormModal';
+
 import {
   createEvent,
   fetchMyEvents,
@@ -9,17 +9,18 @@ import {
   deleteEvent,
   fetchTicketPurchases,
 } from './services/eventService';
+
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Box,
-  CircularProgress,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Box, CircularProgress, Typography, Button, Collapse,
+  TextField, Accordion, AccordionSummary, AccordionDetails,
+  IconButton, Card, CardContent, CardMedia
 } from '@mui/material';
+
+import {
+  Add, Delete, Edit, ExpandMore, ExpandLess, Call
+} from '@mui/icons-material';
+
 
 const EventPage = ({ token }) => {
   const [events, setEvents] = useState([]);
@@ -28,27 +29,31 @@ const EventPage = ({ token }) => {
     title: '',
     image: '',
     description: '',
-    venue: '',
+    city: '',
+    country: '',
     date: '',
-    statTime: '',
+    startTime: '',
     endTime: '',
     regularPrice: '',
     vipPrice: '',
     vvipPrice: '',
-    ticketType: '',
+    ticketType: 'paid',
     freeSlots: '',
     regularSlots: '',
     vipSlots:'',
     vvipSlots:'',
   });
+
   const [editingEventId, setEditingEventId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [showPurchases, setShowPurchases] = useState(false);
-  const [purchases, setPurchases] = useState([]);
 
-  // Fetch events and purchases
+  const [purchases, setPurchases] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
@@ -66,9 +71,9 @@ const EventPage = ({ token }) => {
     try {
       const purchasesByEvent = {};
       for (const event of events) {
-        const purchases = await fetchTicketPurchases(event._id);
-        purchasesByEvent[event._id] = purchases
-          .filter((purchase) => purchase.paymentStatus === 'Success')
+        const p = await fetchTicketPurchases(event._id);
+        purchasesByEvent[event._id] = p
+          .filter((pur) => pur.paymentStatus === 'Success')
           .sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate));
       }
       setPurchases(purchasesByEvent);
@@ -79,45 +84,10 @@ const EventPage = ({ token }) => {
     }
   }, [events]);
 
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
-
-  useEffect(() => {
-    if (showPurchases) {
-      fetchPurchases();
-    }
-  }, [showPurchases, fetchPurchases]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleImageChange = (e) => {
-    setFormData({
-      ...formData,
-      image: e.target.files[0],
-    });
-  };
-
-    // Enable/Disable price inputs based on ticket type
-    const handleTicketTypeChange = (e) => {
-      const ticketType = e.target.value;
-      setFormData({
-        ...formData,
-        ticketType,
-        regularPrice: ticketType === 'free' ? '0' : formData.regularPrice,
-        vipPrice: ticketType === 'free' ? '0' : formData.vipPrice,
-        vvipPrice: ticketType === 'free' ? '0' : formData.vvipPrice,
-      });
-    };
+  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+  useEffect(() => { if (showPurchases) fetchPurchases(); }, [showPurchases, fetchPurchases]);
 
   const handleFormSubmit = async (data) => {
-  // Adjust the formData based on ticketType
     if (data.ticketType === 'free') {
       data.regularPrice = '0';
       data.regularSlots = '0';
@@ -129,7 +99,7 @@ const EventPage = ({ token }) => {
 
     const formDataObj = new FormData();
     for (const key in data) {
-      formDataObj.append(key, key === 'image' && data[key].length > 0 ? data[key][0] : data[key]);
+      formDataObj.append(key, key === 'image' && data[key]?.length > 0 ? data[key][0] : data[key]);
     }
 
     try {
@@ -142,7 +112,7 @@ const EventPage = ({ token }) => {
       }
       fetchEvents();
       closeModal();
-    } catch (error) { 
+    } catch (error) {
       console.error('Error saving event:', error.message);
       setStatusMessage('Error saving event');
     }
@@ -151,9 +121,10 @@ const EventPage = ({ token }) => {
   const handleEditClick = (event) => {
     setFormData({
       title: event.title,
-      image: 'null',
+      image: '',
       description: event.description,
-      venue: event.venue,
+      city: event.city,
+      country: event.country,
       date: format(new Date(event.date), 'yyyy-MM-dd'),
       startTime: event.startTime,
       endTime: event.endTime,
@@ -165,38 +136,34 @@ const EventPage = ({ token }) => {
       vipSlots: event.vipSlots,
       vvipSlots: event.vvipSlots,
     });
+
     setEditingEventId(event._id);
-    openModal();
-  };
-
-  const handleDeleteClick = async (id) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
-      try {
-        await deleteEvent(id);
-        fetchEvents();
-        setStatusMessage('Event deleted successfully');
-      } catch (error) {
-        console.error('Error deleting event:', error.message);
-        setStatusMessage('Error deleting event');
-      }
-    }
-  };
-
-  const openModal = () => {
     setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
+
+    try {
+      await deleteEvent(id);
+      fetchEvents();
+      setStatusMessage('Event deleted successfully');
+    } catch (error) {
+      console.error('Error deleting event:', error.message);
+      setStatusMessage('Error deleting event');
+    }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    resetForm();
-  };
+    setEditingEventId(null);
 
-  const resetForm = () => {
     setFormData({
       title: '',
       image: '',
       description: '',
-      venue: '',
+      city: '',
+      country: '',
       date: '',
       startTime: '',
       endTime: '',
@@ -208,7 +175,6 @@ const EventPage = ({ token }) => {
       vipSlots:'',
       vvipSlots:'',
     });
-    setEditingEventId(null);
   };
 
   const currentDate = new Date();
@@ -216,199 +182,227 @@ const EventPage = ({ token }) => {
   const pastEvents = events.filter((event) => new Date(event.date) < currentDate);
   const upcomingEvents = events.filter((event) => new Date(event.date) >= currentDate);
 
-  const toggleView = () => {
-    setShowPastEvents(!showPastEvents);
-  };
-
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box sx={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh' }}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <div className="event-page">
-      <div className="button-container">
-        <button id="add" onClick={openModal}>
-          Create Event
-        </button>
-        <button id="toggle" onClick={toggleView}>
-          {showPastEvents ? 'Upcoming Events' : 'Past Events'}
-        </button>
-        <button id="toggle" onClick={() => setShowPurchases(!showPurchases)}>
-          {showPurchases ? 'Hide Purchases' : 'Show Purchases'}
-        </button>
-      </div>
+    <Box sx={{ p: { xs: 2, md: 4 } }}>
 
-      <EventModal
+      <Box sx={{ display:'flex', justifyContent:'space-between', mb: 3, flexWrap:'wrap', gap:1 }}>
+        <Button variant="contained" startIcon={<Add />} onClick={() => setIsModalOpen(true)}>
+          Create Event
+        </Button>
+
+        <Button variant="outlined" onClick={() => setShowPastEvents(!showPastEvents)}
+          startIcon={showPastEvents ? <ExpandLess /> : <ExpandMore />}>
+          {showPastEvents ? 'Upcoming Events' : 'Past Events'}
+        </Button>
+
+        <Button variant="outlined" onClick={() => setShowPurchases(!showPurchases)}
+          startIcon={showPurchases ? <ExpandLess /> : <ExpandMore />}>
+          {showPurchases ? 'Hide Purchases' : 'Show Purchases'}
+        </Button>
+      </Box>
+
+      {statusMessage && (
+        <Typography sx={{ mb:2, color:'green', fontWeight:'bold' }}>{statusMessage}</Typography>
+      )}
+
+      {showPurchases && (
+        <Collapse in={showPurchases}>
+          <Box sx={{ mt:4 }}>
+            <Typography variant="h5" sx={{ mb:2 }}>Event Purchases</Typography>
+
+            <TextField
+              placeholder="Search by email or phone"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              size="small"
+              sx={{ mb:2, width:'100%', maxWidth:400 }}
+            />
+
+            {events.map((event) => {
+              const purchasesForEvent = (purchases[event._id] || []).filter(
+                (p) =>
+                  p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  p.phone.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+
+              const totalRevenue = purchasesForEvent.reduce((sum, p) => sum + p.totalAmount, 0);
+
+              return (
+                <Accordion key={event._id} sx={{ mb:2, borderRadius:2, boxShadow:2 }}>
+                  <AccordionSummary expandIcon={<ExpandMore />}>
+                    <Typography variant="h6">
+                      {event.title} ({purchasesForEvent.length} purchases)
+                    </Typography>
+                  </AccordionSummary>
+
+                  <AccordionDetails>
+                    <TableContainer component={Paper}>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Email</TableCell>
+                            <TableCell>Phone</TableCell>
+                            <TableCell>Ticket Type</TableCell>
+                            <TableCell>Quantity</TableCell>
+                            <TableCell>Total (Ksh)</TableCell>
+                            <TableCell>Purchase Date</TableCell>
+                            <TableCell>Call</TableCell>
+                          </TableRow>
+                        </TableHead>
+
+                        <TableBody>
+                          {purchasesForEvent.length ? (
+                            purchasesForEvent.map((p) => (
+                              <TableRow key={p._id}>
+                                <TableCell>{p.email}</TableCell>
+                                <TableCell>{p.phone}</TableCell>
+                                <TableCell>{p.ticketType}</TableCell>
+                                <TableCell>{p.quantity}</TableCell>
+                                <TableCell>{p.totalAmount.toFixed(2)}</TableCell>
+                                <TableCell>{new Date(p.purchaseDate).toLocaleString()}</TableCell>
+                                <TableCell>
+                                  <IconButton href={`tel:${p.phone}`}>
+                                    <Call color="primary" />
+                                  </IconButton>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow><TableCell colSpan={7} align="center">No purchases</TableCell></TableRow>
+                          )}
+
+                          {purchasesForEvent.length > 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} align="right"><strong>Total Revenue:</strong></TableCell>
+                              <TableCell><strong>Ksh.{totalRevenue.toFixed(2)}</strong></TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })}
+          </Box>
+        </Collapse>
+      )}
+
+      {!showPurchases && showPastEvents && (
+        <>
+          <Typography variant="h5" sx={{ mb:2 }}>Past Events</Typography>
+
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Title</TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Location</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Total Tickets</TableCell>
+                  <TableCell>Total Revenue</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {pastEvents.map((event) => {
+                  const eventPurchases = purchases[event._id] || [];
+                  const totalTickets = eventPurchases.reduce((sum, p) => sum + p.quantity, 0);
+                  const totalRevenue = eventPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+
+                  return (
+                    <TableRow key={event._id}>
+                      <TableCell>{event.title}</TableCell>
+                      <TableCell>{new Date(event.date).toLocaleString()}</TableCell>
+                      <TableCell>{event.city}, {event.country}</TableCell>
+                      <TableCell>{event.description}</TableCell>
+                      <TableCell>{totalTickets}</TableCell>
+                      <TableCell>{totalRevenue.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Button size="small" onClick={() => handleEditClick(event)}>Edit</Button>
+                        <Button size="small" color="error" onClick={() => handleDelete(event._id)}>Delete</Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
+
+      {!showPurchases && !showPastEvents && (
+        <>
+          <Typography variant="h5" sx={{ mb:2 }}>Upcoming Events</Typography>
+
+          <Box sx={{ display:'grid', gap:2, gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))' }}>
+            {upcomingEvents.map((event) => (
+              <Card key={event._id} sx={{ borderRadius:3, boxShadow:3 }}>
+                <CardContent>
+                  <CardMedia showThumbs={false}>
+                        <div key={event._id}>
+                          <img
+                            src={event.image}
+                            alt={event.title}
+                            style={{
+                              width: '100%',
+                              height: '200px',
+                              borderRadius: '10px',
+                              objectFit: 'cover',
+                            }}
+                            />
+                        </div>
+                    </CardMedia>
+                  <Typography variant="h6">{event.title}</Typography>
+                  <Typography sx={{ mb:1 }}>{event.description}</Typography>
+
+                  <Typography><strong>Location:</strong> {event.city}, {event.country}</Typography>
+                  <Typography><strong>Venue:</strong> {event.venue}</Typography>
+                  <Typography><strong>Date:</strong> {format(new Date(event.date), 'dd-MM-yyyy')}</Typography>
+                  <Typography><strong>Time:</strong> {event.startTime} - {event.endTime}</Typography>
+
+                  {event.ticketType === 'free' ? (
+                    <Typography><strong>Price:</strong> Free</Typography>
+                  ) : (
+                    <>
+                      {event.regularPrice > 0 && <Typography>Regular: {event.regularPrice}</Typography>}
+                      {event.vipPrice > 0 && <Typography>VIP: {event.vipPrice}</Typography>}
+                      {event.vvipPrice > 0 && <Typography>VVIP: {event.vvipPrice}</Typography>}
+                    </>
+                  )}
+
+                  <Box sx={{ mt:2, display:'flex', justifyContent:'space-between' }}>
+                    <Button variant="contained" startIcon={<Edit />} onClick={() => handleEditClick(event)}>Edit</Button>
+                    <Button variant="outlined" color="error" startIcon={<Delete />} onClick={() => handleDelete(event._id)}>Delete</Button>
+                  </Box>
+                </CardContent>
+                  <Typography><strong>Created on:</strong> <i>{format(new Date(event.createdAt), 'PPP')}</i></Typography>
+              </Card>
+            ))}
+          </Box>
+        </>
+      )}
+
+      <EventFormModal
         isOpen={isModalOpen}
         onClose={closeModal}
         formData={formData}
-        onInputChange={handleInputChange}
-        onImageChange={handleImageChange}
         onSubmit={handleFormSubmit}
         onCancel={closeModal}
         editingEventId={editingEventId}
         statusMessage={statusMessage}
-        onTicketTypeChange={handleTicketTypeChange}
       />
-
-      {showPurchases ? (
-        <div>
-          <h2>Event Purchases</h2>
-          {events.map((event) => {
-            const purchasesForEvent = purchases[event._id] || [];
-
-            // Calculate total revenue for the event
-            const totalRevenue = purchasesForEvent.reduce((sum, purchase) => sum + purchase.totalAmount, 0);
-
-            return (
-              <div key={event._id}>
-                <h3>{event.title}</h3>
-                <TableContainer component={Paper}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Buyer Email</TableCell>
-                        <TableCell>Phone</TableCell>
-                        <TableCell>Ticket Type</TableCell>
-                        <TableCell>Quantity</TableCell>
-                        <TableCell>Total Amount (Ksh.)</TableCell>
-                        <TableCell>Purchase Date</TableCell>
-                        <TableCell>Action</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                    {purchasesForEvent.length > 0 ? (
-                      purchasesForEvent.map((purchase) => (
-                        <TableRow key={purchase._id}>
-                          <TableCell>{purchase.email}</TableCell>
-                          <TableCell>{purchase.phone}</TableCell>
-                          <TableCell>{purchase.ticketType}</TableCell>
-                          <TableCell>{purchase.quantity}</TableCell>
-                          <TableCell>{purchase.totalAmount.toFixed(2)}</TableCell>
-                          <TableCell>{new Date(purchase.purchaseDate).toLocaleString()}</TableCell>
-                          <TableCell>
-                          <a href={`tel:${purchase.phone}`} className="call-button">📞 Call</a>
-                        </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} align="center">
-                          No purchases found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-
-                      {/* Total Revenue Row */}
-                      {purchasesForEvent.length > 0 && (
-                        <TableRow>
-                          <TableCell colSpan={4} align="right">
-                            <strong>Total Revenue:</strong>
-                          </TableCell>
-                          <TableCell>
-                            <strong> Ksh.{totalRevenue.toFixed(2)}</strong>
-                          </TableCell>
-                          <TableCell></TableCell> {/* Empty cell for alignment */}
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <>
-          {showPastEvents ? (
-            <>
-              <h2>Past Events</h2>
-              <table className="events-table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Date</th>
-                    <th>Location</th>
-                    <th>Description</th>
-                    <th>Total Tickets</th>
-                    <th>Total Revenue (Ksh.)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pastEvents.map((event) => {
-                    const purchasesForEvent = purchases[event._id] || [];
-
-                    // Calculate total tickets and total revenue for past events
-                    const totalTickets = purchasesForEvent.reduce((sum, purchase) => sum + purchase.quantity, 0);
-                    const totalRevenue = purchasesForEvent.reduce((sum, purchase) => sum + purchase.totalAmount, 0);
-
-                    return (
-                      <tr key={event._id}>
-                        <td>{event.title}</td>
-                        <td>{new Date(event.date).toLocaleString()}</td>
-                        <td>{event.venue}</td>
-                        <td>{event.description}</td>
-                        <td>{totalTickets}</td>
-                        <td>{totalRevenue.toFixed(2)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </>
-          ) : (
-            <>
-          <h2>Upcoming Events</h2>
-          <div className="events">
-            {upcomingEvents.map((event) => (
-              <div key={event._id} className="card">
-                <img
-                  src={event.image}
-                  alt={event.title}
-                />
-                <h3>{event.title}</h3>
-                <p>{event.description}</p>
-                <p>
-                  <strong>Venue:</strong> {event.venue}
-                </p>
-                <p>
-                  <strong>Date:</strong> {format(new Date(event.date), 'dd-MM-yyyy')}
-                </p>
-                <p>
-                  <strong>Starts at:</strong> {event.startTime}
-                </p>
-                <p>
-                  <strong>Ends at:</strong> {event.endTime}
-                </p>
-                {event.ticketType === 'free' ? (
-                  <p><strong>Price:</strong> Free</p>
-                ) : (
-                  <>
-                    {event.regularPrice > 0 && <p><strong>Regular Price:</strong> Ksh.{event.regularPrice}</p>}
-                    {event.vipPrice > 0 && <p><strong>VIP Price:</strong> Ksh.{event.vipPrice}</p>}
-                    {event.vvipPrice > 0 && <p><strong>VVIP Price:</strong> Ksh.{event.vvipPrice}</p>}
-                  </>
-                )}
-                <div className = "button-group">
-                <button onClick={() => handleEditClick(event)}>Edit</button>
-                <button onClick={() => handleDeleteClick(event._id)}>Delete</button>
-                </div>
-                <p className="event-created-at">
-                  <strong>Created on:</strong> <i>{format(new Date(event.createdAt), 'PPP')}</i>
-                </p>
-              </div>
-            ))}
-              </div>
-            </>
-          )}
-        </>
-      )}
-      {statusMessage && <p className="status-message">{statusMessage}</p>}
-    </div>
+    </Box>
   );
 };
 

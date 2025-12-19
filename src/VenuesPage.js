@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import ImageGallery from 'react-image-gallery';
-import 'react-image-gallery/styles/css/image-gallery.css';
-import './CustomCarousel.css';
 import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Box,
+  Button,
+  CircularProgress,
+  Typography,
   Table,
   TableBody,
   TableCell,
@@ -10,49 +14,57 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Typography,
-  Box,
-  CircularProgress,
+  Collapse,
+  TextField,
+  Card,
+  CardContent,
+  IconButton,
+  Snackbar
 } from '@mui/material';
-import { fetchMyVenues, createVenue, updateVenue, deleteVenue, fetchVenueBookings } from './services/venuesService';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Add, Delete, Edit, Call, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Carousel } from 'react-responsive-carousel';
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import VenueFormModal from './VenueFormModal';
-import './VenuesPage.css';
+import { fetchMyVenues, createVenue, updateVenue, deleteVenue, fetchVenueBookings } from './services/venuesService';
 
 const VenuesPage = ({ token }) => {
   const [venues, setVenues] = useState([]);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentVenue, setCurrentVenue] = useState(null);
-  const [statusMessage, setStatusMessage] = useState('');
   const [showBookings, setShowBookings] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
- const loadVenues = useCallback(async () => {
+  // Load venues
+  const loadVenues = useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchMyVenues(token);
       setVenues(data);
     } catch (error) {
-      setStatusMessage('Error fetching venues');
+      setSnackbar({ open: true, message: 'Error fetching venues', severity: 'error' });
       console.error(error);
     } finally {
       setLoading(false);
     }
   }, [token]);
 
+  // Load bookings per venue
   const loadBookings = useCallback(async () => {
     setLoading(true);
     try {
       const allBookings = [];
       for (const venue of venues) {
-        const venueBookings = await fetchVenueBookings(venue._id); // Fetch bookings per venue
-        allBookings.push(...venueBookings); // Merge all bookings into one array
+        const venueBookings = await fetchVenueBookings(venue._id);
+        allBookings.push(...venueBookings);
       }
       setBookings(allBookings);
     } catch (error) {
-      setStatusMessage('Error fetching bookings');
+      setSnackbar({ open: true, message: 'Error fetching bookings', severity: 'error' });
       console.error(error);
     } finally {
       setLoading(false);
@@ -64,211 +76,226 @@ const VenuesPage = ({ token }) => {
   }, [loadVenues]);
 
   useEffect(() => {
-    if (showBookings) {
-      loadBookings();
-    }
+    if (showBookings) loadBookings();
   }, [showBookings, loadBookings]);
 
-  const handleFormSubmit = async (venue) => {
+  const handleSubmit = async (venue) => {
     try {
       const formData = new FormData();
-      for (const key in venue) {
+      Object.keys(venue).forEach((key) => {
         if (key === 'images') {
-          venue.images.forEach((file) => {
-            formData.append('images', file);
-          });
+          venue.images.forEach((img) => formData.append('images', img));
         } else {
           formData.append(key, venue[key]);
         }
-      }
+      });
 
       if (isEditing) {
         await updateVenue(currentVenue._id, formData, token);
-        setStatusMessage('Venue updated successfully');
+        setSnackbar({ open: true, message: 'Venue updated successfully', severity: 'success' });
       } else {
         await createVenue(formData, token);
-        setStatusMessage('Venue added successfully');
+        setSnackbar({ open: true, message: 'Venue created successfully', severity: 'success' });
       }
-      setModalIsOpen(false);
+
+      setModalOpen(false);
       setIsEditing(false);
       setCurrentVenue(null);
       loadVenues();
     } catch (error) {
-      setStatusMessage('Error saving venue');
       console.error(error);
+      setSnackbar({ open: true, message: 'Error saving venue', severity: 'error' });
     }
   };
 
   const handleEdit = (venue) => {
     setCurrentVenue(venue);
     setIsEditing(true);
-    setModalIsOpen(true);
+    setModalOpen(true);
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this venue?')) {
       try {
         await deleteVenue(id, token);
-        setStatusMessage('Venue deleted successfully');
+        setSnackbar({ open: true, message: 'Venue deleted successfully', severity: 'success' });
         loadVenues();
       } catch (error) {
-        setStatusMessage('Error deleting venue');
         console.error(error);
+        setSnackbar({ open: true, message: 'Error deleting venue', severity: 'error' });
       }
     }
   };
 
-  const handleAddVenue = () => {
-    setCurrentVenue({
-      name: '',
-      location: '',
-      size: '',
-      capacity: '',
-      bookingStatus: '',
-      bookingDuration: '',
-      charges: '',
-      images: [],
-    });
-    setIsEditing(false);
-    setModalIsOpen(true);
-  };
-
-  if (loading) {
+  if (loading)
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
         <CircularProgress />
       </Box>
     );
-  }
 
   return (
-    <div className="venues-container">
-      <div className="venues-header">
-        <button className="add-venue-button" id="add" onClick={handleAddVenue}>Create Venue</button>
-        <button className="toggle-button" id="bookings" onClick={() => setShowBookings(!showBookings)}>
+    <Box sx={{ p: { xs: 2, md: 4 } }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 1 }}>
+        <Button variant="contained" startIcon={<Add />} onClick={() => setModalOpen(true)}>
+          Create Venue
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => setShowBookings(!showBookings)}
+          startIcon={showBookings ? <ExpandLess /> : <ExpandMore />}
+        >
           {showBookings ? 'Hide Bookings' : 'Show Bookings'}
-        </button>
-      </div>
-      {statusMessage && <p className="status-message">{statusMessage}</p>}
-      <VenueFormModal
-        isOpen={modalIsOpen}
-        onRequestClose={() => setModalIsOpen(false)}
-        onSubmit={handleFormSubmit}
-        initialVenue={currentVenue}
-      />
-      {!showBookings ? (
-        <>
-          <h2>Venue Listing</h2>
-          <div className="venue-list">
+        </Button>
+      </Box>
+      {/* Venue List */}
+      {!showBookings && (
+        <Box>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            Venue Listings
+          </Typography>
+          <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
             {venues.map((venue) => (
-              <div key={venue._id} className="venue-card">
-                <div className="image-gallery-container">
-                  <ImageGallery
-                    items={venue.images.map((img) => ({
-                      original: img.url,
-                    }))}
-                    showFullscreenButton={true}
-                    showPlayButton={false}
-                    showThumbnails={false}
-                  />
-                </div>
-                <div className="venue-details">
-                  <h3><strong>Name: </strong>{venue.name}</h3>
-                  <p><strong>Location: </strong>{venue.location}</p>
-                  <p><strong>Size: </strong>{venue.size}</p>
-                  <p><strong>Capacity: </strong>{venue.capacity} people</p>
-                  <p><strong>Status: </strong>{venue.bookingStatus}</p>
-                  <p><strong>Duration: </strong>{venue.bookingDuration}</p>
-                  <p><strong>Charges: </strong>Ksh.{venue.charges}/hour</p>
-                  <div className = "button-group">
-                  <button onClick={() => handleEdit(venue)}>Edit</button>
-                  <button onClick={() => handleDelete(venue._id)}>Delete</button>
-                  </div>
-                </div>
-              </div>
+              <Card key={venue._id} sx={{ borderRadius: 3, boxShadow: 3, overflow: 'hidden' }}>
+                <Box sx={{ height: 200 }}>
+                    <Carousel showThumbs={false} infiniteLoop showStatus={false} autoPlay>
+                      {venue.images.map((img, index) => (
+                        <div key={index}>
+                          <img
+                            src={img.url}
+                            alt={`venue ${index}`}
+                            style={{
+                              width: '100%',
+                              height: '200px',
+                              borderRadius: '10px',
+                              objectFit: 'cover',
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </Carousel>
+                </Box>
+                <CardContent>
+                  <Typography variant="h6">{venue.name}</Typography>
+                  <Typography>Location: {venue.city}, {venue.country}</Typography>
+                  <Typography>Size: {venue.size} square ft.</Typography>
+                  <Typography>Capacity: {venue.capacity} people</Typography>
+                  <Typography>Status: {venue.bookingStatus}</Typography>
+                  <Typography>Duration: {venue.bookingDuration} hours</Typography>
+                  <Typography>Charges: {venue.charges}/hour</Typography>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent:'space-between', gap: 1 }}>
+                    <Button variant="contained" color="primary" startIcon={<Edit />} onClick={() => handleEdit(venue)}>
+                      Edit
+                    </Button>
+                    <Button variant="outlined" color="error" startIcon={<Delete />} onClick={() => handleDelete(venue._id)}>
+                      Delete
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
             ))}
-          </div>
-        </>
-      ) : (
-        <div>
-          <h2>Venue Bookings</h2>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-            <input
-              type="text"
-              placeholder="Search by phone or email"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ padding: '6px', marginRight: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-            <button
-              onClick={() => setSearchTerm(searchTerm.trim())}
-              style={{ padding: '6px 12px', borderRadius: '4px', background: '#1976d2', color: 'white', border: 'none' }}
-            >
-              Search
-            </button>
-          </div>
+          </Box>
+        </Box>
+      )}
+
+      {/* Bookings Section */}
+      <Collapse in={showBookings}>
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            Venue Bookings
+          </Typography>
+          <TextField
+            placeholder="Search by phone or email"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="small"
+            sx={{ mb: 2, width: '100%', maxWidth: 400 }}
+          />
+
           {venues.map((venue) => {
             const venueBookings = bookings.filter(
-              (booking) =>
-                booking.venueId === venue._id &&
-                booking.paymentStatus === 'Success' &&
-                (
-                  booking.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  booking.phone.toLowerCase().includes(searchTerm.toLowerCase())
-                )
+              (b) =>
+                b.venueId === venue._id &&
+                b.paymentStatus === 'Success' &&
+                (b.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  b.phone.toLowerCase().includes(searchTerm.toLowerCase()))
             );
 
             return (
-              <Box key={venue._id} sx={{ my: 3 }}>
-                <Typography variant="h5">{venue.name}</Typography>
+              <Accordion key={venue._id} sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Box>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  {venue.name} ({venueBookings.length} bookings) </Typography>
+                </Box>
+                </AccordionSummary>
+
+                <AccordionDetails>
                 <TableContainer component={Paper}>
                   <Table>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Client Name</TableCell>
+                        <TableCell>Client</TableCell>
                         <TableCell>Phone</TableCell>
                         <TableCell>Email</TableCell>
                         <TableCell>Booking Date</TableCell>
                         <TableCell>From</TableCell>
                         <TableCell>To</TableCell>
-                        <TableCell>Duration (hours)</TableCell>
-                        <TableCell>Total (Ksh.)</TableCell>
+                        <TableCell>Duration</TableCell>
+                        <TableCell>Total (Ksh)</TableCell>
                         <TableCell>Action</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                    {venueBookings.length > 0 ? (
-                      venueBookings.map((booking) => (
-                        <TableRow key={booking._id}>
-                          <TableCell>{booking.name}</TableCell>
-                          <TableCell>{booking.phone}</TableCell>
-                          <TableCell>{booking.email}</TableCell>
-                          <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
-                          <TableCell>{booking.startTime}</TableCell>
-                          <TableCell>{booking.endTime}</TableCell>
-                          <TableCell>{booking.duration}</TableCell>
-                          <TableCell>Ksh.{booking.total.toFixed(2)}</TableCell>
-                          <TableCell>
-                          <a href={`tel:${booking.phone}`} className="call-button">📞 Call</a>
+                      {venueBookings.length > 0 ? (
+                        venueBookings.map((b) => (
+                          <TableRow key={b._id}>
+                            <TableCell>{b.name}</TableCell>
+                            <TableCell>{b.phone}</TableCell>
+                            <TableCell>{b.email}</TableCell>
+                            <TableCell>{new Date(b.bookingDate).toLocaleDateString()}</TableCell>
+                            <TableCell>{b.startTime}</TableCell>
+                            <TableCell>{b.endTime}</TableCell>
+                            <TableCell>{b.duration}</TableCell>
+                            <TableCell>{b.total.toFixed(2)}</TableCell>
+                            <TableCell>
+                              <IconButton color="primary" href={`tel:${b.phone}`}>
+                                <Call color="primary" />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={9} align="center">
+                            No bookings found.
                           </TableCell>
                         </TableRow>
-                      ))
-                      ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} align="center">
-                          No bookings found.
-                        </TableCell>
-                      </TableRow>
-                    )}
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
-              </Box>
+              </AccordionDetails>
+              </Accordion>
             );
           })}
-        </div>
-      )}
-    </div>
+        </Box>
+      </Collapse>
+
+      <VenueFormModal
+        open={modalOpen}
+        handleClose={() => setModalOpen(false)}
+        onSubmit={handleSubmit}
+        initialVenue={isEditing ? currentVenue : null}
+      />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+      />      
+    </Box>
   );
 };
 

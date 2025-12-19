@@ -1,78 +1,142 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Slider from 'react-slick';
-import Avatar from '@mui/material/Avatar';
-import './UserProfileCarousel.css';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-import { getAvatarUrl } from './utils/avatar';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import Slider from "react-slick";
+import {
+  Avatar,
+  Box,
+  Card,
+  CardActionArea,
+  Skeleton,
+  Typography,
+} from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { getAvatarUrl } from "./utils/avatar";
 
-const UserProfileCarousel = ({ users }) => {
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
+const PLACEHOLDERS = Array.from({ length: 6 });
+
+const UserProfileCarousel = ({ users = [], loading = false }) => {
   const navigate = useNavigate();
-
-  const handleImageError = (e) => {
-    e.target.onerror = null;
-    e.target.src = process.env.REACT_APP_AVATAR_URL;
-  };
 
   const handleProfileClick = (userId) => {
     navigate(`/profile/${userId}`);
   };
 
   const settings = {
-    dots: true,
+    arrows: false,
     infinite: true,
-    speed: 500,
-    slidesToShow: 3,
+    autoplay: true,
+    autoplaySpeed: 2500,
+    speed: 600,
+    slidesToShow: 4,
     slidesToScroll: 1,
+    pauseOnHover: true,
     responsive: [
-      {
-        breakpoint: 1440,
-        settings: { slidesToShow: 3, slidesToScroll: 1, infinite: true, dots: true }
-      },
-      {
-        breakpoint: 1024,
-        settings: { slidesToShow: 3, slidesToScroll: 1, infinite: true, dots: true }
-      },
-      {
-        breakpoint: 768,
-        settings: { slidesToShow: 2, slidesToScroll: 1, infinite: true, dots: true }
-      },
-      {
-        breakpoint: 600,
-        settings: { slidesToShow: 2, slidesToScroll: 1, initialSlide: 1 }
-      },
-      {
-        breakpoint: 480,
-        settings: { slidesToShow: 1, slidesToScroll: 1 }
-      }
-    ]
+      { breakpoint: 1024, settings: { slidesToShow: 3 } },
+      { breakpoint: 768, settings: { slidesToShow: 2 } },
+      { breakpoint: 480, settings: { slidesToShow: 1 } },
+    ],
+  };
+
+  const renderSkeletonCard = (_, i) => (
+    <Box key={i} px={1}>
+      <Card
+        sx={{
+          textAlign: "center",
+          py: 3,
+          borderRadius: 3,
+        }}
+      >
+        <Skeleton
+          variant="circular"
+          width={110}
+          height={110}
+          sx={{ mx: "auto", mb: 2 }}
+        />
+        <Skeleton width="60%" sx={{ mx: "auto" }} />
+        <Skeleton width="40%" sx={{ mx: "auto", mt: 1 }} />
+      </Card>
+    </Box>
+  );
+
+  const renderUserCard = (user) => {
+    const avatarSrc = getAvatarUrl(user);
+
+    return (
+      <Box key={user._id} px={1}>
+        <Card
+          elevation={3}
+          sx={{
+            borderRadius: 3,
+            transition: "0.3s",
+            "&:hover": {
+              transform: "translateY(-6px)",
+              boxShadow: 6,
+            },
+          }}
+        >
+          <CardActionArea
+            onClick={() => handleProfileClick(user._id)}
+            sx={{ py: 3 }}
+          >
+            {/* AVATAR */}
+            <Box display="flex" justifyContent="center" mb={2}>
+              {avatarSrc ? (
+                <Avatar
+                  src={avatarSrc}
+                  alt={user.username}
+                  sx={{
+                    width: 110,
+                    height: 110,
+                    boxShadow: 3,
+                  }}
+                />
+              ) : (
+                <Skeleton variant="circular" width={110} height={110} />
+              )}
+            </Box>
+
+            {/* USERNAME */}
+            <Typography
+              variant="subtitle1"
+              fontWeight={600}
+              textAlign="center"
+              noWrap
+            >
+              {user.username}
+            </Typography>
+
+            {/* CATEGORY */}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+            >
+              {user.category || "—"}
+            </Typography>
+
+            {/* ICON */}
+            <Box display="flex" justifyContent="center" mt={1}>
+              <KeyboardArrowDownIcon
+                sx={{ color: "text.secondary", fontSize: 22 }}
+              />
+            </Box>
+          </CardActionArea>
+        </Card>
+      </Box>
+    );
   };
 
   return (
-    <div className="user-profile-carousel">
+    <Box sx={{ mt: 4 }}>
       <Slider {...settings}>
-        {users.slice(0, 10).map(user => (
-          <div 
-            key={user._id} 
-            className="user-profile-card"
-            onClick={() => handleProfileClick(user._id)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="avatar-container">
-              <Avatar
-                src={getAvatarUrl(user)}
-                alt={user ? `${user.username}'s avatar` : 'Unknown User'}
-                sx={{ width: 120, height: 120, margin: 'auto' }}
-                onError={handleImageError}
-              />
-            </div>
-            <h3 className="user-name">{user.username}</h3>
-            <p className="user-details">{user.category}</p>
-          </div>
-        ))}
+        {loading || !users.length
+          ? PLACEHOLDERS.map(renderSkeletonCard)
+          : users.slice(0, 12).map(renderUserCard)}
       </Slider>
-    </div>
+    </Box>
   );
 };
 

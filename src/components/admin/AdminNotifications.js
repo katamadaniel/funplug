@@ -40,7 +40,7 @@ const AdminNotifications = () => {
   // Fetch Support Chats and Group by User
   const fetchSupportChats = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/support/chat`);
+      const response = await axios.get(`${API_URL}/api/support_chat/chat`);
       const chatsGroupedByUser = groupChatsByUser(response.data);
       setSupportChats(chatsGroupedByUser);
 
@@ -78,7 +78,7 @@ const AdminNotifications = () => {
   // Admin Send Response to Support Chat
   const handleSendResponse = async () => {
     try {
-      await axios.post(`${API_URL}/api/support/chat/reply`, {
+      await axios.post(`${API_URL}/api/support_chat/chat/reply`, {
         userId: selectedUserId,
         message: adminMessage,
       });

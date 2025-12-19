@@ -1,36 +1,278 @@
-// About.js
-import React from 'react';
-import './About.css';
-import missionImage from './mission.jpg'; // Ensure you have a suitable image in the src folder
+import React from "react";
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Stack,
+  useTheme,
+} from "@mui/material";
+import EventIcon from "@mui/icons-material/Event";
+import GroupsIcon from "@mui/icons-material/Groups";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import CelebrationIcon from "@mui/icons-material/Celebration";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import missionImage from "./mission.jpg";
+import bannerImage from "./FunPlug.png";
+
+const MotionBox = motion(Box);
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0 },
+};
 
 const About = () => {
+  const navigate = useNavigate();
+  const theme = useTheme();
+
   return (
-    <div className="about-container">
-      <h1>Our Mission</h1>
-      <img src={missionImage} alt="Our Mission" className="mission-image" />
-      <p>
-        We are on a mission to inspire, motivate, and equip the next generation of stars and entrepreneurs with the knowledge and information they need 
-        to get started and succeed in their careers by learning from those in the business. This is made possible by allowing our users to share their stories 
-        through their profiles, which are accessible to their fans through a quick search or recommended on our home page through top picks.
-      </p>
+    <Box sx={{ bgcolor: "background.default" }}>
+      {/* BANNER */}
+      <Box
+        sx={{
+          height: { xs: 220, md: 300 },
+          backgroundImage: `linear-gradient(
+            rgba(0,0,0,0.45),
+            rgba(0,0,0,0.45)
+          ), url(${bannerImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Container maxWidth="lg">
+          <Typography
+            variant="h3"
+            fontWeight={900}
+            color="common.white"
+          >
+            About FunPlug
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            color="common.white"
+            sx={{ opacity: 0.9, mt: 1 }}
+          >
+            Everything events, in one trusted platform
+          </Typography>
+        </Container>
+      </Box>
 
-      <p>
-        Our registered users have the acess to create personalized profiles, events, share booking schedule and rates, book event spaces which enables them to 
-        get more sales and traction by simplifying the process.
-      </p>
+      {/* ABOUT SECTION (OVERLAP) */}
+      <Container
+        maxWidth="lg"
+        sx={{
+          mt: { xs: -6, md: -8 },
+          py: { xs: 6, md: 10 },
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
+        <Grid container spacing={6} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <MotionBox
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <Card
+                sx={{
+                  p: { xs: 3, md: 4 },
+                  borderRadius: 4,
+                  bgcolor: "background.paper",
+                  boxShadow: theme.shadows[4],
+                }}
+              >
+                <Typography variant="h4" fontWeight={800} gutterBottom>
+                  Who We Are
+                </Typography>
 
-      <h2>FunPlug is your gateway to an insightful entertainment and events experience.</h2>
-      <p>
-        Start exploring FunPlug to unlock a whole new world of fun, inspiration, and entertainment. Using our platform, you can do that and much more just 
-        by typing a name in the search bar and hitting ‘enter’.
-      </p>
+                <Typography variant="body1" color="text.secondary" paragraph>
+                  FunPlug is a digital marketplace built for the events industry.
+                  We connect performers, entertainers, service providers,
+                  vendors, and event hosts with clients in a transparent,
+                  seamless, and efficient way.
+                </Typography>
 
-      <h3>
-        We provide you with the information you need on creators, brands, and events to help you make an informed decision while planning to host or
-        attend events. We know that you are specific about your taste and interests thus you often require more time and information before committing 
-        to anything and that’s why we are here to make the search easy for you.
-      </h3>
-    </div>
+                <Typography variant="body1" color="text.secondary" paragraph>
+                  From booking talent and services to selling event tickets,
+                  FunPlug brings everything events into one trusted platform,
+                  reducing the stress of planning unforgettable experiences.
+                </Typography>
+
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  mt={3}
+                >
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => navigate("/signup")}
+                    sx={{ borderRadius: 3, px: 4 }}
+                  >
+                    Get Started
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    onClick={() => navigate("/home")}
+                    sx={{ borderRadius: 3, px: 4 }}
+                  >
+                    Explore FunPlug
+                  </Button>
+                </Stack>
+              </Card>
+            </MotionBox>
+          </Grid>
+
+          {/* MISSION IMAGE */}
+          <Grid item xs={12} md={6}>
+            <MotionBox
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Box
+                component="img"
+                src={missionImage}
+                alt="FunPlug mission"
+                sx={{
+                  width: "100%",
+                  borderRadius: 4,
+                  boxShadow: theme.shadows[6],
+                }}
+              />
+            </MotionBox>
+          </Grid>
+        </Grid>
+      </Container>
+
+      {/* MISSION */}
+      <Box sx={{ py: { xs: 6, md: 8 }, bgcolor: "background.paper" }}>
+        <Container maxWidth="md">
+          <MotionBox
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            textAlign="center"
+          >
+            <Typography variant="h4" fontWeight={700} gutterBottom>
+              Our Mission
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              To bridge the gap between event industry stakeholders and clients
+              by creating a transparent marketplace where talent, services,
+              venues, and events are easily discoverable, bookable, and
+              manageable.
+            </Typography>
+          </MotionBox>
+        </Container>
+      </Box>
+
+      {/* STAKEHOLDERS */}
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
+        <Grid container spacing={4}>
+          {[
+            {
+              icon: <CelebrationIcon fontSize="large" color="primary" />,
+              title: "Performers & Entertainers",
+              text: "Showcase your talent, manage availability, and receive direct bookings from verified clients.",
+            },
+            {
+              icon: <StorefrontIcon fontSize="large" color="primary" />,
+              title: "Vendors & Service Providers",
+              text: "List your services, manage bookings, and grow your business with increased visibility.",
+            },
+            {
+              icon: <GroupsIcon fontSize="large" color="primary" />,
+              title: "Event Hosts & Clients",
+              text: "Discover trusted talent, vendors, venues, and purchase tickets seamlessly.",
+            },
+          ].map((item, index) => (
+            <Grid item xs={12} md={4} key={index}>
+              <MotionBox
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+              >
+                <Card
+                  sx={{
+                    height: "100%",
+                    borderRadius: 4,
+                    bgcolor: "background.paper",
+                    boxShadow: theme.shadows[3],
+                  }}
+                >
+                  <CardContent>
+                    <Box mb={2}>{item.icon}</Box>
+                    <Typography variant="h6" fontWeight={600} gutterBottom>
+                      {item.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {item.text}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </MotionBox>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+
+      {/* CTA */}
+      <Box
+        sx={{
+          py: { xs: 6, md: 8 },
+          bgcolor: "primary.main",
+          color: "primary.contrastText",
+        }}
+      >
+        <Container maxWidth="md">
+          <MotionBox
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            textAlign="center"
+          >
+            <EventIcon sx={{ fontSize: 48, mb: 2 }} />
+            <Typography variant="h4" fontWeight={700} gutterBottom>
+              Your Gateway to Stress-Free Events
+            </Typography>
+            <Typography sx={{ opacity: 0.9, mb: 4 }}>
+              Whether you're planning, hosting, performing, or attending,
+              FunPlug gives you clarity, trust, and convenience — all in one
+              place.
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              color="secondary"
+              onClick={() => navigate("/signup")}
+              sx={{ borderRadius: 3, px: 5 }}
+            >
+              Join FunPlug Today
+            </Button>
+          </MotionBox>
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

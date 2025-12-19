@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
-import axios from 'axios';
+import { useEffect } from "react";
+import axios from "axios";
 
 const usePaymentPolling = ({
   transactionId,
-  type = 'booking',
+  type,               // "ticket" | "venue" | "service" | "performance"
   onSuccess,
   onFailure,
   onTimeout,
@@ -12,36 +12,72 @@ const usePaymentPolling = ({
   pollingKey,
 }) => {
   useEffect(() => {
-    if (!transactionId) return;
+    if (!transactionId || !type) return;
 
     let attempts = 0;
     const maxAttempts = Math.floor(timeoutLimit / pollingInterval);
     const startTime = Date.now();
+    let hasTriggeredQuery = false;
+
+    // Map type → status endpoint
+    const STATUS_ENDPOINTS = {
+      ticket: `/api/ticket_purchases/status/${transactionId}`,
+      venue: `/api/venue_bookings/status/${transactionId}`,
+      performance: `/api/performance_bookings/status/${transactionId}`,
+      service: `/api/service_bookings/status/${transactionId}`,
+    };
 
     const poll = setInterval(async () => {
       try {
-        const res = await axios.get(`/api/${type === 'booking' ? 'venue_bookings' : 'ticket_purchases'}/status/${transactionId}`);
-        const { status, mpesaCode, failureReason, checkoutRequestId } = res.data;
+        const res = await axios.get(STATUS_ENDPOINTS[type]);
 
-        if (status === 'success') {
+        const {
+          status,
+          mpesaCode,
+          reason,
+          checkoutRequestId,
+        } = res.data;
+
+        // --------------------------------
+        // SUCCESS
+        // --------------------------------
+        if (status === "success") {
           clearInterval(poll);
           onSuccess(mpesaCode);
-        } else if (status === 'failed') {
-          clearInterval(poll);
-          onFailure(failureReason);
-        } else if (++attempts >= maxAttempts || Date.now() - startTime > timeoutLimit) {
-          clearInterval(poll);
-            await axios.post(`/api/mpesa/query`, {
-              type,
-              checkoutRequestId,
-              purchaseId: type === 'ticket' ? transactionId : undefined,
-              bookingId: type === 'booking' ? transactionId : undefined,
-              });
-          onTimeout();
           return;
         }
+
+        // --------------------------------
+        // FAILURE
+        // --------------------------------
+        if (status === "failed") {
+          clearInterval(poll);
+          onFailure(reason);
+          return;
+        }
+
+        // --------------------------------
+        // TIMEOUT → TRIGGER FALLBACK QUERY
+        // --------------------------------
+        const timedOut =
+          ++attempts >= maxAttempts ||
+          Date.now() - startTime >= timeoutLimit;
+
+        if (timedOut && !hasTriggeredQuery) {
+          hasTriggeredQuery = true;
+          clearInterval(poll);
+
+          // Ensure we have a checkoutRequestId
+          if (checkoutRequestId) {
+            await axios.post(`/api/mpesa/query`, {
+              checkoutRequestId,
+            });
+          }
+
+          onTimeout();
+        }
       } catch (err) {
-        console.error('Polling error:', err);
+        console.error("Payment polling error:", err);
       }
     }, pollingInterval);
 

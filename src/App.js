@@ -4,10 +4,11 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'r
 import Login from './Login';
 import Signup from './Signup';
 import Home from './Home';
-import Category from './Category';
-import CategoryDetails from './CategoryDetails';
+import Category from './categories/Category';
+import CategoryRouter from './categories/CategoryRouter';
 import About from './About';
 import FAQ from './FAQ';
+import Contact from './Contact';
 import Header from './Header';
 import Menu from './Menu';
 import Footer from './Footer';
@@ -15,8 +16,9 @@ import SearchResults from './SearchResults';
 import Profile from './Profile';
 import UserProfile from './UserProfile';
 import EventsPage from './EventsPage';
-import EventDetails from './EventDetails';
 import VenuesPage from './VenuesPage';
+import Performance from './Performance';
+import Services from './Services';
 import Notifications from './Notifications';
 import { fetchProfile, logoutUser } from './services/userService';
 import { fetchAdminProfile, logoutAdmin } from './services/adminService';
@@ -78,7 +80,7 @@ function App() {
         }
 
         try {
-          const profile = await fetchProfile(token);
+          const profile = await fetchProfile(token).then(setUser);
           setUser(profile);
           localStorage.setItem('userId', profile._id);
         } catch (error) {
@@ -103,7 +105,7 @@ function App() {
         }
 
         try {
-          const adminProfile = await fetchAdminProfile(adminToken);
+          const adminProfile = await fetchAdminProfile(adminToken).then(setAdmin);
           setAdmin(adminProfile);
           localStorage.setItem('adminId', adminProfile._id);
         } catch (error) {
@@ -183,16 +185,19 @@ function App() {
                           <Route path="/" element={<Home />} />
                           <Route path="/about" element={<About />} />
                           <Route path="/faq" element={<FAQ />} />
+                          <Route path="/contact" element={<Contact />} />
                           <Route path="/searchResults" element={<SearchResultsWrapper />} />
                           <Route path="/profile/:id" element={<UserProfile />} />
-                          <Route path="/events/:id" element={<EventDetails />} />
                           <Route path="/category" element={<Category />} />
-                          <Route path="/category/:category" element={<CategoryDetails />} />
+                          <Route path="/category/:slug" element={<CategoryRouter />} />
+                          <Route path="/category/:slug/:category" element={<CategoryRouter />} />
 
                           {/* Protected routes */}
                           <Route path="/profile/*" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Profile token={token} /> </PrivateRoute> } />
                           <Route path="/events" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <EventsPage /> </PrivateRoute> } />
                           <Route path="/venues" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <VenuesPage /> </PrivateRoute> } />
+                          <Route path="/performance" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Performance /> </PrivateRoute> } />
+                          <Route path="/services" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Services /> </PrivateRoute> } />
                           <Route path="/notifications" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Notifications /> </PrivateRoute> } />
                           <Route path="/change-password" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ChangePassword /> </PrivateRoute> } />
                           <Route path="/delete-account" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <DeleteAccount /> </PrivateRoute> } />

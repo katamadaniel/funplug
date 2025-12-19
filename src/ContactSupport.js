@@ -16,7 +16,7 @@ import axiosInstance from './services/axiosInstance';
 import { fetchProfile } from './services/userService';
 
 const API_URL= process.env.REACT_APP_API_URL;
-const SUPPORT_API_URL = `${API_URL}/api/support/chat/`;
+const SUPPORT_API_URL = `${API_URL}/api/support_chat/chat/`;
 
 const ContactSupport = () => {
   const [message, setMessage] = useState('');

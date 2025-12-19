@@ -149,7 +149,7 @@ const Login = ({ setIsAuthenticated, setUser }) => {
         variant="contained"
         color="primary"
         fullWidth
-        sx={{ mt: 2 }}
+        sx={{ display: 'block', margin: '20px auto' }}
         disabled={loading}
         >
           {loading ? <i className="fas fa-spinner fa-spin"></i> : 'Login'}
