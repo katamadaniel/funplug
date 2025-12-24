@@ -332,6 +332,7 @@ const TicketPurchase = ({ event, onClose }) => {
       </DialogContent>
 
       <DialogActions>
+      <Stack direction="row" spacing={2} p={1}  justifyContent= "space-between" width="100%">
         <Button onClick={onClose}> Cancel </Button>
         <Button
           variant="contained"
@@ -345,6 +346,7 @@ const TicketPurchase = ({ event, onClose }) => {
         >
           {loading ? <CircularProgress size={22} /> : "Buy Ticket"}
         </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );

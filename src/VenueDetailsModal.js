@@ -33,7 +33,7 @@ import { getAvatarUrl } from "./utils/avatar";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const VenueDetailsModal = ({ venue, user, open, onClose, onBookVenue }) => {
+const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isFollowOpen, setIsFollowOpen] = useState(false);
   const [fullImage, setFullImage] = useState(null);
@@ -134,7 +134,7 @@ const VenueDetailsModal = ({ venue, user, open, onClose, onBookVenue }) => {
 
       {/* MAIN MODAL */}
       <Dialog
-        open={open}
+        open={true}
         onClose={onClose}
         fullWidth
         maxWidth="md"
@@ -274,7 +274,7 @@ const VenueDetailsModal = ({ venue, user, open, onClose, onBookVenue }) => {
           </Stack>
         </DialogContent>
 
-        <DialogActions >
+        <DialogActions sx={{justifyContent: 'center'}} >
           <Button
             variant="contained"
             disabled={venue.bookingStatus === "closed"}

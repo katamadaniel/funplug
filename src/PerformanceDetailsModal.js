@@ -33,7 +33,7 @@ import { getAvatarUrl } from "./utils/avatar";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const PerformanceDetailsModal = ({ performance, user, open, onClose, onBookPerformance }) => {
+const PerformanceDetailsModal = ({ performance, user, onClose, onBookPerformance }) => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isFollowOpen, setIsFollowOpen] = useState(false);
   const [fullImage, setFullImage] = useState(null);
@@ -132,7 +132,7 @@ const PerformanceDetailsModal = ({ performance, user, open, onClose, onBookPerfo
       </Modal>
 
       {/* MAIN MODAL */}
-      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
         <DialogTitle sx={{ pb: 1 }}>
           <Stack direction="row" justifyContent="space-between">
             {/* USER INFO */}
@@ -263,7 +263,7 @@ const PerformanceDetailsModal = ({ performance, user, open, onClose, onBookPerfo
 
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions sx={{justifyContent: 'center'}} >
           <Button
             variant="contained"
             onClick={onBookPerformance}

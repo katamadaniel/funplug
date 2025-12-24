@@ -14,6 +14,7 @@ import {
   Typography,
   Divider,
   Alert,
+  Stack
 } from "@mui/material";
 import PaymentStatusBanner from "./components/PaymentStatusBanner";
 import usePaymentPolling from "./hooks/usePaymentPolling";
@@ -21,7 +22,7 @@ import usePaymentPolling from "./hooks/usePaymentPolling";
 const API_URL = process.env.REACT_APP_API_URL;
 const socket = io(API_URL, { autoConnect: false });
 
-const ServiceBookingFormModal = ({ service, open, onClose, onBooked }) => {
+const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
   const [form, setForm] = useState({
     clientName: "",
     phone: "",
@@ -261,7 +262,7 @@ const ServiceBookingFormModal = ({ service, open, onClose, onBooked }) => {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
+    <Dialog open onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
       <DialogTitle>Book Service — {service.serviceType}</DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "75vh", overflowY: "auto", pb: 2 }}>
@@ -418,13 +419,14 @@ const ServiceBookingFormModal = ({ service, open, onClose, onBooked }) => {
             <Divider sx={{ my: 1 }} />
             <Typography variant="subtitle2">Total: Ksh {total}</Typography>
             <Typography variant="subtitle2">
-              Reservation Fee (10%): Ksh {reservationFee}
+              Reservation Fee: Ksh {reservationFee}
             </Typography>
           </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions>
+      <Stack direction="row" spacing={2} p={1}  justifyContent= "space-between" width="100%">
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant="contained"
@@ -433,6 +435,7 @@ const ServiceBookingFormModal = ({ service, open, onClose, onBooked }) => {
         >
           {loading ? <CircularProgress size={22} /> : "Book Service"}
         </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );

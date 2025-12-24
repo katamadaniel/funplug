@@ -26,10 +26,18 @@ const Footer = () => {
     >
       <Grid container spacing={4} justifyContent="center">
         {/* MAP */}
-        <Grid item xs={12} md={4}>
+        <Grid
+          item
+          xs={12}
+          md={4}
+          sx={{
+            display: { xs: "none", md: "block" },
+          }}
+        >
           <Typography fontWeight={600} mb={1}>
             Our Location
           </Typography>
+
           <Box
             sx={{
               borderRadius: 2,

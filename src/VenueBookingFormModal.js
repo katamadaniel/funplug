@@ -10,6 +10,7 @@ import {
   Grid,
   Button,
   Alert,
+  Stack,
   MenuItem,
   Typography,
   CircularProgress,
@@ -21,7 +22,7 @@ import usePaymentPolling from "./hooks/usePaymentPolling";
 const API_URL = process.env.REACT_APP_API_URL;
 const socket = io(API_URL, { autoConnect: false });
 
-const VenueBookingFormModal = ({ open, venue, onClose, onBooked }) => {
+const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -257,7 +258,7 @@ const VenueBookingFormModal = ({ open, venue, onClose, onBooked }) => {
 
   return (
     <Dialog
-      open={open}
+      open
       onClose={onClose}
       fullWidth
       maxWidth="sm"
@@ -265,7 +266,7 @@ const VenueBookingFormModal = ({ open, venue, onClose, onBooked }) => {
     >
       <DialogTitle>Book {venue.name}</DialogTitle>
 
-      <DialogContent sx={{ maxHeight: "80vh", overflowY: "auto", pb: 2 }}>
+      <DialogContent dividers sx={{ maxHeight: "75vh", overflowY: "auto", pb: 2 }}>
         {errors.general && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {errors.general}
@@ -387,13 +388,14 @@ const VenueBookingFormModal = ({ open, venue, onClose, onBooked }) => {
             <Divider sx={{ my: 1 }} />
             <Typography variant="subtitle2">Total: Ksh {total}</Typography>
             <Typography variant="subtitle2">
-              Reservation Fee (10%): Ksh {reservationFee}
+              Reservation Fee: Ksh {reservationFee}
             </Typography>
           </Grid>
         </Grid>
       </DialogContent>
 
       <DialogActions>
+      <Stack direction="row" spacing={2} p={1}  justifyContent= "space-between" width="100%">
         <Button onClick={onClose} color="inherit">
           Cancel
         </Button>
@@ -405,6 +407,7 @@ const VenueBookingFormModal = ({ open, venue, onClose, onBooked }) => {
         >
           {loading ? <CircularProgress size={22} /> : "Book Venue"}
         </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );

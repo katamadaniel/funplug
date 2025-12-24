@@ -15,6 +15,7 @@ export const SearchProvider = ({ children }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchError, setSearchError] = useState(null);
+  const [nearMe, setNearMe] = useState(false);
 
   const [user, setUser] = useState(null);
   const [userCollections, setUserCollections] = useState({
@@ -24,10 +25,46 @@ export const SearchProvider = ({ children }) => {
     services: [],
   });
 
-  const search = async (query) => {
-    setSearchQuery(query);
+const search = async (query = "") => {
+  setSearchQuery(query);
+  setSearchError(null);
 
-    try {
+  try {
+    let results = [];
+
+    // ===============================
+    // 📍 NEAR ME SEARCH
+    // ===============================
+    if (nearMe) {
+      const loc = await getUserLocationWithFallback();
+
+      const params = {
+        ...(loc.lat && { lat: loc.lat }),
+        ...(loc.lng && { lng: loc.lng }),
+        ...(loc.city && { city: loc.city }),
+        ...(loc.country && { country: loc.country }),
+        radius: 100,
+      };
+
+      const [events, venues, performances, services] = await Promise.all([
+        axios.get(`${API_URL}/api/search/nearby/event`, { params }),
+        axios.get(`${API_URL}/api/search/nearby/venue`, { params }),
+        axios.get(`${API_URL}/api/search/nearby/performance`, { params }),
+        axios.get(`${API_URL}/api/search/nearby/service`, { params }),
+      ]);
+
+      results = [
+        ...events.data.map(e => ({ ...e, type: "event" })),
+        ...venues.data.map(v => ({ ...v, type: "venue" })),
+        ...performances.data.map(p => ({ ...p, type: "performance" })),
+        ...services.data.map(s => ({ ...s, type: "service" })),
+      ];
+    }
+
+    // ===============================
+    // 🔎 NORMAL TEXT SEARCH
+    // ===============================
+    else {
       const [
         usersResponse,
         eventsResponse,
@@ -42,22 +79,51 @@ export const SearchProvider = ({ children }) => {
         axios.get(`${SERVICES_API_URL}?serviceType=${query}`)
       ]);
 
-      const results = [
+      results = [
         ...usersResponse.data.map(u => ({ ...u, type: "user" })),
         ...eventsResponse.data.map(e => ({ ...e, type: "event" })),
         ...venuesResponse.data.map(v => ({ ...v, type: "venue" })),
         ...performanceResponse.data.map(p => ({ ...p, type: "performance" })),
         ...serviceResponse.data.map(s => ({ ...s, type: "service" })),
       ];
-
-      setSearchResults(results);
-      setSearchError(null);
-
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchError("Failed to fetch search results");
     }
-  };
+
+    setSearchResults(results);
+  } catch (error) {
+    console.error("Search error:", error);
+    setSearchError("Failed to fetch search results");
+  }
+};
+
+const getUserLocationWithFallback = async () => {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({});
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+      },
+      async () => {
+        try {
+          const res = await axios.get("https://ipapi.co/json/");
+          resolve({
+            city: res.data.city,
+            country: res.data.country_name,
+          });
+        } catch {
+          resolve({});
+        }
+      },
+      { timeout: 7000 }
+    );
+  });
+};
 
   //USER PROFILE FETCH
   const fetchUserProfile = async (userId) => {
@@ -79,18 +145,19 @@ export const SearchProvider = ({ children }) => {
   };
 
   return (
-    <SearchContext.Provider
-      value={{
-        searchResults,
-        setSearchResults,
-        searchQuery,
-        searchError,
-        search,
-        fetchUserProfile,
-        user,
-        userCollections,
-      }}
-    >
+          <SearchContext.Provider
+            value={{
+              searchResults,
+              searchQuery,
+              searchError,
+              search,
+              nearMe,
+              setNearMe,
+              fetchUserProfile,
+              user,
+              userCollections,
+            }}
+          >
       {children}
     </SearchContext.Provider>
   );

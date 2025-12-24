@@ -31,6 +31,7 @@ const Menu = ({ isAuthenticated }) => {
 
   const handleNavigate = (path) => {
     navigate(path);
+    window.scrollTo({ top: 0, behavior: "smooth" });    
     setOpen(false);
   };
 

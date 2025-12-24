@@ -14,8 +14,20 @@ import {
   Box,
   Stack,
 } from "@mui/material";
-
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import { useForm, Controller } from "react-hook-form";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 const categoryData = {
   "Social Event": [
@@ -78,12 +90,98 @@ const EventFormModal = ({
     vvip: !!formData?.vvipPrice,
   });
   
+  const cityValue = watch("city");
+  const countryValue = watch("country");
   const ticketTypeValue = watch("ticketType") || "";
   const subCategoryValue = watch("subCategory") || "";
+  const [coords, setCoords] = useState({
+    lat: formData?.lat || null,
+    lng: formData?.lng || null,
+  });
 
   const [imagePreview, setImagePreview] = useState(null);
 
-  // When modal opens for editing or creating, set defaults
+ const RecenterMap = ({ lat, lng }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (lat && lng) {
+      map.setView([lat, lng], 13);
+    }
+  }, [lat, lng, map]);
+
+  return null;
+};
+
+  useEffect(() => {
+    if (coords.lat && coords.lng) {
+      setValue("lat", coords.lat);
+      setValue("lng", coords.lng);
+    }
+  }, [coords, setValue]);
+
+ useEffect(() => {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      setCoords({ lat: latitude, lng: longitude });
+
+      setValue("lat", latitude);
+      setValue("lng", longitude);
+    },
+    () => {
+      console.warn("Location access denied");
+    },
+    { enableHighAccuracy: true }
+  );
+}, [setValue]);
+
+useEffect(() => {
+  const runGeocodeFallback = async () => {
+    if (
+      !coords.lat &&
+      !coords.lng &&
+      cityValue &&
+      countryValue
+    ) {
+      const geo = await geocodeLocation(cityValue, countryValue);
+      if (geo) {
+        setCoords(geo);
+        setValue("lat", geo.lat);
+        setValue("lng", geo.lng);
+      }
+    }
+  };
+
+  runGeocodeFallback();
+}, [cityValue, countryValue, coords, setValue]);
+
+useEffect(() => {
+    if (ticketTypeValue === "free") {
+      setTicketOptions({
+        regular: false,
+        vip: false,
+        vvip: false,
+      });
+
+      setValue("regularPrice", undefined);
+      setValue("vipPrice", undefined);
+      setValue("vvipPrice", undefined);
+      setValue("regularSlots", undefined);
+      setValue("vipSlots", undefined);
+      setValue("vvipSlots", undefined);
+    }
+  }, [ticketTypeValue, setValue]);
+
+  useEffect(() => {
+      if (formData?.image && !imagePreview) {
+        setImagePreview(formData.image); // existing image URL
+      }
+    }, [formData, imagePreview]);
+
+// When modal opens for editing or creating, set defaults
   useEffect(() => {
     if (formData) reset(formData);
 
@@ -114,11 +212,7 @@ const EventFormModal = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (formData?.image instanceof File) {
-      setImagePreview(URL.createObjectURL(formData.image));
-    } else {
-      setImagePreview(formData?.image || null);
-    }
+    setImagePreview(URL.createObjectURL(file));
     setValue("image", file);
   };
 
@@ -130,22 +224,51 @@ const EventFormModal = ({
   };
 
   const submitForm = (data) => {
-    if (!ticketOptions.regular) {
+    if (data.ticketType === "free") {
       delete data.regularPrice;
-      delete data.regularSlots;
-    }
-    if (!ticketOptions.vip) {
       delete data.vipPrice;
-      delete data.vipSlots;
-    }
-    if (!ticketOptions.vvip) {
       delete data.vvipPrice;
+      delete data.regularSlots;
+      delete data.vipSlots;
       delete data.vvipSlots;
     }
+
     onSubmit(data);
   };
 
-  return (
+ const geocodeLocation = async (city, country) => {
+  try {
+    const query = encodeURIComponent(`${city}, ${country}`);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${query}`
+    );
+    const data = await res.json();
+
+    if (data?.length) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+      };
+    }
+  } catch (err) {
+    console.error("Geocoding failed", err);
+  }
+  return null;
+};
+
+const LocationPicker = ({ setCoords }) => {
+  useMapEvents({
+    click(e) {
+      setCoords({
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+      });
+    },
+  });
+  return null;
+};
+
+return (
     <Dialog
       open={isOpen}
       onClose={onClose}
@@ -206,6 +329,53 @@ const EventFormModal = ({
                 {...register("country", { required:  "Country is required" })}
               />
             </Grid>
+            <input type="hidden" {...register("lat")} />
+            <input type="hidden" {...register("lng")} />
+
+            {coords.lat && coords.lng && (
+              <Grid item xs={12}>
+                <Typography fontWeight="bold" mb={1}>
+                  Pick Event Location
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" mb={1}>
+                  Drag the marker or click on the map to choose the exact venue location.
+                </Typography>
+
+                <Box
+                  sx={{
+                    height: 320,
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  <MapContainer
+                    center={[coords.lat, coords.lng]}
+                    zoom={13}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer
+                      attribution="&copy; OpenStreetMap"
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+
+                    <Marker
+                      position={[coords.lat, coords.lng]}
+                      draggable
+                      eventHandlers={{
+                        dragend: (e) => {
+                          const pos = e.target.getLatLng();
+                          setCoords({ lat: pos.lat, lng: pos.lng });
+                        },
+                      }}
+                    />
+
+                    <LocationPicker setCoords={setCoords} />
+                  </MapContainer>
+                </Box>
+              </Grid>
+            )}
 
             {/* Category */}
             <Grid item xs={12} sm={6}>
@@ -321,7 +491,7 @@ const EventFormModal = ({
             </Grid>
 
             {/* Ticket Options */}
-            {formData?.ticketType === "paid" && (
+            {ticketTypeValue === "paid" && (
               <Grid item xs={12}>
                 <Typography fontWeight="bold">Ticket Options</Typography>
 
@@ -425,7 +595,7 @@ const EventFormModal = ({
             )}
 
             {/* Free event slots */}
-            {formData?.ticketType === "free" && (
+            {ticketTypeValue === "free" && (
               <Grid item xs={12}>
                 <TextField
                   type="number"
@@ -440,7 +610,7 @@ const EventFormModal = ({
       </DialogContent>
 
       <DialogActions>
-        <Stack direction="row" spacing={2} justifyContent="space-between">
+      <Stack direction="row" spacing={2}  justifyContent= "center" width="100%">
         <Button type="submit" form="event-form" variant="contained">
           Save
         </Button>

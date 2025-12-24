@@ -756,7 +756,7 @@ useEffect(() => {
         )}
       </Box>
 
-      {/* Modals (reuse your components, pass props appropriately) */}
+      {/* Modals */}
       {selectedEvent && (
         <EventModal
           event={selectedEvent}
@@ -778,7 +778,6 @@ useEffect(() => {
         <VenueDetailsModal
           venue={selectedVenue}
           user={user}
-          open={isVenueModalOpen} 
           onClose={() => setVenueModalOpen(false)}
           onBookVenue={() => setVenueBookingOpen(true)}
         />
@@ -796,7 +795,6 @@ useEffect(() => {
         <PerformanceDetailsModal
           performance={selectedPerformance}
           user={user}
-          open={isPerformanceModalOpen} 
           onClose={() => setPerformanceModalOpen(false)}
           onBookPerformance={() => setPerformanceBookingOpen(true)}
         />
@@ -814,7 +812,6 @@ useEffect(() => {
         <ServiceDetailsModal
           service={selectedService}
           user={user}
-          open={isServiceModalOpen} 
           onClose={() => setServiceModalOpen(false)}
           onBookService={() => setServiceBookingOpen(true)}
         />

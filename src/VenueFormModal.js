@@ -11,6 +11,19 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 const ImagePreviewContainer = styled(Box)({
   position: 'relative',
@@ -41,15 +54,17 @@ const RemoveButton = styled(IconButton)({
 });
 
 const defaultVenue = {
-  name: '',
-  city: '',
-  country: '',
-  size: '',
-  capacity: '',
-  bookingStatus: '',
-  bookingDuration: '',
-  charges: '',
+  name: "",
+  city: "",
+  country: "",
+  size: "",
+  capacity: "",
+  bookingStatus: "",
+  bookingDuration: "",
+  charges: "",
   images: [],
+  lat: null,
+  lng: null,
 };
 
 const VenueFormModal = ({ open, handleClose, onSubmit, initialVenue }) => {
@@ -59,7 +74,57 @@ const VenueFormModal = ({ open, handleClose, onSubmit, initialVenue }) => {
     setVenue(initialVenue || defaultVenue);
   }, [initialVenue]);
 
-  const handleChange = (e) => {
+useEffect(() => {
+  if (!open) return;
+
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setVenue((prev) => ({
+          ...prev,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        }));
+      },
+      () => {
+        console.warn("Geolocation denied — will fallback to city/country");
+      },
+      { enableHighAccuracy: true }
+    );
+  }
+}, [open]);
+
+const geocodeCityCountry = async (city, country) => {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        `${city}, ${country}`
+      )}`
+    );
+    const data = await res.json();
+    if (data?.length) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+      };
+    }
+  } catch (err) {
+    console.error("Geocoding failed:", err);
+  }
+  return null;
+};
+
+useEffect(() => {
+  if (!venue.lat && venue.city && venue.country) {
+    geocodeCityCountry(venue.city, venue.country).then((coords) => {
+      if (coords) {
+        setVenue((prev) => ({ ...prev, ...coords }));
+      }
+    });
+  }
+}, [venue.city, venue.country, venue.lat]);
+
+const handleChange = (e) => {
     setVenue({ ...venue, [e.target.name]: e.target.value });
   };
 
@@ -113,6 +178,43 @@ const VenueFormModal = ({ open, handleClose, onSubmit, initialVenue }) => {
         <TextField name="name" label="Venue Name" value={venue.name} onChange={handleChange} required />
         <TextField name="city" label="City" value={venue.city} onChange={handleChange} required />
         <TextField name="country" label="Country" value={venue.country} onChange={handleChange} required />
+        {venue.lat && venue.lng && (
+          <Box mt={2}>
+            <Typography fontWeight="bold" mb={1}>
+              Venue Location (Auto-detected)
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              This location is based on your current position.
+            </Typography>
+
+            <Box
+              sx={{
+                height: 280,
+                borderRadius: 2,
+                overflow: "hidden",
+                border: "1px solid #ddd",
+              }}
+            >
+              <MapContainer
+                center={[venue.lat, venue.lng]}
+                zoom={13}
+                style={{ height: "100%", width: "100%" }}
+                scrollWheelZoom={false}
+                dragging={false}
+                doubleClickZoom={false}
+                zoomControl={false}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution="&copy; OpenStreetMap"
+                />
+                <Marker position={[venue.lat, venue.lng]} />
+              </MapContainer>
+            </Box>
+          </Box>
+        )}
+
         <TextField name="size" label="Size (square feet)" value={venue.size} onChange={handleChange} required />
         <TextField name="capacity" label="Seating Capacity" type="number" value={venue.capacity} onChange={handleChange} required />
 

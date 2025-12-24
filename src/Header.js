@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -31,11 +31,22 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenu, setMobileMenu] = useState(null);
 
-  const avatarSrc = user?.avatar ? getAvatarUrl(user) : null;
+  const avatarSrc = useMemo(() => {
+    if (!user?.avatar) return null;
+    return getAvatarUrl(user);
+  }, [user?.avatar]);
+
+  const navigateAndScroll = (path) => {
+    navigate(path);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setAnchorEl(null);
+    setMobileMenu(null);
+  };
 
   const handleLogout = () => {
     onLogout();
     setAnchorEl(null);
+    setMobileMenu(null);
     navigate("/login");
   };
 
@@ -91,6 +102,7 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
               <>
                 <IconButton onClick={(e) => setMobileMenu(e.currentTarget)}>
                       <Avatar
+                        key={avatarSrc || "no-avatar"}
                         src={avatarSrc}
                         alt={user?.username}
                         sx={{ width: 36, height: 36 }}
@@ -103,13 +115,13 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
                   open={Boolean(mobileMenu)}
                   onClose={() => setMobileMenu(null)}
                 >
-                  <MenuItem onClick={() => navigate("/contact-support")}>
+                  <MenuItem onClick={() => navigateAndScroll("/contact-support")}>
                     Contact Support
                   </MenuItem>
-                  <MenuItem onClick={() => navigate("/change-password")}>
+                  <MenuItem onClick={() => navigateAndScroll("/change-password")}>
                     Change Password
                   </MenuItem>
-                  <MenuItem onClick={() => navigate("/delete-account")}>
+                  <MenuItem onClick={() => navigateAndScroll("/delete-account")}>
                     Delete Account
                   </MenuItem>
                   <MenuItem onClick={handleLogout}>
@@ -124,6 +136,7 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
                   <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
                     {avatarSrc ? (
                       <Avatar
+                        key={avatarSrc || "no-avatar"}
                         src={avatarSrc}
                         alt={user?.username}
                         sx={{ width: 36, height: 36 }}
@@ -144,19 +157,19 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
                   open={Boolean(anchorEl)}
                   onClose={() => setAnchorEl(null)}
                 >
-                  <MenuItem onClick={() => navigate("/problem-report")}>
+                  <MenuItem onClick={() => navigateAndScroll("/report-problem")}>
                     Report Problem
                   </MenuItem>
-                  <MenuItem onClick={() => navigate("/contact-support")}>
+                  <MenuItem onClick={() => navigateAndScroll("/contact-support")}>
                     Contact Support
                   </MenuItem>
-                  <MenuItem onClick={() => navigate("/change-password")}>
+                  <MenuItem onClick={() => navigateAndScroll("/change-password")}>
                     Change Password
                   </MenuItem>
-                  <MenuItem onClick={() => navigate("/delete-account")}>
+                  <MenuItem onClick={() => navigateAndScroll("/delete-account")}>
                     Delete Account
                   </MenuItem>
-                  <MenuItem onClick={() => navigate("/privacy-policy")}>
+                  <MenuItem onClick={() => navigateAndScroll("/privacy-policy")}>
                     Privacy Policy
                   </MenuItem>
                   <MenuItem onClick={handleLogout}>

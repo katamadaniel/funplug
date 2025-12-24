@@ -12,6 +12,8 @@ import {
   Button,
 } from "@mui/material";
 
+import { Switch, FormControlLabel } from "@mui/material";
+import { useUserLocation } from "./contexts/LocationContext";
 import { useSearch } from "./contexts/SearchContext";
 import EventModal from "./EventModal";
 import TicketPurchase from "./TicketPurchase";
@@ -37,13 +39,40 @@ const FILTER_TAGS = [
   { label: "Services", value: "service" },
 ];
 
+const formatLocationLabel = (item) => {
+  if (item.city && item.country) return `${item.city}, ${item.country}`;
+  if (item.city) return item.city;
+  if (item.country) return item.country;
+  return "Location not specified";
+};
+
+const toRad = (v) => (v * Math.PI) / 180;
+
+const getDistanceKm = (a, b) => {
+  if (!a || !b) return null;
+
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+
+  const x =
+    Math.sin(dLat / 2) ** 2 +
+    Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+};
+
 const isFutureDate = (date) => {
   if (!date) return false;
   return new Date(date).getTime() > Date.now();
 };
 
 const SearchResults = ({ results, onViewProfile }) => {
-  const { searchQuery } = useSearch();
+  const { searchQuery, nearMe, setNearMe } = useSearch();
+  const userLocation = useUserLocation();
 
   const [users, setUsers] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -72,22 +101,38 @@ const SearchResults = ({ results, onViewProfile }) => {
   //QUERY & FILTER LOGIC
   const query = searchQuery.toLowerCase();
 
-  const filteredResults = results
-    .filter((item) => {
-      // TAG FILTER
-      if (filter !== "all" && item.type !== filter) return false;
+const filteredResults = results
+  .map((item) => {
+    if (
+      userLocation &&
+      item.location?.coordinates?.length === 2
+    ) {
+      const [lng, lat] = item.location.coordinates;
+      const distanceKm = getDistanceKm(userLocation, { lat, lng });
+      return { ...item, distanceKm };
+    }
+    return item;
+  })
+  .filter((item) => {
+    if (filter !== "all" && item.type !== filter) return false;
+    if (!JSON.stringify(item).toLowerCase().includes(query)) return false;
 
-      // TEXT SEARCH
-      if (!JSON.stringify(item).toLowerCase().includes(query)) return false;
+    if (item.type === "event") {
+      const eventDate = item.date || item.startDate;
+      if (!isFutureDate(eventDate)) return false;
+    }
 
-      // FUTURE EVENTS ONLY
-      if (item.type === "event") {
-        const eventDate = item.date || item.startDate;
-        if (!isFutureDate(eventDate)) return false;
-      }
+    // Optional radius filter (example: 100km)
+    if (item.distanceKm && item.distanceKm > 100) return false;
 
-      return true;
-    });
+    return true;
+  })
+  .sort((a, b) => {
+    if (a.distanceKm != null && b.distanceKm != null) {
+      return a.distanceKm - b.distanceKm;
+    }
+    return 0;
+  });
 
   const grouped = {
     user: filteredResults.filter(r => r.type === "user"),
@@ -128,7 +173,15 @@ const SearchResults = ({ results, onViewProfile }) => {
           />
         ))}
       </Box>
-
+      <FormControlLabel
+        control={
+          <Switch
+            checked={nearMe}
+            onChange={(e) => setNearMe(e.target.checked)}
+          />
+        }
+        label="Near Me"
+      />
       {Object.keys(grouped).map(type => {
         const list = grouped[type];
         if (!list.length) return null;
@@ -174,11 +227,18 @@ const SearchResults = ({ results, onViewProfile }) => {
                           sx={{ objectFit: "cover" }}
                         />
                         <CardContent>
+                          {item.distanceKm != null && (
+                            <Chip
+                              size="small"
+                              label={`${item.distanceKm.toFixed(1)} km away`}
+                              sx={{ mt: 0.5 }}
+                            />
+                          )}
                           <Typography variant="subtitle1" fontWeight="bold">
                             {item.title || item.name}
                           </Typography>
-                          <Typography variant="body2">
-                            {item.description || item.location}
+                          <Typography variant="body2" color="text.secondary">
+                            {item.description || formatLocationLabel(item)}
                           </Typography>
                         </CardContent>
                       </>

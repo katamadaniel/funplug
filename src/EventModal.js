@@ -288,7 +288,7 @@ const EventModal = ({ event, user, onClose, onBuyTicket }) => {
           </Box>
         </DialogContent>
 
-        <DialogActions >
+        <DialogActions sx={{justifyContent: 'center'}} >
           <Button
             variant="contained"
             disabled={isBuyDisabled}

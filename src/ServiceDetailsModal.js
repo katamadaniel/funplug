@@ -33,7 +33,7 @@ import { getAvatarUrl } from "./utils/avatar";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const ServiceDetailsModal = ({ service, user, open, onClose, onBookService }) => {
+const ServiceDetailsModal = ({ service, user, onClose, onBookService }) => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isFollowOpen, setIsFollowOpen] = useState(false);
   const [fullImage, setFullImage] = useState(null);
@@ -131,7 +131,7 @@ const ServiceDetailsModal = ({ service, user, open, onClose, onBookService }) =>
       </Modal>
 
       {/* MAIN MODAL */}
-      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
         <DialogTitle sx={{ pb: 1 }}>
           <Stack direction="row" justifyContent="space-between">
             {/* USER INFO */}
@@ -260,7 +260,7 @@ const ServiceDetailsModal = ({ service, user, open, onClose, onBookService }) =>
           </Box>
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions sx={{justifyContent: 'center'}} >
           <Button
             variant="contained"
             disabled={service.status === "closed"}

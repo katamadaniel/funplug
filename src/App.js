@@ -9,6 +9,7 @@ import CategoryRouter from './categories/CategoryRouter';
 import About from './About';
 import FAQ from './FAQ';
 import Contact from './Contact';
+import ScrollToTop from './ScrollToTop';
 import Header from './Header';
 import Menu from './Menu';
 import Footer from './Footer';
@@ -32,6 +33,7 @@ import PrivacyPolicy from './PrivacyPolicy';
 import ReportProblem from './ReportProblem';
 import ContactSupport from './ContactSupport';
 import './App.css';
+import { LocationProvider } from './contexts/LocationContext';
 import { CacheProvider } from './contexts/CacheContext';
 import { UsersProvider } from './contexts/UsersContext';
 import { TicketsProvider } from './contexts/TicketsContext';
@@ -144,6 +146,7 @@ function App() {
   };
 
   return (
+    <LocationProvider>
     <CacheProvider>
     <NotificationProvider userId={user?._id} token={token}>
       <UsersProvider>
@@ -152,6 +155,7 @@ function App() {
             <VenuesProvider>
               <SearchProvider>
                 <Router>
+                  <ScrollToTop />
                   {isAdminAuthenticated ? (
                     <div className="admin-portal">
                       <AdminNavbar  admin={admin} onLogout={handleAdminLogout}  setAdminAuthenticated={setAdminAuthenticated}  setAdmin={setAdmin} />
@@ -218,27 +222,19 @@ function App() {
       </UsersProvider>
     </NotificationProvider>
     </CacheProvider>
+    </LocationProvider>
   );
 }
 
 function SearchResultsWrapper() {
   const navigate = useNavigate();
-  const { searchResults } = useSearch(); // Get searchResults from context
-
-  const handleViewProfile = (userId) => {
-    navigate(`/profile/${userId}`);
-  };
-
-  const handleViewEventDetails = (eventId) => {
-    navigate(`/events/${eventId}`);
-  };
-
-  const handleViewVenueDetails = (venueId) => {
-    navigate(`/venues/${venueId}`);
-  };
+  const { searchResults } = useSearch();
 
   return (
-    <SearchResults results={searchResults} onViewProfile={handleViewProfile} onViewEventDetails={handleViewEventDetails} onExploreVenue={handleViewVenueDetails} />
+    <SearchResults
+      results={searchResults}
+      onViewProfile={(id) => navigate(`/profile/${id}`)}
+    />
   );
 }
 

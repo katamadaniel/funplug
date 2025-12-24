@@ -23,7 +23,7 @@ import PaymentStatusBanner from "./components/PaymentStatusBanner";
 const API_URL = process.env.REACT_APP_API_URL;
 const socket = io(API_URL, { autoConnect: false });
 
-const PerformanceBookingFormModal = ({ performance, onClose, onBooked, open}) => {
+const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
   const [form, setForm] = useState({
     clientName: "",
     phone: "",
@@ -260,7 +260,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked, open}) =>
 
   return (
     <Dialog
-      open={open}
+      open
       onClose={onClose}
       fullWidth
       maxWidth="sm"
@@ -270,8 +270,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked, open}) =>
         Book {performance.name} for {performance.artType} Performance
       </DialogTitle>
 
-      <DialogContent dividers sx={{ maxHeight: "80vh" }}>
-        <Stack spacing={2}>
+      <DialogContent dividers sx={{ maxHeight: "75vh", overflowY: "auto", pb: 2 }}>
           {errors.general && (
             <Alert severity="error">{errors.general}</Alert>
           )}
@@ -417,14 +416,14 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked, open}) =>
             <Divider sx={{ my: 1 }} />
             <Typography variant="subtitle2">Total: Ksh {total}</Typography>
             <Typography variant="subtitle2">
-              Reservation Fee (10%): Ksh {reservationFee}
+              Reservation Fee: Ksh {reservationFee}
             </Typography>
           </Grid>
           </Grid>
-        </Stack>
       </DialogContent>
 
       <DialogActions>
+      <Stack direction="row" spacing={2} p={1}  justifyContent= "space-between" width="100%">
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant="contained"
@@ -433,6 +432,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked, open}) =>
         >
           {loading ? <CircularProgress size={22}/> : "Book Now"}
         </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );

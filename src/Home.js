@@ -10,6 +10,7 @@ import PerformanceDetailsModal from "./PerformanceDetailsModal";
 import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
 import ServiceDetailsModal from "./ServiceDetailsModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
+import { useUserLocation } from "./contexts/LocationContext";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -35,7 +36,6 @@ const USERS_API_URL = `${API_URL}/api/users`;
 const VENUES_API_URL = `${API_URL}/api/venues`;
 const PERFORMANCES_API_URL = `${API_URL}/api/performances`;
 const SERVICES_API_URL = `${API_URL}/api/services`;
-
 
 const EVENTS_PER_PAGE = 4;
 const VENUES_PER_PAGE = 4;
@@ -109,9 +109,26 @@ const Home = () => {
   const performancesRef = useRef(null);
   const servicesRef = useRef(null);
 
+  const userLocation = useUserLocation();
+  const userCity = users?.[0]?.city;
+  const userCountry = users?.[0]?.country;
+
+  const buildParams = () => {
+    if (userLocation) return userLocation;
+    if (userCity) return { city: userCity };
+    if (userCountry) return { country: userCountry };
+    return {};
+  };
+
 // fetch
 const loadAll = useCallback(async () => {
   setLoading(true);
+
+  
+  axios.get(`${EVENTS_API_URL}/recommended`, { params: buildParams() })
+  axios.get(`${VENUES_API_URL}/recommended`, { params: buildParams() })
+  axios.get(`${PERFORMANCES_API_URL}/recommended`, { params: buildParams() })
+  axios.get(`${SERVICES_API_URL}/recommended`, { params: buildParams() })
 
   try {
     /* =========================
@@ -437,6 +454,19 @@ useEffect(() => {
                       loading="lazy"
                     />
                     <CardContent sx={{ flexGrow: 1 }}>
+                      <Chip
+                        label={
+                          userLocation
+                            ? "Near you"
+                            : userCity
+                              ? `In ${userCity}`
+                              : userCountry
+                                ? `In ${userCountry}`
+                                : "Trending"
+                        }
+                        color="primary"
+                        size="small"
+                      />
                       <Typography variant="subtitle1" gutterBottom>{ev.title}</Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{ev.description}</Typography>
                       <Typography variant="caption" color="text.secondary">Venue: {ev.venue}</Typography>
@@ -474,6 +504,19 @@ useEffect(() => {
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia component="img" height="160" image={venue.images?.[0]?.url || "/default-venue.jpg"} alt={venue.name}/>
                     <CardContent sx={{ flexGrow: 1 }}>
+                      <Chip
+                        label={
+                          userLocation
+                            ? "Near you"
+                            : userCity
+                              ? `In ${userCity}`
+                              : userCountry
+                                ? `In ${userCountry}`
+                                : "Trending"
+                        }
+                        color="primary"
+                        size="small"
+                      />
                       <Typography variant="subtitle1">{venue.name}</Typography>
                       <Typography variant="body2" color="text.secondary">{venue.city}, {venue.country}</Typography>
                     </CardContent>
@@ -510,6 +553,19 @@ useEffect(() => {
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia component="img" height="160" image={card.images?.[0]?.url || "/default-perf.jpg"} alt={card.name}/>
                     <CardContent sx={{ flexGrow: 1 }}>
+                      <Chip
+                        label={
+                          userLocation
+                            ? "Near you"
+                            : userCity
+                              ? `In ${userCity}`
+                              : userCountry
+                                ? `In ${userCountry}`
+                                : "Trending"
+                        }
+                        color="primary"
+                        size="small"
+                      />
                       <Typography variant="subtitle1">{card.name}</Typography>
                       <Typography variant="body2" color="text.secondary">{card.artType} — {card.city}</Typography>
                     </CardContent>
@@ -546,6 +602,19 @@ useEffect(() => {
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia component="img" height="160" image={service.images?.[0]?.url || "/default-service.jpg"} alt={service.serviceType}/>
                     <CardContent sx={{ flexGrow: 1 }}>
+                      <Chip
+                        label={
+                          userLocation
+                            ? "Near you"
+                            : userCity
+                              ? `In ${userCity}`
+                              : userCountry
+                                ? `In ${userCountry}`
+                                : "Trending"
+                        }
+                        color="success"
+                        size="small"
+                      />
                       <Typography variant="subtitle1">{service.serviceType}</Typography>
                       <Typography variant="body2" color="text.secondary">{service.city}, {service.country}</Typography>
                     </CardContent>
@@ -588,27 +657,8 @@ useEffect(() => {
         <VenueDetailsModal
          venue={selectedVenue} 
          user={selectedUser} 
-         open={isVenueModalOpen} 
          onClose={handleCloseModal} 
          onBookVenue={() => handleBookVenue(selectedVenue)} />
-      )}
-
-      {isPerformanceModalOpen && selectedPerformance && (
-        <PerformanceDetailsModal
-         performance={selectedPerformance} 
-         user={selectedUser} 
-         open={isPerformanceModalOpen} 
-         onClose={handleCloseModal} 
-         onBookPerformance={() => handleBookPerformance(selectedPerformance)} />
-      )}
-
-      {isServiceModalOpen && selectedService && (
-        <ServiceDetailsModal
-         service={selectedService} 
-         user={selectedUser} 
-         open={isServiceModalOpen} 
-         onClose={handleCloseModal} 
-         onBookService={() => handleBookService(selectedService)} />
       )}
 
       {isVenueBookingModalOpen && selectedVenue && (
@@ -618,11 +668,27 @@ useEffect(() => {
          onClose={handleCloseModal} />
       )}
 
+      {isPerformanceModalOpen && selectedPerformance && (
+        <PerformanceDetailsModal
+         performance={selectedPerformance} 
+         user={selectedUser} 
+         onClose={handleCloseModal} 
+         onBookPerformance={() => handleBookPerformance(selectedPerformance)} />
+      )}
+
       {isPerformanceBookingModalOpen && selectedPerformance && (
         <PerformanceBookingFormModal
          performance={selectedPerformance} 
          open={isPerformanceBookingModalOpen} 
          onClose={handleCloseModal} />
+      )}
+
+      {isServiceModalOpen && selectedService && (
+        <ServiceDetailsModal
+         service={selectedService} 
+         user={selectedUser} 
+         onClose={handleCloseModal} 
+         onBookService={() => handleBookService(selectedService)} />
       )}
 
       {isServiceBookingModalOpen && selectedService && (
