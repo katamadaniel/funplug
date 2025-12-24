@@ -612,7 +612,7 @@ useEffect(() => {
                                 ? `In ${userCountry}`
                                 : "Trending"
                         }
-                        color="success"
+                        color="primary"
                         size="small"
                       />
                       <Typography variant="subtitle1">{service.serviceType}</Typography>
