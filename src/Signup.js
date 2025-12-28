@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signup } from './services/userService';
-import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl, Typography, IconButton, InputAdornment, Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl, Typography, IconButton, 
+  InputAdornment, Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -24,7 +25,22 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
+
   const navigate = useNavigate();
+
+  const showToast = (message, severity = "info") => {
+    setToast({ open: true, message, severity });
+  };
+
+  const handleCloseToast = () => {
+    setToast((prev) => ({ ...prev, open: false }));
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,11 +83,19 @@ const Signup = () => {
       setLoading(true);
       try {
         await signup(formData);
-        alert('User signed up successfully');
+        showToast('User signed up successfully');
         navigate('/login');
       } catch (error) {
         console.error('Error signing up:', error);
-        setError(error.response?.data?.message || 'Error signing up');
+
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
+
+      if (status === 429) {
+        showToast(message || "Too many signup attempts. Please try again later.", "error");
+      } else {
+        showToast(message || "Email already in use.", "error");
+      }
       } finally {
         setLoading(false);
       }
@@ -309,6 +333,21 @@ By using FunPlug, you agree to these terms. If you have any questions, contact u
           <Button variant="contained" sx={{ display: 'block', margin: '20px auto' }} onClick={() => setTermsOpen(false)} color="primary">Close</Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={5000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseToast}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
