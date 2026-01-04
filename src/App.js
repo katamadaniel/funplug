@@ -55,6 +55,8 @@ import AdminLogin from './components/admin/AdminLogin';
 import AdminNavbar from './components/admin/AdminNavbar';
 import PrivateRoute from './PrivateRoute';
 import { decodeToken } from './utils/decodeToken';
+import useOffline from './hooks/useOffline';
+import { Alert } from '@mui/material';
 
 Modal.setAppElement('#root');
 
@@ -65,6 +67,13 @@ function App() {
   const [admin, setAdmin] = useState(null);
   const token = localStorage.getItem('token');
   const adminToken = localStorage.getItem('adminToken');
+  const offline = useOffline();
+
+  {offline && (
+    <Alert severity="warning">
+      You are offline. Some features may not work.
+    </Alert>
+  )}
 
   useEffect(() => {
     const loadUserProfile = async () => {

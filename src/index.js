@@ -4,12 +4,15 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { CustomThemeProvider } from "./theme/ThemeContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <CustomThemeProvider>
+      <ErrorBoundary>
         <App />
+      </ErrorBoundary>
     </CustomThemeProvider>
   </React.StrictMode>
 );

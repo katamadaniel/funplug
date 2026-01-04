@@ -1,5 +1,5 @@
 export const handleApiError = (error) => {
-  // 📴 Offline
+  // Offline
   if (!navigator.onLine) {
     return {
       success: false,
@@ -8,7 +8,7 @@ export const handleApiError = (error) => {
     };
   }
 
-  // 🌐 Network / CORS / server down
+  // Network / CORS / server down
   if (!error.response) {
     return {
       success: false,
@@ -17,7 +17,7 @@ export const handleApiError = (error) => {
     };
   }
 
-  // 🔐 Auth errors
+  // Auth errors
   if (error.response.status === 401) {
     return {
       success: false,
@@ -26,7 +26,7 @@ export const handleApiError = (error) => {
     };
   }
 
-  // 🚫 Forbidden
+  // Forbidden
   if (error.response.status === 403) {
     return {
       success: false,
@@ -35,7 +35,7 @@ export const handleApiError = (error) => {
     };
   }
 
-  // ❌ Validation / bad request
+  // Validation / bad request
   if (error.response.status === 400) {
     return {
       success: false,
@@ -44,7 +44,7 @@ export const handleApiError = (error) => {
     };
   }
 
-  // 💥 Server error
+  // Server error
   if (error.response.status >= 500) {
     return {
       success: false,

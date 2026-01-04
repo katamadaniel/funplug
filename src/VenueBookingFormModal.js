@@ -174,7 +174,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
         ...form,
         phone: formatPhone(form.phone),
         duration,
-        total,
+        totalAmount: total,
         venueId: venue._id,
         creatorId: venue.userId,
         venueTitle: venue.name,

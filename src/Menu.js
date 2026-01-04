@@ -66,7 +66,7 @@ const Menu = ({ isAuthenticated }) => {
           borderRadius: 3,
           boxShadow: 3,
           px: 1.5,
-          py: 1,
+          py: 1,         
         }}
       >
         <Stack

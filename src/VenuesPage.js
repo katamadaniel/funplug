@@ -257,7 +257,7 @@ const VenuesPage = ({ token }) => {
                             <TableCell>{b.startTime}</TableCell>
                             <TableCell>{b.endTime}</TableCell>
                             <TableCell>{b.duration}</TableCell>
-                            <TableCell>{b.total.toFixed(2)}</TableCell>
+                            <TableCell>{b.totalAmount.toFixed(2)}</TableCell>
                             <TableCell>
                               <IconButton color="primary" href={`tel:${b.phone}`}>
                                 <Call color="primary" />

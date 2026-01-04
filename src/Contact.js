@@ -16,14 +16,15 @@ import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import EmailIcon from "@mui/icons-material/Email";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 
-// Replace with real API call
+const API_URL= process.env.REACT_APP_API_URL;
+
 const sendSupportMessage = async (payload) => {
   const formData = new FormData();
   Object.entries(payload).forEach(([key, value]) => {
     if (value) formData.append(key, value);
   });
 
-  const res = await fetch("/api/support/contact", {
+  const res = await fetch(`${API_URL}/api/support/contact`, {
     method: "POST",
     body: formData,
   });

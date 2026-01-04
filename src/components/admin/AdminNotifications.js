@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Button, Drawer, List, ListItem, ListItemText, TextField, Switch, Box } from '@mui/material';
+import { Typography, Button, Drawer, List, ListItem, ListItemText, TextField, Switch, Box, MenuItem } from '@mui/material';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -7,6 +7,9 @@ const API_URL = process.env.REACT_APP_API_URL;
 const AdminNotifications = () => {
   const [problemReports, setProblemReports] = useState([]);
   const [supportChats, setSupportChats] = useState([]);
+  const [supportTickets, setSupportTickets] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [priority, setPriority] = useState("Medium");
   const [userDetails, setUserDetails] = useState({});
   const [selectedTab, setSelectedTab] = useState('problemReports');
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -89,6 +92,15 @@ const AdminNotifications = () => {
     }
   };
 
+  const fetchSupportTickets = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/support/tickets`);
+      setSupportTickets(res.data);
+    } catch (error) {
+      console.error("Error fetching support tickets", error);
+    }
+  };
+
   // Open the drawer with data
   const openDrawer = (userId, tab) => {
     setSelectedUserId(userId);
@@ -99,6 +111,7 @@ const AdminNotifications = () => {
   useEffect(() => {
     fetchProblemReports();
     fetchSupportChats();
+    fetchSupportTickets();    
   }, []);
 
   return (
@@ -107,21 +120,15 @@ const AdminNotifications = () => {
         Manage Notifications
       </Typography>
 
-      {/* Row with Buttons for Problem Reports and Support Chats */}
-      <Box display="flex" justifyContent="space-between" marginBottom={2}>
-        <Button
-          onClick={() => setSelectedTab('problemReports')}
-          variant="contained"
-          style={{ width: '48%' }}
-        >
+      <Box display="flex" gap={1} marginBottom={2}>
+        <Button fullWidth variant="contained" onClick={() => setSelectedTab("problemReports")}>
           Problem Reports
         </Button>
-        <Button
-          onClick={() => setSelectedTab('supportChats')}
-          variant="contained"
-          style={{ width: '48%' }}
-        >
+        <Button fullWidth variant="contained" onClick={() => setSelectedTab("supportChats")}>
           Support Chats
+        </Button>
+        <Button fullWidth variant="contained" onClick={() => setSelectedTab("supportTickets")}>
+          Support Tickets
         </Button>
       </Box>
 
@@ -182,6 +189,30 @@ const AdminNotifications = () => {
         </div>
       )}
 
+      {selectedTab === "supportTickets" && (
+        <>
+          <Typography variant="h5">Support Tickets</Typography>
+          <List>
+            {supportTickets.map((ticket) => (
+              <ListItem
+                key={ticket._id}
+                button
+                onClick={() => {
+                  setSelectedTicket(ticket);
+                  setPriority(ticket.priority);
+                  setDrawerOpen(true);
+                }}
+              >
+                <ListItemText
+                  primary={`${ticket.subject} (${ticket.issueType})`}
+                  secondary={`From: ${ticket.email} • Priority: ${ticket.priority}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
+
       {/* Drawer for Chat or Problem Report */}
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <div style={{ width: 350, padding: 20, display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -234,6 +265,84 @@ const AdminNotifications = () => {
                 Send Response
               </Button>
             </div>
+          )}
+
+          {selectedTicket && selectedTab === "supportTickets" && (
+            <Box display="flex" flexDirection="column" height="100%">
+              <Typography variant="h6">{selectedTicket.subject}</Typography>
+              <Typography variant="body2">{selectedTicket.email}</Typography>
+
+              <Typography sx={{ mt: 2 }}>
+                {selectedTicket.message}
+              </Typography>
+
+              {selectedTicket.attachment && (
+                <Box mt={2}>
+                  <img
+                    src={`${API_URL}/${selectedTicket.attachment}`}
+                    alt="attachment"
+                    style={{ width: "100%", cursor: "pointer" }}
+                    onClick={() =>
+                      window.open(`${API_URL}/${selectedTicket.attachment}`, "_blank")
+                    }
+                  />
+                </Box>
+              )}
+
+              {/* Priority */}
+              <TextField
+                select
+                label="Priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                sx={{ mt: 2 }}
+              >
+                <MenuItem value="Low">Low</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="High">High</MenuItem>
+              </TextField>
+
+              {/* Reply */}
+              <TextField
+                multiline
+                rows={3}
+                label="Admin Reply"
+                value={adminMessage}
+                onChange={(e) => setAdminMessage(e.target.value)}
+                sx={{ mt: 2 }}
+              />
+
+              <Button
+                variant="contained"
+                sx={{ mt: 2 }}
+                onClick={async () => {
+                  await axios.put(
+                    `${API_URL}/api/support/tickets/${selectedTicket._id}`,
+                    {
+                      adminReply: adminMessage,
+                      priority,
+                    }
+                  );
+                  fetchSupportTickets();
+                }}
+              >
+                Send Reply
+              </Button>
+
+              <Button
+                color="success"
+                sx={{ mt: 1 }}
+                onClick={async () => {
+                  await axios.put(
+                    `${API_URL}/api/support/tickets/${selectedTicket._id}`,
+                    { status: "Resolved" }
+                  );
+                  fetchSupportTickets();
+                }}
+              >
+                Mark as Resolved
+              </Button>
+            </Box>
           )}
         </div>
       </Drawer>

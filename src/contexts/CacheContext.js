@@ -10,9 +10,9 @@ const CacheContext = createContext();
 
 /**
  * Default cache TTL (in ms)
- * Example: 5 minutes
+ * Example: 10 minutes
  */
-const DEFAULT_TTL = 5 * 60 * 1000;
+const DEFAULT_TTL = 10 * 60 * 1000;
 
 export const CacheProvider = ({ children }) => {
   const [cache, setCache] = useState({});
@@ -81,7 +81,7 @@ export const CacheProvider = ({ children }) => {
 
         return cleaned;
       });
-    }, 60 * 1000); // cleanup every 1 minute
+    }, 600 * 1000); // cleanup every 10 minute
 
     return () => clearInterval(interval);
   }, []);

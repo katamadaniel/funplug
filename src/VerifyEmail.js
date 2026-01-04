@@ -22,7 +22,7 @@ const VerifyEmail = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        const response = await axios.get(`${API_URL}api/users/verify-email/${token}`);
+        const response = await axios.get(`${API_URL}/api/users/verify-email/${token}`);
         setMessage(response.data.message);
         setSuccess(true);
       } catch (error) {

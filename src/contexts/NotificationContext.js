@@ -29,7 +29,7 @@ const SOURCES = {
       email: b.email,
       bookingDate: b.bookingDate,
       duration: b.duration,
-      total: b.total,
+      total: b.totalAmount,
     }),
   },
   performanceBooking: {

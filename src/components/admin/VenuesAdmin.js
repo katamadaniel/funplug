@@ -88,7 +88,7 @@ const fetchVenues = async () => {
 
         const bookingCount = successBookings.length;
         const totalAmount = successBookings.reduce(
-          (sum, b) => sum + (b.total || 0),
+          (sum, b) => sum + (b.totalAmount || 0),
           0
         );
 
@@ -247,7 +247,7 @@ const fetchVenues = async () => {
                     <TableCell>{booking.email}</TableCell>
                     <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
                     <TableCell>{booking.duration}</TableCell>
-                    <TableCell>{booking.total.toFixed(2)}</TableCell>
+                    <TableCell>{booking.totalAmount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
