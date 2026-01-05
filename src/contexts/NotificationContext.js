@@ -24,10 +24,10 @@ const SOURCES = {
     label: (b) => `Venue booked: ${b.venueTitle}`,
     date: (b) => b.createdAt,
     details: (b) => ({
-      name: b.name,
+      name: b.clientName,
       phone: b.phone,
       email: b.email,
-      bookingDate: b.bookingDate,
+      date: b.bookingDate,
       duration: b.duration,
       total: b.totalAmount,
     }),
@@ -37,7 +37,9 @@ const SOURCES = {
     label: (b) => `Performance booked: ${b.artType}`,
     date: (b) => b.createdAt,
     details: (b) => ({
-       name: b.clientName,
+      name: b.clientName,
+      phone: b.phone,
+      email: b.email,
       date: b.bookingDate,
       duration: b.duration,
       total: b.totalAmount,
@@ -49,6 +51,8 @@ const SOURCES = {
     date: (b) => b.createdAt,
     details: (b) => ({
       name: b.clientName,
+      phone: b.phone,
+      email: b.email,
       date: b.bookingDate,
       duration: b.duration,
       total: b.totalAmount,

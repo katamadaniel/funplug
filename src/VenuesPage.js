@@ -235,7 +235,7 @@ const VenuesPage = ({ token }) => {
                   <Table>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Client</TableCell>
+                        <TableCell>Client Name</TableCell>
                         <TableCell>Phone</TableCell>
                         <TableCell>Email</TableCell>
                         <TableCell>Booking Date</TableCell>
@@ -250,7 +250,7 @@ const VenuesPage = ({ token }) => {
                       {venueBookings.length > 0 ? (
                         venueBookings.map((b) => (
                           <TableRow key={b._id}>
-                            <TableCell>{b.name}</TableCell>
+                            <TableCell>{b.clientName}</TableCell>
                             <TableCell>{b.phone}</TableCell>
                             <TableCell>{b.email}</TableCell>
                             <TableCell>{new Date(b.bookingDate).toLocaleDateString()}</TableCell>

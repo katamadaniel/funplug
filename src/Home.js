@@ -454,19 +454,19 @@ useEffect(() => {
                       loading="lazy"
                     />
                     <CardContent sx={{ flexGrow: 1 }}>
-                      <Chip
-                        label={
-                          userLocation
-                            ? "Near you"
-                            : userCity
-                              ? `In ${userCity}`
-                              : userCountry
-                                ? `In ${userCountry}`
-                                : "Trending"
-                        }
-                        color="primary"
-                        size="small"
-                      />
+                      {(userLocation || userCity || userCountry) && (
+                        <Chip
+                          label={
+                            userLocation
+                              ? "Near you"
+                              : userCity
+                                ? `In ${userCity}`
+                                : `In ${userCountry}`
+                          }
+                          color="primary"
+                          size="small"
+                        />
+                      )}
                       <Typography variant="subtitle1" gutterBottom>{ev.title}</Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{ev.description}</Typography>
                       <Typography variant="caption" color="text.secondary">Venue: {ev.venue}</Typography>
@@ -504,19 +504,19 @@ useEffect(() => {
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia component="img" height="160" image={venue.images?.[0]?.url || "/default-venue.jpg"} alt={venue.name}/>
                     <CardContent sx={{ flexGrow: 1 }}>
-                      <Chip
-                        label={
-                          userLocation
-                            ? "Near you"
-                            : userCity
-                              ? `In ${userCity}`
-                              : userCountry
-                                ? `In ${userCountry}`
-                                : "Trending"
-                        }
-                        color="primary"
-                        size="small"
-                      />
+                      {(userLocation || userCity || userCountry) && (
+                        <Chip
+                          label={
+                            userLocation
+                              ? "Near you"
+                              : userCity
+                                ? `In ${userCity}`
+                                : `In ${userCountry}`
+                          }
+                          color="primary"
+                          size="small"
+                        />
+                      )}
                       <Typography variant="subtitle1">{venue.name}</Typography>
                       <Typography variant="body2" color="text.secondary">{venue.city}, {venue.country}</Typography>
                     </CardContent>
@@ -553,19 +553,6 @@ useEffect(() => {
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia component="img" height="160" image={card.images?.[0]?.url || "/default-perf.jpg"} alt={card.name}/>
                     <CardContent sx={{ flexGrow: 1 }}>
-                      <Chip
-                        label={
-                          userLocation
-                            ? "Near you"
-                            : userCity
-                              ? `In ${userCity}`
-                              : userCountry
-                                ? `In ${userCountry}`
-                                : "Trending"
-                        }
-                        color="primary"
-                        size="small"
-                      />
                       <Typography variant="subtitle1">{card.name}</Typography>
                       <Typography variant="body2" color="text.secondary">{card.artType} — {card.city}</Typography>
                     </CardContent>
@@ -602,19 +589,6 @@ useEffect(() => {
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia component="img" height="160" image={service.images?.[0]?.url || "/default-service.jpg"} alt={service.serviceType}/>
                     <CardContent sx={{ flexGrow: 1 }}>
-                      <Chip
-                        label={
-                          userLocation
-                            ? "Near you"
-                            : userCity
-                              ? `In ${userCity}`
-                              : userCountry
-                                ? `In ${userCountry}`
-                                : "Trending"
-                        }
-                        color="primary"
-                        size="small"
-                      />
                       <Typography variant="subtitle1">{service.serviceType}</Typography>
                       <Typography variant="body2" color="text.secondary">{service.city}, {service.country}</Typography>
                     </CardContent>
