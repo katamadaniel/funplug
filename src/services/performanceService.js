@@ -130,7 +130,7 @@ export const deleteCardById = async (cardId) => {
   return response.data;
 };
 
-export const getVenueBookingsByCardId = async (cardId) => {
+export const getBookingsByCardId = async (cardId) => {
   const response = await axiosInstance.get(`${BOOKINGS_API_URL}?cardId=${cardId}`);
   return response.data;
 };

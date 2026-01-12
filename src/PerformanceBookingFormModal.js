@@ -175,6 +175,8 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
         duration: String(duration),
         totalAmount: total,
         eventDetails: form.eventDetails,
+        artType: performance.artType,
+        name: performance.name,
         paymentMethod,
         amount: reservationFee,
       };

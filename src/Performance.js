@@ -38,6 +38,19 @@ import { styled } from '@mui/material/styles';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import CloseIcon from '@mui/icons-material/Close';
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 const ModalStyle = {
   position: 'absolute',
@@ -103,7 +116,9 @@ const Performance = ({ token }) => {
     city: '',
     charges: '',
     status: 'open',
-    images: []
+    images: [],
+    lat: null,
+    lng: null,
   });
 
   const loadMyCards = useCallback(async () => {
@@ -161,6 +176,8 @@ const Performance = ({ token }) => {
         charges: card.charges,
         status: card.status,
         images: card.images || [],
+        lat: card.location?.coordinates?.[1] || null,
+        lng: card.location?.coordinates?.[0] || null,
       });
     } else {
       setFormData({
@@ -233,6 +250,45 @@ const Performance = ({ token }) => {
         b.phone?.toLowerCase().includes(search.toLowerCase())
     );
   }
+
+  const LocationPicker = ({ lat, lng, onChange }) => {
+    const position = lat && lng ? [lat, lng] : [-1.286389, 36.817223]; // Nairobi fallback
+
+    function LocationMarker() {
+      useMapEvents({
+        click(e) {
+          onChange(e.latlng.lat, e.latlng.lng);
+        },
+      });
+
+      return lat && lng ? (
+        <Marker
+          position={[lat, lng]}
+          draggable
+          eventHandlers={{
+            dragend: (e) => {
+              const p = e.target.getLatLng();
+              onChange(p.lat, p.lng);
+            },
+          }}
+        />
+      ) : null;
+    }
+
+    return (
+      <MapContainer
+        center={position}
+        zoom={13}
+        style={{ height: 250, width: "100%", borderRadius: 12 }}
+      >
+        <TileLayer
+          attribution="&copy; OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <LocationMarker />
+      </MapContainer>
+    );
+  };
 
   return (
     <Box p={2}>
@@ -402,6 +458,25 @@ const Performance = ({ token }) => {
             <TextField fullWidth label="Stage Name" name="name" value={formData.name} onChange={handleChange} margin="normal" required />
             <TextField fullWidth label="Country" name="country" value={formData.country} onChange={handleChange} margin="normal" required />
             <TextField fullWidth label="City/Town" name="city" value={formData.city} onChange={handleChange} margin="normal" required />
+            <Box mt={2}>
+              <Typography variant="subtitle2" gutterBottom>
+                Pick performance location (click or drag marker)
+              </Typography>
+
+              <LocationPicker
+                lat={formData.lat}
+                lng={formData.lng}
+                onChange={(lat, lng) =>
+                  setFormData((prev) => ({ ...prev, lat, lng }))
+                }
+              />
+
+              {!formData.lat && (
+                <Typography variant="caption" color="text.secondary">
+                  If not set, city & country will be used as fallback
+                </Typography>
+              )}
+            </Box>
             <TextField fullWidth label="Charges (per hour)" name="charges" type="number" value={formData.charges} onChange={handleChange} margin="normal" required />
             <FormControl fullWidth margin="normal">
               <InputLabel>Status</InputLabel>

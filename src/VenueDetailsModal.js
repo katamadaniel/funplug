@@ -259,17 +259,18 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
               <strong>Capacity:</strong> {venue.capacity} people
             </Typography>
             <Typography>
-              <strong>Status:</strong>{" "}
-              <Chip
-                label={venue.bookingStatus}
-                color={venue.bookingStatus === "closed" ? "error" : "success"}
-              />
-            </Typography>
-            <Typography>
-              <strong>Duration:</strong> {venue.bookingDuration} hours
+              <strong>Duration:</strong> {venue.duration} hours/Day
             </Typography>
             <Typography>
               <strong>Charges:</strong> Ksh. {venue.charges}/hour
+            </Typography>
+            <Typography>
+              <strong>Status:</strong>{" "}
+              <Chip
+                label={venue.status}
+                color={venue.status === "closed" ? "error" : "primary"}
+                sx={{ textTransform: "capitalize" }}
+              />
             </Typography>
           </Stack>
         </DialogContent>
@@ -277,7 +278,7 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
         <DialogActions sx={{justifyContent: 'center'}} >
           <Button
             variant="contained"
-            disabled={venue.bookingStatus === "closed"}
+            disabled={venue.status === "closed"}
             onClick={onBookVenue}
           >
             Book Venue

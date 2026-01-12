@@ -24,7 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { fetchAdminProfile } from '../../services/adminService';
 import { getAllUsers, getUserById } from '../../services/userService';
-import { getAllVenues, deleteVenueById, getVenueBookingsByVenueId } from '../../services/venuesService';
+import { getAllVenues, deleteVenueById, getBookingsByVenueId } from '../../services/venuesService';
 
 const VenuesAdmin = () => {
   const [venues, setVenues] = useState([]);
@@ -81,7 +81,7 @@ const fetchVenues = async () => {
           username = user.username;
         } catch {/* ignore */}
 
-        const allBookings = await getVenueBookingsByVenueId(venue._id);
+        const allBookings = await getBookingsByVenueId(venue._id);
         const successBookings = allBookings.filter(
           (b) => b.paymentStatus === 'Success'
         );
@@ -115,7 +115,7 @@ const fetchVenues = async () => {
 
   const handleViewReport = async (venueId) => {
     try {
-      const bookings = await getVenueBookingsByVenueId(venueId);
+      const bookings = await getBookingsByVenueId(venueId);
           const successBookings = bookings.filter(
       (b) => b.paymentStatus === 'Success'
     );
@@ -178,7 +178,8 @@ const fetchVenues = async () => {
               <TableRow>
                 <TableCell>Username</TableCell>
                 <TableCell>Venue Name</TableCell>
-                <TableCell>Location</TableCell>
+                <TableCell>Country</TableCell>
+                <TableCell>City</TableCell>
                 <TableCell>Size (sq ft)</TableCell>
                 <TableCell>Capacity</TableCell>
                 <TableCell>Booking Status</TableCell>
@@ -193,10 +194,11 @@ const fetchVenues = async () => {
                 <TableRow key={venue._id}>
                   <TableCell>{usersMap[venue.userId] || 'Unknown User'}</TableCell>
                   <TableCell>{venue.name}</TableCell>
-                  <TableCell>{venue.location}</TableCell>
+                  <TableCell>{venue.country}</TableCell>
+                  <TableCell>{venue.city}</TableCell>
                   <TableCell>{venue.size}</TableCell>
                   <TableCell>{venue.capacity}</TableCell>
-                  <TableCell>{venue.bookingStatus}</TableCell>
+                  <TableCell>{venue.status}</TableCell>
                   <TableCell>Ksh.{venue.charges.toFixed(2)}</TableCell>
                   <TableCell>{venue.bookingCount}</TableCell>
                   <TableCell>Ksh.{venue.totalAmount.toFixed(2)}</TableCell>

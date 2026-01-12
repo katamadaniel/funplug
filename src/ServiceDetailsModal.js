@@ -246,14 +246,14 @@ const ServiceDetailsModal = ({ service, user, onClose, onBookService }) => {
           <Box mt={3}>
             <Typography><strong>Location:</strong> {service.city}, {service.country}</Typography>
             <Typography mt={1}><strong>Description:</strong> {service.description}</Typography>
-            <Typography mt={1}><strong>Charges:</strong> Ksh {service.charges}</Typography>
             <Typography mt={1}><strong>Duration:</strong> {service.duration} hours/day</Typography>
+            <Typography mt={1}><strong>Charges:</strong> Ksh {service.charges}/hour</Typography>
 
             <Typography mt={2}>
               <strong>Status: </strong>
             <Chip
               label={service.status}
-              color={service.status === "closed" ? "error" : "success"}
+              color={service.status === "closed" ? "error" : "primary"}
               sx={{ textTransform: "capitalize" }}
             />
             </Typography>

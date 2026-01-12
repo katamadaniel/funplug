@@ -180,8 +180,8 @@ const VenuesPage = ({ token }) => {
                   <Typography>Location: {venue.city}, {venue.country}</Typography>
                   <Typography>Size: {venue.size} square ft.</Typography>
                   <Typography>Capacity: {venue.capacity} people</Typography>
-                  <Typography>Status: {venue.bookingStatus}</Typography>
-                  <Typography>Duration: {venue.bookingDuration} hours</Typography>
+                  <Typography>Status: {venue.status}</Typography>
+                  <Typography>Duration: {venue.duration} hours</Typography>
                   <Typography>Charges: {venue.charges}/hour</Typography>
                   <Box sx={{ mt: 2, display: 'flex', justifyContent:'space-between', gap: 1 }}>
                     <Button variant="contained" color="primary" startIcon={<Edit />} onClick={() => handleEdit(venue)}>
@@ -205,7 +205,7 @@ const VenuesPage = ({ token }) => {
             Venue Bookings
           </Typography>
           <TextField
-            placeholder="Search by phone or email"
+            placeholder="Search by Email or Phone"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             size="small"
@@ -254,8 +254,8 @@ const VenuesPage = ({ token }) => {
                             <TableCell>{b.phone}</TableCell>
                             <TableCell>{b.email}</TableCell>
                             <TableCell>{new Date(b.bookingDate).toLocaleDateString()}</TableCell>
-                            <TableCell>{b.startTime}</TableCell>
-                            <TableCell>{b.endTime}</TableCell>
+                            <TableCell>{b.from}</TableCell>
+                            <TableCell>{b.to}</TableCell>
                             <TableCell>{b.duration}</TableCell>
                             <TableCell>{b.totalAmount.toFixed(2)}</TableCell>
                             <TableCell>

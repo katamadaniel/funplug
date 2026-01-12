@@ -182,6 +182,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
         quantity: form.quantity,
         eventDetails: form.eventDetails,
         totalAmount: total,
+        serviceType: service.serviceType,
         paymentMethod,
         amount: reservationFee,
       };

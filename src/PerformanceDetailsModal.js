@@ -256,7 +256,7 @@ const PerformanceDetailsModal = ({ performance, user, onClose, onBookPerformance
             <strong>Status:</strong>{" "}
             <Chip
               label={performance.status}
-              color={performance.status === "closed" ? "error" : "success"}
+              color={performance.status === "closed" ? "error" : "primary"}
               sx={{ textTransform: "capitalize" }}
             />
           </Typography>

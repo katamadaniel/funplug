@@ -24,12 +24,12 @@ const socket = io(API_URL, { autoConnect: false });
 
 const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
   const [form, setForm] = useState({
-    name: "",
+    clientName: "",
     phone: "",
     email: "",
     bookingDate: "",
-    startTime: "",
-    endTime: "",
+    from: "",
+    to: "",
   });
 
   const [duration, setDuration] = useState(0);
@@ -75,10 +75,10 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
   }, [lastBookingId, onClose, onBooked]);
 
   useEffect(() => {
-    const { startTime, endTime } = form;
-    if (startTime && endTime) {
-      const start = new Date(`1970-01-01T${startTime}`);
-      const end = new Date(`1970-01-01T${endTime}`);
+    const { from, to } = form;
+    if (from && to) {
+      const start = new Date(`1970-01-01T${from}`);
+      const end = new Date(`1970-01-01T${to}`);
       const hours = (end - start) / (1000 * 60 * 60);
 
       if (hours > 0) {
@@ -89,11 +89,11 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
       } else {
         setErrors((prev) => ({
           ...prev,
-          endTime: "End time must be after start time.",
+          to: "End time must be after start time.",
         }));
       }
     }
-  }, [form.startTime, form.endTime, venue.charges]);
+  }, [form.from, form.to, venue.charges]);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -109,7 +109,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
   const validateForm = () => {
     const errs = {};
 
-    if (!form.name) errs.name = "Enter your name";
+    if (!form.clientName) errs.clientName = "Enter your name";
     if (!form.phone) errs.phone = "Enter phone number";
     else if (!/^254\d{9}$/.test(formatPhone(form.phone)))
       errs.phone = "Invalid phone number";
@@ -118,8 +118,8 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Invalid email";
 
     if (!form.bookingDate) errs.bookingDate = "Pick a date";
-    if (!form.startTime) errs.startTime = "Select start time";
-    if (!form.endTime) errs.endTime = "Select end time";
+    if (!form.from) errs.from = "Select start time";
+    if (!form.to) errs.to = "Select end time";
 
     return errs;
   };
@@ -132,12 +132,12 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
 
   const checkAvailability = async () => {
     try {
-      const { bookingDate, startTime, endTime } = form;
+      const { bookingDate, from, to } = form;
       const params = new URLSearchParams();
       params.append("venueId", venue._id);
       params.append("bookingDate", bookingDate);
-      params.append("startTime", startTime);
-      params.append("endTime", endTime);
+      params.append("from", from);
+      params.append("to", to);
 
       const res = await axios.get(
         `${API_URL}/api/venue_bookings/check?${params.toString()}`
@@ -290,12 +290,12 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
               <TextField
                 fullWidth
                 label="Name"
-                value={form.name}
+                value={form.clientName}
                 onChange={(e) =>
-                  setForm((p) => ({ ...p, name: e.target.value }))
+                  setForm((p) => ({ ...p, clientName: e.target.value }))
                 }
-                error={Boolean(errors.name)}
-                helperText={errors.name}
+                error={Boolean(errors.clientName)}
+                helperText={errors.clientName}
               />
             </Grid>
 
@@ -343,12 +343,12 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
             <TextField
               fullWidth
               type="time"
-              label="Start Time"
+              label="From"
               InputLabelProps={{ shrink: true }}
-              value={form.startTime}
-              onChange={handleInputChange("startTime")}
-              error={Boolean(errors.startTime)}
-              helperText={errors.startTime}
+              value={form.from}
+              onChange={handleInputChange("from")}
+              error={Boolean(errors.from)}
+              helperText={errors.from}
             />
           </Grid>
 
@@ -356,12 +356,12 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
             <TextField
               fullWidth
               type="time"
-              label="End Time"
+              label="To"
               InputLabelProps={{ shrink: true }}
-              value={form.endTime}
-              onChange={handleInputChange("endTime")}
-              error={Boolean(errors.endTime)}
-              helperText={errors.endTime}
+              value={form.to}
+              onChange={handleInputChange("to")}
+              error={Boolean(errors.to)}
+              helperText={errors.to}
             />
           </Grid>
 
@@ -403,7 +403,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
         <Button
           variant="contained"
           onClick={handleBookVenue}
-          disabled={loading || venue.bookingStatus === "closed"}
+          disabled={loading || venue.status === "closed"}
         >
           {loading ? <CircularProgress size={22} /> : "Book Venue"}
         </Button>

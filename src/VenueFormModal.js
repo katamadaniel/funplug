@@ -59,8 +59,8 @@ const defaultVenue = {
   country: "",
   size: "",
   capacity: "",
-  bookingStatus: "",
-  bookingDuration: "",
+  status: "",
+  duration: "",
   charges: "",
   images: [],
   lat: null,
@@ -220,9 +220,9 @@ const handleChange = (e) => {
 
         <TextField
           select
-          name="bookingStatus"
+          name="status"
           label="Booking Status"
-          value={venue.bookingStatus}
+          value={venue.status}
           onChange={handleChange}
           required
         >
@@ -231,9 +231,9 @@ const handleChange = (e) => {
         </TextField>
 
         <TextField
-          name="bookingDuration"
+          name="duration"
           label="Booking Duration"
-          value={venue.bookingDuration}
+          value={venue.duration}
           onChange={handleChange}
         />
         <TextField

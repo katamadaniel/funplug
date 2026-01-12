@@ -130,7 +130,7 @@ export const deleteVenueById = async (venueId) => {
   return response.data;
 };
 
-export const getVenueBookingsByVenueId = async (venueId) => {
+export const getBookingsByVenueId = async (venueId) => {
   const response = await axiosInstance.get(`${BOOKINGS_API_URL}?venueId=${venueId}`);
   return response.data;
 };

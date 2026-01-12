@@ -553,6 +553,19 @@ useEffect(() => {
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia component="img" height="160" image={card.images?.[0]?.url || "/default-perf.jpg"} alt={card.name}/>
                     <CardContent sx={{ flexGrow: 1 }}>
+                      {(userLocation || userCity || userCountry) && (
+                        <Chip
+                          label={
+                            userLocation
+                              ? "Near you"
+                              : userCity
+                                ? `In ${userCity}`
+                                : `In ${userCountry}`
+                          }
+                          color="primary"
+                          size="small"
+                        />
+                      )}
                       <Typography variant="subtitle1">{card.name}</Typography>
                       <Typography variant="body2" color="text.secondary">{card.artType} — {card.city}</Typography>
                     </CardContent>
@@ -589,6 +602,19 @@ useEffect(() => {
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia component="img" height="160" image={service.images?.[0]?.url || "/default-service.jpg"} alt={service.serviceType}/>
                     <CardContent sx={{ flexGrow: 1 }}>
+                      {(userLocation || userCity || userCountry) && (
+                        <Chip
+                          label={
+                            userLocation
+                              ? "Near you"
+                              : userCity
+                                ? `In ${userCity}`
+                                : `In ${userCountry}`
+                          }
+                          color="primary"
+                          size="small"
+                        />
+                      )}
                       <Typography variant="subtitle1">{service.serviceType}</Typography>
                       <Typography variant="body2" color="text.secondary">{service.city}, {service.country}</Typography>
                     </CardContent>
