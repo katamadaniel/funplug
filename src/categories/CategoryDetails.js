@@ -10,6 +10,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EventCard from "./EventCard";
 import EventModal from "../EventModal";
 import TicketPurchase from "../TicketPurchase";
+import { fetchUsers } from "../services/userService";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -30,7 +31,7 @@ const CategoryDetails = () => {
     const load = async () => {
       try {
         const [usersRes, eventsRes] = await Promise.all([
-          axios.get(`${API_URL}/api/users`),
+          fetchUsers(),
           axios.get(`${API_URL}/api/events/category/${category}`)
         ]);
 
@@ -63,7 +64,11 @@ const CategoryDetails = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      {Object.entries(groupedEvents).map(([subCategory, events]) => (
+      {/* Cards */}
+      {Object.keys(groupedEvents).length === 0 ? (
+        <Typography>No events found.</Typography>
+      ) : (
+      Object.entries(groupedEvents).map(([subCategory, events]) => (
         <Accordion defaultExpanded key={subCategory} sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">{subCategory}</Typography>
@@ -77,7 +82,8 @@ const CategoryDetails = () => {
             </Box>
           </AccordionDetails>
         </Accordion>
-      ))}
+      ))
+      )}
 
       {selectedEvent && (
         <EventModal

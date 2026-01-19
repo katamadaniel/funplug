@@ -31,6 +31,7 @@ const TicketPurchase = ({ event, onClose }) => {
   });
 
   const [quantity, setQuantity] = useState("");
+  const [clientName, setClientName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [paymentOption, setPaymentOption] = useState("mpesa");
@@ -99,6 +100,7 @@ const TicketPurchase = ({ event, onClose }) => {
 
     if (!ticketType) errs.ticketType = "Please select a ticket type";
     if (!quantity || quantity <= 0) errs.quantity = "Enter ticket quantity";
+    if (!clientName) errs.clientName = "Enter your name";
 
     if (!email) errs.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(email))
@@ -134,6 +136,7 @@ const TicketPurchase = ({ event, onClose }) => {
       const purchaseData = {
         ticketType,
         quantity,
+        clientName,
         email,
         phone: formattedPhone,
         paymentOption:
@@ -143,6 +146,10 @@ const TicketPurchase = ({ event, onClose }) => {
         eventId: event._id,
         creatorId: event.userId,
         eventTitle: event.title,
+        eventVenue: event.venue,
+        eventDate: event.date,
+        from: event.startTime,
+        to: event.endTime,
       };
 
       const res = await axios.post(
@@ -289,6 +296,14 @@ const TicketPurchase = ({ event, onClose }) => {
             inputProps={{ min: 1, max: maxTickets }}
             error={!!errors.quantity}
             helperText={errors.quantity}
+          />
+
+          <TextField
+            label="Name"
+            value={clientName}
+            onChange={(e) => setClientName(e.target.value)}
+            error={!!errors.clientName}
+            helperText={errors.clientName}
           />
 
           <TextField

@@ -12,6 +12,8 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import EventIcon from '@mui/icons-material/Event';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import RoomServiceIcon from '@mui/icons-material/RoomService';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import EmailIcon from '@mui/icons-material/Email';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -81,6 +83,20 @@ const AdminSidebar = () => {
             <LocationOnIcon fontSize="large" />
           </ListItemIcon>
           <ListItemText primary="Venues" sx={{ display: collapsed ? 'none' : 'block', fontSize: '1rem' }} />
+        </ListItem>
+
+        <ListItem button component={Link} to="performance">
+          <ListItemIcon>
+            <RoomServiceIcon fontSize="large" />
+          </ListItemIcon>
+          <ListItemText primary="Performance" sx={{ display: collapsed ? 'none' : 'block', fontSize: '1rem' }} />
+        </ListItem>
+
+        <ListItem button component={Link} to="services">
+          <ListItemIcon>
+            <SportsEsportsIcon fontSize="large" />
+          </ListItemIcon>
+          <ListItemText primary="Services" sx={{ display: collapsed ? 'none' : 'block', fontSize: '1rem' }} />
         </ListItem>
 
         <ListItem button component={Link} to="notifications">

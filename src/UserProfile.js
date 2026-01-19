@@ -40,7 +40,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { getAvatarUrl } from "./utils/avatar";
 
-// These are your existing components — keep imports as-is or update names/paths
 import EventModal from "./EventModal";
 import TicketPurchase from "./TicketPurchase";
 import VenueDetailsModal from "./VenueDetailsModal";
@@ -111,7 +110,6 @@ const UserProfile = () => {
         const res = await axios.get(`${API_URL}/api/search/user/${id}`);
         if (cancelled) return;
 
-        // Expecting { user, events, venues, performances, services }
         const payload = res.data || {};
         if (!payload.user) {
           setError("User not found");

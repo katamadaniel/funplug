@@ -21,12 +21,21 @@ export const createService = async (formData) => {
   }
 };
 
-export const fetchServices = async () => {
+export const fetchActiveServices = async () => {
+  const res = await axiosInstance.get(`${SERVICES_API_URL}/active`);
+  return res.data;
+};
+
+export const fetchServices = async (params = {}) => {
   try {
-    const response = await axiosInstance.get(SERVICES_API_URL);
+    const endpoint = `${SERVICES_API_URL}/recommended`;
+    const response = await axiosInstance.get(endpoint, { params });
     return response.data;
   } catch (error) {
-    console.error('Error fetching cards:', error.response ? error.response.data : error.message);
+    console.error(
+      "Error fetching events:",
+      error.response ? error.response.data : error.message
+    );
     throw error;
   }
 };
@@ -116,10 +125,16 @@ export const deleteService = async (id) => {
 };
 
   //Admin functions
-
 export const getAllServices = async () => {
-  const response = await axiosInstance.get(SERVICES_API_URL);
+  try{
+  const token = localStorage.getItem('adminToken');
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axiosInstance.get(SERVICES_API_URL, config);
   return response.data;
+  } catch (error) {
+    console.error('Error fetching service:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 };
 
 export const deleteServiceById = async (serviceId) => {
@@ -131,6 +146,25 @@ export const deleteServiceById = async (serviceId) => {
 };
 
 export const getBookingsByServiceId = async (serviceId) => {
-  const response = await axiosInstance.get(`${BOOKINGS_API_URL}?serviceId=${serviceId}`);
+  try{
+  const token = localStorage.getItem('adminToken');
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axiosInstance.get(`${BOOKINGS_API_URL}?serviceId=${serviceId}`, config);
+  return response.data;
+  } catch (error) {
+    console.error('Error fetching service bookings:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+export const updateServiceStatus = async (serviceId, status) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await axiosInstance.patch(
+    `${SERVICES_API_URL}/${serviceId}/status`,
+    { status },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return response.data;
 };

@@ -101,38 +101,40 @@ const SearchResults = ({ results, onViewProfile }) => {
   //QUERY & FILTER LOGIC
   const query = searchQuery.toLowerCase();
 
-const filteredResults = results
-  .map((item) => {
-    if (
-      userLocation &&
-      item.location?.coordinates?.length === 2
-    ) {
-      const [lng, lat] = item.location.coordinates;
-      const distanceKm = getDistanceKm(userLocation, { lat, lng });
-      return { ...item, distanceKm };
-    }
-    return item;
-  })
-  .filter((item) => {
-    if (filter !== "all" && item.type !== filter) return false;
-    if (!JSON.stringify(item).toLowerCase().includes(query)) return false;
+  const filteredResults = results
+    .map((item) => {
+      if (
+        nearMe &&
+        userLocation &&
+        item.location?.coordinates?.length === 2
+      ) {
+        const [lng, lat] = item.location.coordinates;
+        const distanceKm = getDistanceKm(userLocation, { lat, lng });
+        return { ...item, distanceKm };
+      }
+      return item;
+    })
+    .filter((item) => {
+      if (filter !== "all" && item.type !== filter) return false;
+      if (!JSON.stringify(item).toLowerCase().includes(query)) return false;
 
-    if (item.type === "event") {
-      const eventDate = item.date || item.startDate;
-      if (!isFutureDate(eventDate)) return false;
-    }
+      if (item.type === "event") {
+        const eventDate = item.date || item.startDate;
+        if (!isFutureDate(eventDate)) return false;
+      }
 
-    // Optional radius filter (example: 100km)
-    if (item.distanceKm && item.distanceKm > 100) return false;
-
-    return true;
-  })
-  .sort((a, b) => {
-    if (a.distanceKm != null && b.distanceKm != null) {
-      return a.distanceKm - b.distanceKm;
-    }
-    return 0;
-  });
+      if (nearMe) {
+        if (item.distanceKm == null) return false;
+        if (item.distanceKm > 100) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (nearMe && a.distanceKm != null && b.distanceKm != null) {
+        return a.distanceKm - b.distanceKm;
+      }
+      return 0;
+    });
 
   const grouped = {
     user: filteredResults.filter(r => r.type === "user"),
@@ -177,7 +179,13 @@ const filteredResults = results
         control={
           <Switch
             checked={nearMe}
-            onChange={(e) => setNearMe(e.target.checked)}
+            onChange={(e) => {
+              if (e.target.checked && !userLocation) {
+                alert("Please enable location access to use Near Me search.");
+                return;
+              }
+              setNearMe(e.target.checked);
+            }}
           />
         }
         label="Near Me"
@@ -227,7 +235,7 @@ const filteredResults = results
                           sx={{ objectFit: "cover" }}
                         />
                         <CardContent>
-                          {item.distanceKm != null && (
+                          {nearMe && item.distanceKm != null && (
                             <Chip
                               size="small"
                               label={`${item.distanceKm.toFixed(1)} km away`}

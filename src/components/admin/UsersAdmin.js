@@ -142,7 +142,19 @@ const UsersAdmin = () => {
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
+  const formatDate = (date) => {
+    if (!date) return '—';
+    return new Date(date).toLocaleString();
+  };
+
+  const isInactiveUser = (user) => {
+    if (!user.lastLogin) {
+      return Date.now() - new Date(user.createdAt) > 7 * 24 * 60 * 60 * 1000;
+    }
+    return Date.now() - new Date(user.lastLogin) > 90 * 24 * 60 * 60 * 1000;
+  };
+
+return (
     <div>
       <Typography variant="h4">Manage Users</Typography>
       <Box sx={{ p: 3 }}>
@@ -161,25 +173,60 @@ const UsersAdmin = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell>Status</TableCell>
                 <TableCell>Username</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Phone</TableCell>
                 <TableCell>Gender</TableCell>
                 <TableCell>Category</TableCell>
+                <TableCell>Created At</TableCell>
                 <TableCell>Last Login</TableCell>
+                <TableCell>Login Count</TableCell>
+                <TableCell>Inactive Delete</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow key={user._id}>
+                <TableRow
+                  key={user._id}
+                  sx={{ backgroundColor: isInactiveUser(user) ? '#fff4e5' : 'inherit',}}
+                >
+                  <TableCell>
+                    {isInactiveUser(user) ? (
+                      <Tooltip title="Inactive account">
+                        <Typography color="warning.main" fontWeight="bold">Inactive</Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography color="success.main">Active</Typography>
+                    )}
+                  </TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>{user.gender}</TableCell>
                   <TableCell>{user.category}</TableCell>
-                  <TableCell>{new Date(user.lastLogin).toLocaleString()}</TableCell>
+
+                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>{formatDate(user.lastLogin)}</TableCell>
+                  <TableCell>{user.loginCount ?? 0}</TableCell>
+                  <TableCell>
+                    {user.scheduledForDeletionAt
+                      ? `Deletes on ${new Date(user.scheduledForDeletionAt).toLocaleDateString()}`
+                      : '—'}
+                  </TableCell>
                   <TableCell align="center">
+                    <Tooltip
+                      title={
+                        <>
+                          <div>IP: {user.lastLoginIP || '—'}</div>
+                          <div>Device: {user.lastLoginUserAgent || '—'}</div>
+                          <div>Verified: {user.isVerified || '—'}</div>
+                        </>
+                      }
+                    >
+                      <Typography variant="body2" sx={{ cursor: 'help' }}> Details </Typography>
+                    </Tooltip>
                     {user.isBanned ? (
                       <Tooltip title="Unban User">
                         <IconButton color="success" onClick={() => handleUnbanUser(user._id)}>

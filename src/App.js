@@ -16,8 +16,8 @@ import Footer from './Footer';
 import SearchResults from './SearchResults';
 import Profile from './Profile';
 import UserProfile from './UserProfile';
-import EventsPage from './EventsPage';
-import VenuesPage from './VenuesPage';
+import Events from './Events';
+import Venues from './Venues';
 import Performance from './Performance';
 import Services from './Services';
 import Notifications from './Notifications';
@@ -47,6 +47,8 @@ import Admins from './components/admin/Admins';
 import EventsAdmin from './components/admin/EventsAdmin';
 import UsersAdmin from './components/admin/UsersAdmin';
 import VenuesAdmin from './components/admin/VenuesAdmin';
+import PerformanceAdmin from './components/admin/PerformanceAdmin';
+import ServicesAdmin from './components/admin/ServicesAdmin';
 import AdminNotifications from './components/admin/AdminNotifications';
 import AdminEmails from './components/admin/AdminEmails';
 import AdminInvoices from './components/admin/AdminInvoices';
@@ -175,6 +177,8 @@ function App() {
                           <Route path="users" element={<UsersAdmin />} />
                           <Route path="events" element={<EventsAdmin />} />
                           <Route path="venues" element={<VenuesAdmin />} />
+                          <Route path="performance" element={<PerformanceAdmin />} />
+                          <Route path="services" element={<ServicesAdmin />} />
                           <Route path="notifications" element={<AdminNotifications />} />
                           <Route path="emails" element={<AdminEmails />} />
                           <Route path="invoices" element={<AdminInvoices />} />
@@ -207,8 +211,8 @@ function App() {
 
                           {/* Protected routes */}
                           <Route path="/profile/*" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Profile token={token} /> </PrivateRoute> } />
-                          <Route path="/events" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <EventsPage /> </PrivateRoute> } />
-                          <Route path="/venues" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <VenuesPage /> </PrivateRoute> } />
+                          <Route path="/events" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Events /> </PrivateRoute> } />
+                          <Route path="/venues" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Venues /> </PrivateRoute> } />
                           <Route path="/performance" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Performance /> </PrivateRoute> } />
                           <Route path="/services" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Services /> </PrivateRoute> } />
                           <Route path="/notifications" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Notifications /> </PrivateRoute> } />

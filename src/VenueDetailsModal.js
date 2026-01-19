@@ -210,7 +210,7 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
           )}
 
           {/* HEADER TEXT */}
-          <Typography variant="h5">{venue.name}</Typography>
+          <Typography variant="h5" fontWeight="bold">{venue.venueType}</Typography>
           <Typography variant="body2" sx={{ mb: 2 }}>
             {venue.city}, {venue.country}
           </Typography>
@@ -250,25 +250,17 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
 
           <Divider sx={{ my: 2 }} />
 
-          {/* ---------------- VENUE DETAILS ---------------- */}
+          {/* VENUE DETAILS */}
           <Stack spacing={1}>
-            <Typography>
-              <strong>Size:</strong> {venue.size} sq ft
-            </Typography>
-            <Typography>
-              <strong>Capacity:</strong> {venue.capacity} people
-            </Typography>
-            <Typography>
-              <strong>Duration:</strong> {venue.duration} hours/Day
-            </Typography>
-            <Typography>
-              <strong>Charges:</strong> Ksh. {venue.charges}/hour
-            </Typography>
-            <Typography>
-              <strong>Status:</strong>{" "}
+            <Typography><strong>Venue Name:</strong> {venue.name}</Typography>
+            <Typography><strong>Size:</strong> {venue.size} sq ft</Typography>
+            <Typography><strong>Capacity:</strong> {venue.capacity} people</Typography>
+            <Typography><strong>Duration:</strong> {venue.duration} hours/Day</Typography>
+            <Typography><strong>Charges:</strong> Ksh. {venue.charges}/hour</Typography>
+            <Typography><strong>Status:</strong>
               <Chip
-                label={venue.status}
-                color={venue.status === "closed" ? "error" : "primary"}
+                label={venue.bookingStatus}
+                color={venue.bookingStatus === "closed" ? "error" : "primary"}
                 sx={{ textTransform: "capitalize" }}
               />
             </Typography>
@@ -278,7 +270,7 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
         <DialogActions sx={{justifyContent: 'center'}} >
           <Button
             variant="contained"
-            disabled={venue.status === "closed"}
+            disabled={venue.bookingStatus === "closed"}
             onClick={onBookVenue}
           >
             Book Venue

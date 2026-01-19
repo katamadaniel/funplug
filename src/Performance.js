@@ -115,7 +115,7 @@ const Performance = ({ token }) => {
     country: '',
     city: '',
     charges: '',
-    status: 'open',
+    bookingStatus: 'open',
     images: [],
     lat: null,
     lng: null,
@@ -174,7 +174,7 @@ const Performance = ({ token }) => {
         country: card.country,
         city: card.city,
         charges: card.charges,
-        status: card.status,
+        bookingStatus: card.bookingStatus,
         images: card.images || [],
         lat: card.location?.coordinates?.[1] || null,
         lng: card.location?.coordinates?.[0] || null,
@@ -186,7 +186,7 @@ const Performance = ({ token }) => {
          country: '', 
          city: '', 
          charges: '', 
-         status: 'open', 
+         bookingStatus: 'open', 
          images: [] 
         });
     }
@@ -416,7 +416,7 @@ const Performance = ({ token }) => {
                   Location: {card.city}, {card.country}
                 </Typography>
                 <Typography variant="body2">Charges/hr: {card.charges}</Typography>
-                <Typography variant="body2">Status: {card.status}</Typography>
+                <Typography variant="body2">Booking Status: {card.bookingStatus}</Typography>
                 <Box display="flex" justifyContent="space-between" mt={1}>
                   <Button variant="contained" color="primary" startIcon={<Edit />} onClick={() => handleOpenModal(card)}>Edit</Button>
                   <Button variant="outlined" color="error" startIcon={<Delete />} onClick={() => handleDelete(card._id)}>Delete</Button>
@@ -480,7 +480,7 @@ const Performance = ({ token }) => {
             <TextField fullWidth label="Charges (per hour)" name="charges" type="number" value={formData.charges} onChange={handleChange} margin="normal" required />
             <FormControl fullWidth margin="normal">
               <InputLabel>Status</InputLabel>
-              <Select name="status" value={formData.status} onChange={handleChange}>
+              <Select name="bookingStatus" value={formData.bookingStatus} onChange={handleChange}>
                 <MenuItem value="open">Open</MenuItem>
                 <MenuItem value="closed">Closed</MenuItem>
               </Select>

@@ -24,7 +24,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { fetchAdminProfile } from '../../services/adminService';
 import { getAllUsers, getUserById } from '../../services/userService';
-import { getAllVenues, deleteVenueById, getBookingsByVenueId } from '../../services/venuesService';
+import { getAllVenues, updateVenueStatus, getBookingsByVenueId } from '../../services/venuesService';
+import  { exportBookingsToCSV } from './adminHeplers';
 
 const VenuesAdmin = () => {
   const [venues, setVenues] = useState([]);
@@ -33,8 +34,8 @@ const VenuesAdmin = () => {
   const [filteredVenues, setFilteredVenues] = useState([]);
   const [selectedVenueBookings, setSelectedVenueBookings] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [venueToDelete, setVenueToDelete] = useState(null);
+//  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+//  const [venueToDelete, setVenueToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,17 +43,25 @@ const VenuesAdmin = () => {
     if (!token) {
       navigate('/admin-login');
     } else {
-      fetchInitialData();
+      initialize();
     }
   }, [navigate]);
 
-  const fetchInitialData = async () => {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchVenues();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+const initialize = async () => {
     try {
       await fetchAdminProfile();
       await fetchUsers();
       await fetchVenues();
     } catch (error) {
-      console.error('Initialization failed:', error);
+      console.error('Admin initialization failed:', error);
     }
   };
 
@@ -126,7 +135,16 @@ const fetchVenues = async () => {
     }
   };
 
-  const handleDelete = (venueId) => {
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      await updateVenueStatus(id, currentStatus === 'Active' ? 'Suspended' : 'Active');
+      fetchVenues(); // refresh list
+    } catch (err) {
+      console.error('Status update failed', err);
+    }
+  };
+
+/*  const handleDelete = (venueId) => {
     setVenueToDelete(venueId);
     setDeleteDialogOpen(true);
   };
@@ -141,9 +159,18 @@ const fetchVenues = async () => {
     } catch (error) {
       console.error('Failed to delete venue:', error);
     }
-  };
+  }; */
 
-  return (
+  const summary = selectedVenueBookings.reduce(
+    (acc, venue) => {
+      acc.totalBookings += venue.bookingCount;
+      acc.totalRevenue += venue.totalAmount;
+      return acc;
+    },
+    { totalBookings: 0, totalRevenue: 0 }
+  );
+
+return (
     <div>
       <Typography variant="h4">Manage Venues</Typography>
 
@@ -185,7 +212,7 @@ const fetchVenues = async () => {
                 <TableCell>Booking Status</TableCell>
                 <TableCell>Charges (per hour)</TableCell>
                 <TableCell>Booking Count</TableCell>
-                <TableCell>Total Booking Revenue</TableCell>
+                <TableCell>Total Revenue</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -198,10 +225,10 @@ const fetchVenues = async () => {
                   <TableCell>{venue.city}</TableCell>
                   <TableCell>{venue.size}</TableCell>
                   <TableCell>{venue.capacity}</TableCell>
-                  <TableCell>{venue.status}</TableCell>
-                  <TableCell>Ksh.{venue.charges.toFixed(2)}</TableCell>
+                  <TableCell>{venue.bookingStatus}</TableCell>
+                  <TableCell>{venue.charges.toFixed(2)}</TableCell>
                   <TableCell>{venue.bookingCount}</TableCell>
-                  <TableCell>Ksh.{venue.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell>{venue.totalAmount.toFixed(2)}</TableCell>
                   <TableCell>
                     <Button
                       startIcon={<VisibilityIcon />}
@@ -211,11 +238,10 @@ const fetchVenues = async () => {
                       View Report
                     </Button>
                     <Button
-                      startIcon={<DeleteIcon />}
-                      color="secondary"
-                      onClick={() => handleDelete(venue._id)}
+                      color={venue.status === 'Active' ? 'warning' : 'success'}
+                      onClick={() => handleToggleStatus(venue._id, venue.status)}
                     >
-                      Delete
+                      {venue.status === 'Active' ? 'Suspend' : 'Approve'}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -229,7 +255,30 @@ const fetchVenues = async () => {
       <Modal open={openModal} onClose={() => setOpenModal(false)}>
         <Box sx={{ width: '70%', margin: 'auto', mt: 5, p: 4, backgroundColor: 'white', borderRadius: 2 }}>
           <Typography variant="h6">Venue Booking Report</Typography>
+            <Button
+              variant="outlined"
+              sx={{ mb: 2 }}
+              onClick={() =>
+                exportBookingsToCSV(
+                  selectedVenueBookings,
+                  'venue-bookings.csv'
+                )
+              }
+            >
+              Export CSV
+            </Button>
           <TableContainer>
+            <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h6">Total Bookings</Typography>
+                <Typography>{summary.totalBookings}</Typography>
+              </Paper>
+
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h6">Total Revenue</Typography>
+                <Typography>Ksh. {summary.totalRevenue.toFixed(2)}</Typography>
+              </Paper>
+            </Box>
             <Table>
               <TableHead>
                 <TableRow>
@@ -244,7 +293,7 @@ const fetchVenues = async () => {
               <TableBody>
                 {selectedVenueBookings.map((booking) => (
                   <TableRow key={booking._id}>
-                    <TableCell>{booking.name}</TableCell>
+                    <TableCell>{booking.clientName}</TableCell>
                     <TableCell>{booking.phone}</TableCell>
                     <TableCell>{booking.email}</TableCell>
                     <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
@@ -258,7 +307,7 @@ const fetchVenues = async () => {
         </Box>
       </Modal>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog 
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Venue</DialogTitle>
         <DialogContent>
@@ -268,7 +317,7 @@ const fetchVenues = async () => {
           <Button onClick={() => setDeleteDialogOpen(false)} color="primary">Cancel</Button>
           <Button onClick={confirmDelete} color="secondary">Delete</Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 };

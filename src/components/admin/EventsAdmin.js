@@ -24,8 +24,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
 
 import {getAllUsers} from '../../services/userService';
-import {fetchEvents, getAllTicketSales, purchaseByEventId, deleteEventById} from '../../services/eventService';
+import {fetchAllEvents, getAllTicketSales, purchaseByEventId, updateEventStatus} from '../../services/eventService';
 import {fetchAdminProfile} from '../../services/adminService';
+import  { exportBookingsToCSV } from './adminHeplers';
 
 const EventsAdmin = () => {
   const [events, setEvents] = useState([]);
@@ -36,8 +37,9 @@ const EventsAdmin = () => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEventPurchases, setSelectedEventPurchases] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
+//  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+//  const [eventToDelete, setEventToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,11 +47,19 @@ const EventsAdmin = () => {
     if (!token) {
       navigate('/admin-login');
     } else {
-      fetchInitialData();
+      initialize();
     }
   }, [navigate]);
 
-  const fetchInitialData = async () => {
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchEventsWithSales();
+  }, 30000); // 30 seconds
+
+  return () => clearInterval(interval);
+}, []);
+
+const initialize = async () => {
     try {
       await fetchAdminProfile();
       await fetchUsers();
@@ -74,7 +84,7 @@ const EventsAdmin = () => {
 
   const fetchEventsWithSales = async () => {
     try {
-      const eventsData = await fetchEvents();
+      const eventsData = await fetchAllEvents();
       const salesData = await getAllTicketSales();
 
       const mergedEvents = eventsData.map(event => {
@@ -122,7 +132,22 @@ const EventsAdmin = () => {
     }
   };
 
-  const handleDelete = (eventId) => {
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      setUpdatingStatusId(id);
+      await updateEventStatus(
+        id,
+        currentStatus === 'Active' ? 'Suspended' : 'Active'
+      );
+      await fetchEventsWithSales();
+    } catch (err) {
+      console.error('Status update failed', err);
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+/*  const handleDelete = (eventId) => {
     setEventToDelete(eventId);
     setDeleteDialogOpen(true);
   };
@@ -138,9 +163,26 @@ const EventsAdmin = () => {
     } catch (error) {
       console.error('Failed to delete event and its purchases:', error);
     }
-  };
+  }; */
 
-  return (
+  const revenueSummary = selectedEventPurchases.reduce(
+    (acc, e) => {
+      const eventRevenue = Number(e.totalRevenue) || 0;
+      acc.totalRevenue += eventRevenue;
+
+      const ticketsSold =
+        (Number(e.regularTicketsSold) || 0) +
+        (Number(e.vipTicketsSold) || 0) +
+        (Number(e.vvipTicketsSold) || 0);
+
+      acc.totalTickets += ticketsSold;
+
+      return acc;
+    },
+    { totalRevenue: 0, totalTickets: 0 }
+  );
+
+return (
     <div>
       <Typography variant="h4">Manage Events</Typography>
 
@@ -213,11 +255,10 @@ const EventsAdmin = () => {
                       View Report
                     </Button>
                     <Button
-                      startIcon={<DeleteIcon />}
-                      color="secondary"
-                      onClick={() => handleDelete(event._id)}
+                      color={event.status === 'Active' ? 'warning' : 'success'}
+                      onClick={() => handleToggleStatus(event._id, event.status)}
                     >
-                      Delete
+                      {event.status === 'Active' ? 'Suspend' : 'Approve'}
                     </Button>
                   </TableCell>
                   </TableRow>
@@ -271,11 +312,10 @@ const EventsAdmin = () => {
                       View Report
                     </Button>
                     <Button
-                      startIcon={<DeleteIcon />}
-                      color="secondary"
-                      onClick={() => handleDelete(event._id)}
+                      disabled={updatingStatusId === event._id}
+                      color={event.status === 'Active' ? 'warning' : 'success'}
                     >
-                      Delete
+                      {event.status === 'Active' ? 'Suspend' : 'Approve'}
                     </Button>
                   </TableCell>
                   </TableRow>
@@ -289,7 +329,31 @@ const EventsAdmin = () => {
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
         <Box sx={{ width: '70%', margin: 'auto', mt: 5, p: 4, backgroundColor: 'white', borderRadius: 2 }}>
           <Typography variant="h6">Event Ticket Purchases</Typography>
+            <Button
+              variant="outlined"
+              sx={{ mb: 2 }}
+              onClick={() =>
+                exportBookingsToCSV(
+                  selectedEventPurchases,
+                  'ticket-purchases.csv'
+                )
+              }
+            >
+              Export CSV
+            </Button>
           <TableContainer>
+            <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle2">Total Tickets Sold</Typography>
+                <Typography variant="h6">{revenueSummary.totalTickets}</Typography>
+              </Paper>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle2">Total Revenue</Typography>
+                <Typography variant="h6">
+                  Ksh. {revenueSummary.totalRevenue.toFixed(2)}
+                </Typography>
+              </Paper>
+            </Box>
             <Table>
               <TableHead>
               <TableRow>
@@ -318,7 +382,7 @@ const EventsAdmin = () => {
         </Box>
       </Modal>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog 
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Event</DialogTitle>
         <DialogContent>
@@ -330,7 +394,7 @@ const EventsAdmin = () => {
           <Button onClick={() => setDeleteDialogOpen(false)} color="primary">Cancel</Button>
           <Button onClick={confirmDelete} color="secondary">Delete</Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 };

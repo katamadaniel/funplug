@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import axios from "axios";
 import { useCache } from "./contexts/CacheContext";
 import UserProfileCarousel from "./UserProfileCarousel";
 import EventModal from "./EventModal";
@@ -10,8 +9,12 @@ import PerformanceDetailsModal from "./PerformanceDetailsModal";
 import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
 import ServiceDetailsModal from "./ServiceDetailsModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
-import { useUserLocation } from "./contexts/LocationContext";
-
+import { useUserLocation, useLocationContext, inferCityFromIP } from "./contexts/LocationContext";
+import { fetchUsers } from "./services/userService";
+import { fetchEvents } from "./services/eventService";
+import { fetchVenues } from "./services/venuesService";
+import { fetchCards } from "./services/performanceService";
+import { fetchServices } from "./services/serviceService";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import {
@@ -28,14 +31,6 @@ import {
   Stack,
   Chip,
 } from "@mui/material";
-
-const API_URL = process.env.REACT_APP_API_URL;
-
-const EVENTS_API_URL = `${API_URL}/api/events`;
-const USERS_API_URL = `${API_URL}/api/users`;
-const VENUES_API_URL = `${API_URL}/api/venues`;
-const PERFORMANCES_API_URL = `${API_URL}/api/performances`;
-const SERVICES_API_URL = `${API_URL}/api/services`;
 
 const EVENTS_PER_PAGE = 4;
 const VENUES_PER_PAGE = 4;
@@ -109,124 +104,130 @@ const Home = () => {
   const performancesRef = useRef(null);
   const servicesRef = useRef(null);
 
-  const userLocation = useUserLocation();
-  const userCity = users?.[0]?.city;
-  const userCountry = users?.[0]?.country;
+const userLocation = useUserLocation();
 
-  const buildParams = () => {
-    if (userLocation) return userLocation;
-    if (userCity) return { city: userCity };
-    if (userCountry) return { country: userCountry };
-    return {};
-  };
+const {
+  userCity,
+  setUserCity,
+  userCountry,
+  setUserCountry,
+  setUserLocation,
+} = useLocationContext();
 
-// fetch
+const buildLocationParams = () => {
+  if (userLocation?.lat && userLocation?.lng) {
+    return {
+      lat: userLocation.lat,
+      lng: userLocation.lng,
+      radius: 100,
+    };
+  }
+
+  if (userCity) return { city: userCity };
+  if (userCountry) return { country: userCountry };
+
+  return {};
+};
+
+useEffect(() => {
+  if (!userLocation && !userCity) {
+    inferCityFromIP().then((loc) => {
+      if (!loc) return;
+
+      if (!userCity) setUserCity(loc.city);
+      if (!userCountry) setUserCountry(loc.country);
+
+      // Only set GPS if user hasn't already allowed it
+      if (!userLocation && loc.lat && loc.lng) {
+        setUserLocation({ lat: loc.lat, lng: loc.lng });
+      }
+    });
+  }
+}, [userLocation, userCity, userCountry, setUserCity, setUserCountry, setUserLocation]);
+
+
+    // fetch
 const loadAll = useCallback(async () => {
   setLoading(true);
-
-  
-  axios.get(`${EVENTS_API_URL}/recommended`, { params: buildParams() })
-  axios.get(`${VENUES_API_URL}/recommended`, { params: buildParams() })
-  axios.get(`${PERFORMANCES_API_URL}/recommended`, { params: buildParams() })
-  axios.get(`${SERVICES_API_URL}/recommended`, { params: buildParams() })
+  const params = buildLocationParams();
 
   try {
-    /* =========================
-       READ FROM CACHE (TTL SAFE)
-    ========================== */
-    const cachedUsers = getFromCache("users");
-    const cachedEvents = getFromCache("events");
-    const cachedVenues = getFromCache("venues");
-    const cachedPerformances = getFromCache("performances");
-    const cachedServices = getFromCache("services");
+    /* ---------- CACHE ---------- */
+    const cached = {
+      users: getFromCache("users"),
+      events: getFromCache("events"),
+      venues: getFromCache("venues"),
+      performances: getFromCache("performances"),
+      services: getFromCache("services"),
+    };
 
-    // Hydrate immediately from cache where available
-    if (cachedUsers) setUsers(cachedUsers);
-    if (cachedEvents) setEvents(cachedEvents);
-    if (cachedVenues) setVenues(cachedVenues);
-    if (cachedPerformances) setPerformances(cachedPerformances);
-    if (cachedServices) setServices(cachedServices);
+    if (cached.users) setUsers(cached.users);
+    if (cached.events) setEvents(cached.events);
+    if (cached.venues) setVenues(cached.venues);
+    if (cached.performances) setPerformances(cached.performances);
+    if (cached.services) setServices(cached.services);
 
-    // If everything exists in cache → stop here
-    if (
-      cachedUsers && cachedEvents && cachedVenues && cachedPerformances && cachedServices ) { return; }
+    if (Object.values(cached).every(Boolean)) return;
 
-       //FETCH ONLY WHAT IS MISSING
+    /* ---------- FETCH ---------- */
     const [
-      usersRes,
-      eventsRes,
-      venuesRes,
-      perfRes,
-      servicesRes,
+      usersData,
+      eventsData,
+      venuesData,
+      perfData,
+      servicesData,
     ] = await Promise.all([
-      cachedUsers ? null : axios.get(USERS_API_URL),
-      cachedEvents ? null : axios.get(EVENTS_API_URL),
-      cachedVenues ? null : axios.get(VENUES_API_URL),
-      cachedPerformances ? null : axios.get(PERFORMANCES_API_URL),
-      cachedServices ? null : axios.get(SERVICES_API_URL),
+      cached.users ?? fetchUsers(),
+      cached.events ?? fetchEvents(params),
+      cached.venues ?? fetchVenues(params),
+      cached.performances ?? fetchCards(params),
+      cached.services ?? fetchServices(params),
     ]);
 
-  
-      // USERS
-    const usersData = cachedUsers ?? usersRes?.data ?? [];
-    if (!cachedUsers) {
-      addToCache("users", usersData, 10 * 60 * 1000); // 10 min
+    /* ---------- USERS ---------- */
+    if (!cached.users) {
+      addToCache("users", usersData, 10 * 60 * 1000);
       setUsers(usersData);
     }
 
     const validUserIds = new Set(usersData.map(u => u._id));
 
-       // EVENTS
-    if (!cachedEvents) {
-      const filteredEvents = (eventsRes?.data ?? [])
-        .filter(
-          ev =>
-            validUserIds.has(ev.userId) &&
-            new Date(ev.date) >= new Date()
-        )
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    /* ---------- FILTERED CONTENT ---------- */
+    const filterByValidUser = (items = []) =>
+      items.filter(i => validUserIds.has(i.userId));
 
-      addToCache("events", filteredEvents, 2 * 60 * 1000); // 2 min
-      setEvents(filteredEvents);
+    if (!cached.events) {
+      const filtered = filterByValidUser(eventsData)
+        .filter(e => new Date(e.date) >= new Date());
+      addToCache("events", filtered, 2 * 60 * 1000);
+      setEvents(filtered);
     }
 
-       //VENUES
-    if (!cachedVenues) {
-      const filteredVenues = (venuesRes?.data ?? []).filter(v =>
-        validUserIds.has(v.userId)
-      );
-
-      addToCache("venues", filteredVenues, 5 * 60 * 1000); // 5 min
-      setVenues(filteredVenues);
+    if (!cached.venues) {
+      const filtered = filterByValidUser(venuesData);
+      addToCache("venues", filtered, 5 * 60 * 1000);
+      setVenues(filtered);
     }
 
-       //PERFORMANCES
-    if (!cachedPerformances) {
-      const filteredPerformances = (perfRes?.data ?? []).filter(p =>
-        validUserIds.has(p.userId)
-      );
-
-      addToCache("performances", filteredPerformances, 5 * 60 * 1000);
-      setPerformances(filteredPerformances);
+    if (!cached.performances) {
+      const filtered = filterByValidUser(perfData);
+      addToCache("performances", filtered, 5 * 60 * 1000);
+      setPerformances(filtered);
     }
 
-       //SERVICES
-    if (!cachedServices) {
-      const filteredServices = (servicesRes?.data ?? []).filter(s =>
-        validUserIds.has(s.userId)
-      );
-
-      addToCache("services", filteredServices, 5 * 60 * 1000);
-      setServices(filteredServices);
+    if (!cached.services) {
+      const filtered = filterByValidUser(servicesData);
+      addToCache("services", filtered, 5 * 60 * 1000);
+      setServices(filtered);
     }
 
   } catch (err) {
     console.error(err);
-    setError("Failed to load data. Please try again later.");
+    setError("Failed to load recommendations");
   } finally {
     setLoading(false);
   }
-}, [getFromCache, addToCache]);
+}, [userLocation, userCity, userCountry, getFromCache, addToCache]);
 
 useEffect(() => {
   loadAll();
@@ -443,14 +444,14 @@ useEffect(() => {
         ) : (
           <>
             <Grid container spacing={2} alignItems="stretch">
-              {paginatedEvents.map((ev) => (
-                <Grid item xs={12} sm={6} md={3} key={ev._id}>
+              {paginatedEvents.map((event) => (
+                <Grid item xs={12} sm={6} md={3} key={event._id}>
                   <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     <CardMedia
                       component="img"
                       height="160"
-                      image={ev.image || "/default-event.jpg"}
-                      alt={ev.title}
+                      image={event.image || "/default-event.jpg"}
+                      alt={event.title}
                       loading="lazy"
                     />
                     <CardContent sx={{ flexGrow: 1 }}>
@@ -463,17 +464,16 @@ useEffect(() => {
                                 ? `In ${userCity}`
                                 : `In ${userCountry}`
                           }
-                          color="primary"
                           size="small"
                         />
                       )}
-                      <Typography variant="subtitle1" gutterBottom>{ev.title}</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{ev.description}</Typography>
-                      <Typography variant="caption" color="text.secondary">Venue: {ev.venue}</Typography>
+                      <Typography variant="subtitle1" gutterBottom>{event.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{event.description}</Typography>
+                      <Typography variant="caption" color="text.secondary">Venue: {event.venue}</Typography>
                     </CardContent>
                     <Box p={1} display="flex" gap={1} justifyContent="space-between">
-                      <Button size="small" onClick={() => handleViewDetails(ev)}>View Details</Button>
-                      <Button size="small" variant="contained" onClick={() => handleBuyTicket(ev)}>Buy Ticket</Button>
+                      <Button size="small" onClick={() => handleViewDetails(event)}>View Details</Button>
+                      <Button size="small" variant="contained" onClick={() => handleBuyTicket(event)}>Buy Ticket</Button>
                     </Box>
                   </Card>
                 </Grid>
@@ -513,7 +513,6 @@ useEffect(() => {
                                 ? `In ${userCity}`
                                 : `In ${userCountry}`
                           }
-                          color="primary"
                           size="small"
                         />
                       )}
@@ -562,7 +561,6 @@ useEffect(() => {
                                 ? `In ${userCity}`
                                 : `In ${userCountry}`
                           }
-                          color="primary"
                           size="small"
                         />
                       )}
@@ -611,7 +609,6 @@ useEffect(() => {
                                 ? `In ${userCity}`
                                 : `In ${userCountry}`
                           }
-                          color="primary"
                           size="small"
                         />
                       )}

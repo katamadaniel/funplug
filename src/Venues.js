@@ -28,7 +28,7 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import VenueFormModal from './VenueFormModal';
 import { fetchMyVenues, createVenue, updateVenue, deleteVenue, fetchVenueBookings } from './services/venuesService';
 
-const VenuesPage = ({ token }) => {
+const Venues = ({ token }) => {
   const [venues, setVenues] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -176,11 +176,12 @@ const VenuesPage = ({ token }) => {
                     </Carousel>
                 </Box>
                 <CardContent>
-                  <Typography variant="h6">{venue.name}</Typography>
+                  <Typography variant="h6">{venue.venueType}</Typography>
+                  <Typography>Name: {venue.name}</Typography>
                   <Typography>Location: {venue.city}, {venue.country}</Typography>
                   <Typography>Size: {venue.size} square ft.</Typography>
                   <Typography>Capacity: {venue.capacity} people</Typography>
-                  <Typography>Status: {venue.status}</Typography>
+                  <Typography>Booking Status: {venue.bookingStatus}</Typography>
                   <Typography>Duration: {venue.duration} hours</Typography>
                   <Typography>Charges: {venue.charges}/hour</Typography>
                   <Box sx={{ mt: 2, display: 'flex', justifyContent:'space-between', gap: 1 }}>
@@ -299,4 +300,4 @@ const VenuesPage = ({ token }) => {
   );
 };
 
-export default VenuesPage;
+export default Venues;

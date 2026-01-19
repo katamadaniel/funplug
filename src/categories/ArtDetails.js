@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import {
   Box,
   Grid,
@@ -14,10 +13,9 @@ import {
 import PerformanceCard from "./PerformanceCard";
 import PerformanceDetailsModal from "../PerformanceDetailsModal";
 import PerformanceBookingFormModal from "../PerformanceBookingFormModal";
-
-const API_URL = process.env.REACT_APP_API_URL;
-const PERFORMANCES_API = `${API_URL}/api/performances`;
-const USERS_API = `${API_URL}/api/users`;
+import { fetchActiveCards } from "../services/performanceService";
+import { fetchUsers } from "../services/userService";
+import GroupedPaginatedSection from "./GroupedPaginatedSection";
 
 const ArtDetails = () => {
   const [performances, setPerformances] = useState([]);
@@ -31,33 +29,31 @@ const ArtDetails = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
+useEffect(() => {
+  let mounted = true;
 
-    const load = async () => {
-      try {
-        const [perfRes, usersRes] = await Promise.all([
-          axios.get(PERFORMANCES_API),
-          axios.get(USERS_API),
-        ]);
+  const load = async () => {
+    try {
+      const [performances, users] = await Promise.all([
+        fetchActiveCards(),
+        fetchUsers(),
+      ]);
 
-        if (!mounted) return;
+      if (!mounted) return;
 
-        const validUserIds = new Set(usersRes.data.map((u) => u._id));
-        setPerformances(
-          perfRes.data.filter((p) => validUserIds.has(p.userId))
-        );
-        setUsers(usersRes.data);
-      } catch (err) {
-        console.error("ArtDetails load error:", err);
-      } finally {
-        mounted && setLoading(false);
-      }
-    };
+      const validUserIds = new Set(users.map(u => u._id));
+      setPerformances(performances.filter(p => validUserIds.has(p.userId)));
+      setUsers(users);
+    } catch (err) {
+      console.error("ArtDetails load error:", err);
+    } finally {
+      mounted && setLoading(false);
+    }
+  };
 
-    load();
-    return () => (mounted = false);
-  }, []);
+  load();
+  return () => (mounted = false);
+}, []);
 
   const countries = useMemo(
     () => [...new Set(performances.map((p) => p.country).filter(Boolean))],
@@ -129,9 +125,7 @@ const ArtDetails = () => {
           >
             <MenuItem value="">All</MenuItem>
             {cities.map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
+              <MenuItem key={c} value={c}>{c}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -139,14 +133,16 @@ const ArtDetails = () => {
         <Chip label={`Total: ${performances.length}`} />
       </Box>
 
-      {Object.keys(grouped).map((artType) => (
-        <Box key={artType} mb={4}>
-          <Typography variant="h6" mb={1}>
-            {artType}
-          </Typography>
-
-          <Grid container spacing={2}>
-            {grouped[artType].map((p) => (
+      {/* Cards */}
+      {Object.keys(grouped).length === 0 ? (
+        <Typography>No entertainment found.</Typography>
+      ) : (
+        Object.entries(grouped).map(([artType, cards]) => (
+          <GroupedPaginatedSection
+            key={artType}
+            title={artType}
+            items={cards}
+            renderCard={(p) => (
               <Grid item xs={12} sm={6} md={4} key={p._id}>
                 <PerformanceCard
                   performance={p}
@@ -156,10 +152,10 @@ const ArtDetails = () => {
                   }}
                 />
               </Grid>
-            ))}
-          </Grid>
-        </Box>
-      ))}
+            )}
+          />
+        ))
+      )}
 
       {selectedPerformance && (
         <PerformanceDetailsModal

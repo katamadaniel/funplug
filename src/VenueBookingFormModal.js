@@ -178,6 +178,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
         venueId: venue._id,
         creatorId: venue.userId,
         venueTitle: venue.name,
+        venueType: venue.venueType,
         paymentMethod,
         amount: reservationFee,
       });
@@ -403,7 +404,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
         <Button
           variant="contained"
           onClick={handleBookVenue}
-          disabled={loading || venue.status === "closed"}
+          disabled={loading || venue.bookingStatus === "closed"}
         >
           {loading ? <CircularProgress size={22} /> : "Book Venue"}
         </Button>

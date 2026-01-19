@@ -21,12 +21,21 @@ export const createEvent = async (formData) => {
   }
 };
 
-export const fetchEvents = async () => {
+export const fetchActiveEvents = async () => {
+  const res = await axiosInstance.get(`${EVENTS_API_URL}/active`);
+  return res.data;
+};
+
+export const fetchEvents = async (params = {}) => {
   try {
-    const response = await axiosInstance.get(EVENTS_API_URL);
+    const endpoint = `${EVENTS_API_URL}/recommended`;
+    const response = await axiosInstance.get(endpoint, { params });
     return response.data;
   } catch (error) {
-    console.error('Error fetching events:', error.response ? error.response.data : error.message);
+    console.error(
+      "Error fetching events:",
+      error.response ? error.response.data : error.message
+    );
     throw error;
   }
 };
@@ -104,7 +113,7 @@ export const deleteEvent = async (id) => {
     const token = localStorage.getItem('token');
     const config = {
       headers: {
-        'Authorization': `Bearer ${token}`
+         'Authorization': `Bearer ${token}`
       }
     };
     const response = await axiosInstance.delete(`${EVENTS_API_URL}/${id}`, config);
@@ -116,19 +125,61 @@ export const deleteEvent = async (id) => {
 };
 
   // Admin functions
+export const fetchAllEvents = async () => {
+  try {
+    const token = localStorage.getItem('adminToken');
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    const response = await axiosInstance.get(EVENTS_API_URL, config);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching events:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
 export const getAllTicketSales = async () => {
-  const response = await axiosInstance.get(`${EVENTS_API_URL}/all-ticket-sales`);
+  try{
+  const token = localStorage.getItem('adminToken');
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axiosInstance.get(`${EVENTS_API_URL}/all-ticket-sales`, config);
   return response.data;
+  } catch (error) {
+    console.error('Error fetching ticket sales:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 };
 
 export const deleteEventById = async (eventId) => {
-    const token = localStorage.getItem('adminToken');
-  const config = { headers: { Authorization: token } };
-  const response = await axiosInstance.delete(`${EVENTS_API_URL}/${eventId}`, config);
+  const token = localStorage.getItem('adminToken');
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axiosInstance.delete(
+    `${EVENTS_API_URL}/${eventId}`, config);
   return response.data;
 };
 
 export const purchaseByEventId = async (eventId) => {
-  const response = await axiosInstance.get(`${TICKET_PURCHASES_API_URL}?eventId=${eventId}`);
+  try{
+  const token = localStorage.getItem('adminToken');
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axiosInstance.get(`${TICKET_PURCHASES_API_URL}?eventId=${eventId}`, config);
+  return response.data;
+  } catch (error) {
+    console.error('Error fetching event purchases:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+export const updateEventStatus = async (eventId, status) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await axiosInstance.patch(
+    `${EVENTS_API_URL}/${eventId}/status`,
+    { status },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return response.data;
 };

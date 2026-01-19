@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import {
   Box,
   Grid,
@@ -14,10 +13,9 @@ import {
 import VenueCard from "./VenueCard";
 import VenueDetailsModal from "../VenueDetailsModal";
 import VenueBookingFormModal from "../VenueBookingFormModal";
-
-const API_URL = process.env.REACT_APP_API_URL;
-const VENUES_API = `${API_URL}/api/venues`;
-const USERS_API = `${API_URL}/api/users`;
+import { fetchActiveVenues } from "../services/venuesService";
+import { fetchUsers } from "../services/userService";
+import GroupedPaginatedSection from "./GroupedPaginatedSection";
 
 const LocationDetails = () => {
   const [venues, setVenues] = useState([]);
@@ -36,20 +34,16 @@ const LocationDetails = () => {
 
     const load = async () => {
       try {
-        const [venuesRes, usersRes] = await Promise.all([
-          axios.get(VENUES_API),
-          axios.get(USERS_API),
+        const [venues, users] = await Promise.all([
+          fetchActiveVenues(),
+          fetchUsers(),
         ]);
 
         if (!mounted) return;
 
-        const validUserIds = new Set(usersRes.data.map((u) => u._id));
-        const filteredVenues = venuesRes.data.filter((v) =>
-          validUserIds.has(v.userId)
-        );
-
-        setVenues(filteredVenues);
-        setUsers(usersRes.data);
+        const validUserIds = new Set(users.map(u => u._id));
+        setVenues(venues.filter(v => validUserIds.has(v.userId)));
+        setUsers(users);
       } catch (err) {
         console.error("LocationDetails load error:", err);
       } finally {
@@ -72,15 +66,21 @@ const LocationDetails = () => {
     return [...new Set(filtered.map((v) => v.city).filter(Boolean))].sort();
   }, [venues, countryFilter]);
 
-  const filteredVenues = useMemo(() => {
+  const grouped = useMemo(() => {
     return venues.filter((v) => {
       if (countryFilter && v.country !== countryFilter) return false;
       if (cityFilter && v.city !== cityFilter) return false;
       return true;
-    });
+    })
+    .reduce((acc, venue) => {
+      const key = venue.venueType || "Other";
+      acc[key] = acc[key] || [];
+      acc[key].push(venue);
+      return acc;
+    }, {});
   }, [venues, countryFilter, cityFilter]);
 
-  if (loading)
+if (loading)
     return (
       <Box display="flex" justifyContent="center" mt={6}>
         <CircularProgress />
@@ -90,7 +90,7 @@ const LocationDetails = () => {
   return (
     <Box p={2}>
       <Typography variant="h5" mb={2}>
-        Venues — Browse by location
+        Venues — Browse by venue type
       </Typography>
 
       {/* Filters */}
@@ -107,9 +107,7 @@ const LocationDetails = () => {
           >
             <MenuItem value="">All</MenuItem>
             {countries.map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
+              <MenuItem key={c} value={c}>{c}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -123,37 +121,36 @@ const LocationDetails = () => {
           >
             <MenuItem value="">All</MenuItem>
             {cities.map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
+              <MenuItem key={c} value={c}>{c}</MenuItem>
             ))}
           </Select>
         </FormControl>
 
-        <Box display="flex" gap={1} alignItems="center">
-          <Chip label={`Total: ${filteredVenues.length}`} />
-          {countryFilter && <Chip label={countryFilter} />}
-          {cityFilter && <Chip label={cityFilter} />}
-        </Box>
+        <Chip label={`Total: ${venues.length}`} />
       </Box>
 
       {/* Cards */}
-      {filteredVenues.length === 0 ? (
+      {Object.keys(grouped).length === 0 ? (
         <Typography>No venues found.</Typography>
       ) : (
-        <Grid container spacing={2}>
-          {filteredVenues.map((venue) => (
-            <Grid item xs={12} sm={6} md={4} key={venue._id}>
-              <VenueCard
-                venue={venue}
-                onView={() => {
-                  setSelectedVenue(venue);
-                  setDetailsOpen(true);
-                }}
-              />
-            </Grid>
-          ))}
-        </Grid>
+        Object.entries(grouped).map(([venueType, venues]) => (
+          <GroupedPaginatedSection
+            key={venueType}
+            title={venueType}
+            items={venues}
+            renderCard={(v) => (
+              <Grid item xs={12} sm={6} md={4} key={v._id}>
+                <VenueCard
+                  venue={v}
+                  onView={() => {
+                    setSelectedVenue(v);
+                    setDetailsOpen(true);
+                  }}
+                />
+              </Grid>
+            )}
+          />
+        ))
       )}
 
       {/* Details Modal */}

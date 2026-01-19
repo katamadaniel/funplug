@@ -21,12 +21,21 @@ export const createCard = async (formData) => {
   }
 };
 
-export const fetchCards = async () => {
+export const fetchActiveCards = async () => {
+  const res = await axiosInstance.get(`${PERFORMANCES_API_URL}/active`);
+  return res.data;
+};
+
+export const fetchCards = async (params = {}) => {
   try {
-    const response = await axiosInstance.get(PERFORMANCES_API_URL);
+    const endpoint = `${PERFORMANCES_API_URL}/recommended`;
+    const response = await axiosInstance.get(endpoint, { params });
     return response.data;
   } catch (error) {
-    console.error('Error fetching cards:', error.response ? error.response.data : error.message);
+    console.error(
+      "Error fetching events:",
+      error.response ? error.response.data : error.message
+    );
     throw error;
   }
 };
@@ -116,21 +125,50 @@ export const deleteCard = async (id) => {
 };
 
   //Admin functions
-
 export const getAllCards = async () => {
-  const response = await axiosInstance.get(PERFORMANCES_API_URL);
-  return response.data;
-};
+  try{
+    const token = localStorage.getItem('adminToken');
+    const config = { 
+      headers: { 
+        'Authorization': `Bearer ${token}` 
+      }
+    };
+    const response = await axiosInstance.get(PERFORMANCES_API_URL, config);
+    return response.data;
+    } catch (error) {
+      console.error('Error fetching cards:', error.response ? error.response.data : error.message);
+      throw error;
+    }
+  };
 
 export const deleteCardById = async (cardId) => {
   const token = localStorage.getItem('adminToken');
-  const response = await axiosInstance.delete(`${PERFORMANCES_API_URL}/${cardId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axiosInstance.delete(
+    `${PERFORMANCES_API_URL}/${cardId}`, config);
   return response.data;
 };
 
 export const getBookingsByCardId = async (cardId) => {
-  const response = await axiosInstance.get(`${BOOKINGS_API_URL}?cardId=${cardId}`);
+  try{
+    const token = localStorage.getItem('adminToken');
+    const config = { headers: { 'Authorization': `Bearer ${token}` } };
+    const response = await axiosInstance.get(`${BOOKINGS_API_URL}?cardId=${cardId}`, config);
+    return response.data;
+    } catch (error) {
+      console.error('Error fetching card bookings:', error.response ? error.response.data : error.message);
+      throw error;
+    }
+  };
+
+export const updatePerformanceStatus = async (cardId, status) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await axiosInstance.patch(
+    `${PERFORMANCES_API_URL}/${cardId}/status`,
+    { status },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return response.data;
 };

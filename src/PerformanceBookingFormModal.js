@@ -430,7 +430,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
         <Button
           variant="contained"
           onClick={handleBookPerformance}
-          disabled={loading || performance.status === "closed"}
+          disabled={loading || performance.bookingStatus === "closed"}
         >
           {loading ? <CircularProgress size={22}/> : "Book Now"}
         </Button>

@@ -54,18 +54,30 @@ const RemoveButton = styled(IconButton)({
 });
 
 const defaultVenue = {
+  venueType: "",
   name: "",
   city: "",
   country: "",
   size: "",
   capacity: "",
-  status: "",
+  bookingStatus: "open",
   duration: "",
   charges: "",
   images: [],
   lat: null,
   lng: null,
 };
+
+const VENUE_TYPES = [
+  "Meeting/Ballrooms",
+  "Restaurant & Bar/Club",
+  "Conference & Convention center",
+  "Outdoor space",
+  "Museum/Art gallery",
+  "Auditorium/Hall",
+  "Sports club/Stadium",
+  "Warehouse/Industrial space",
+];
 
 const VenueFormModal = ({ open, handleClose, onSubmit, initialVenue }) => {
   const [venue, setVenue] = useState(defaultVenue);
@@ -175,6 +187,20 @@ const handleChange = (e) => {
           {initialVenue ? 'Edit Venue' : 'Add Venue'}
         </Typography>
 
+        <TextField
+          select
+          name="venueType"
+          label="Venue Type"
+          value={venue.venueType}
+          onChange={handleChange}
+          required
+        >
+          {VENUE_TYPES.map((type) => (
+            <MenuItem key={type} value={type}>
+              {type}
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField name="name" label="Venue Name" value={venue.name} onChange={handleChange} required />
         <TextField name="city" label="City" value={venue.city} onChange={handleChange} required />
         <TextField name="country" label="Country" value={venue.country} onChange={handleChange} required />
@@ -220,9 +246,9 @@ const handleChange = (e) => {
 
         <TextField
           select
-          name="status"
+          name="bookingStatus"
           label="Booking Status"
-          value={venue.status}
+          value={venue.bookingStatus}
           onChange={handleChange}
           required
         >

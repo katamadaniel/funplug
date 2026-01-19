@@ -249,14 +249,14 @@ const PerformanceDetailsModal = ({ performance, user, onClose, onBookPerformance
           <Divider sx={{ my: 2 }} />
 
           {/* INFO */}
-          <Typography><strong>Performer:</strong> {performance.name}</Typography>
-          <Typography><strong>Charges:</strong> Ksh {performance.charges}/hour</Typography>
+          <Typography mt={1}><strong>Performer:</strong> {performance.name}</Typography>
+          <Typography mt={1}><strong>Charges:</strong> Ksh {performance.charges}/hour</Typography>
 
           <Typography mt={1}>
             <strong>Status:</strong>{" "}
             <Chip
-              label={performance.status}
-              color={performance.status === "closed" ? "error" : "primary"}
+              label={performance.bookingStatus}
+              color={performance.bookingStatus === "closed" ? "error" : "primary"}
               sx={{ textTransform: "capitalize" }}
             />
           </Typography>
@@ -267,7 +267,7 @@ const PerformanceDetailsModal = ({ performance, user, onClose, onBookPerformance
           <Button
             variant="contained"
             onClick={onBookPerformance}
-            disabled={performance.status === "closed"}
+            disabled={performance.bookingStatus === "closed"}
           >
             Book Performance
           </Button>

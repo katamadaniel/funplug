@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 
 
-const EventPage = ({ token }) => {
+const Events = ({ token }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -406,4 +406,4 @@ const EventPage = ({ token }) => {
   );
 };
 
-export default EventPage;
+export default Events;

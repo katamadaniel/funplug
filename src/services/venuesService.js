@@ -21,12 +21,21 @@ export const createVenue = async (formData) => {
   }
 };
 
-export const fetchVenues = async () => {
+export const fetchActiveVenues = async () => {
+  const res = await axiosInstance.get(`${VENUES_API_URL}/active`);
+  return res.data;
+};
+
+export const fetchVenues = async (params = {}) => {
   try {
-    const response = await axiosInstance.get(VENUES_API_URL);
+    const endpoint = `${VENUES_API_URL}/recommended`;
+    const response = await axiosInstance.get(endpoint, { params });
     return response.data;
   } catch (error) {
-    console.error('Error fetching venues:', error.response ? error.response.data : error.message);
+    console.error(
+      "Error fetching events:",
+      error.response ? error.response.data : error.message
+    );
     throw error;
   }
 };
@@ -118,19 +127,49 @@ export const deleteVenue = async (id) => {
   //Admin functions
 
 export const getAllVenues = async () => {
-  const response = await axiosInstance.get(VENUES_API_URL);
-  return response.data;
+  try{
+    const token = localStorage.getItem('adminToken');
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    };
+  const response = await axiosInstance.get(VENUES_API_URL, config);
+  return response.data;    
+  } catch (error) {
+    console.error('Error fetching venues:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 };
 
 export const deleteVenueById = async (venueId) => {
   const token = localStorage.getItem('adminToken');
-  const response = await axiosInstance.delete(`${VENUES_API_URL}/${venueId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axiosInstance.delete(
+    `${VENUES_API_URL}/${venueId}`, config);
   return response.data;
 };
 
 export const getBookingsByVenueId = async (venueId) => {
-  const response = await axiosInstance.get(`${BOOKINGS_API_URL}?venueId=${venueId}`);
+  try{
+  const token = localStorage.getItem('adminToken');
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axiosInstance.get(`${BOOKINGS_API_URL}?venueId=${venueId}`, config);
+  return response.data;
+  } catch (error) {
+      console.error('Error fetching  venue bookings:', error.response ? error.response.data : error.message);
+      throw error;
+    }
+};
+
+export const updateVenueStatus = async (venueId, status) => {
+  const token = localStorage.getItem('adminToken');
+  const response = await axiosInstance.patch(
+    `${VENUES_API_URL}/${venueId}/status`,
+    { status },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return response.data;
 };

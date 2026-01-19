@@ -203,8 +203,9 @@ const ServiceDetailsModal = ({ service, user, onClose, onBookService }) => {
             </Box>
           )}
 
-          <Typography variant="h5" fontWeight="bold">
-            {service.serviceType}
+          <Typography variant="h5" fontWeight="bold">{service.serviceType}</Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            {service.city}, {service.country}
           </Typography>
 
           {/* CAROUSEL */}
@@ -244,7 +245,6 @@ const ServiceDetailsModal = ({ service, user, onClose, onBookService }) => {
 
           {/* INFO SECTION */}
           <Box mt={3}>
-            <Typography><strong>Location:</strong> {service.city}, {service.country}</Typography>
             <Typography mt={1}><strong>Description:</strong> {service.description}</Typography>
             <Typography mt={1}><strong>Duration:</strong> {service.duration} hours/day</Typography>
             <Typography mt={1}><strong>Charges:</strong> Ksh {service.charges}/hour</Typography>
@@ -252,8 +252,8 @@ const ServiceDetailsModal = ({ service, user, onClose, onBookService }) => {
             <Typography mt={2}>
               <strong>Status: </strong>
             <Chip
-              label={service.status}
-              color={service.status === "closed" ? "error" : "primary"}
+              label={service.bookingStatus}
+              color={service.bookingStatus === "closed" ? "error" : "primary"}
               sx={{ textTransform: "capitalize" }}
             />
             </Typography>
@@ -263,7 +263,7 @@ const ServiceDetailsModal = ({ service, user, onClose, onBookService }) => {
         <DialogActions sx={{justifyContent: 'center'}} >
           <Button
             variant="contained"
-            disabled={service.status === "closed"}
+            disabled={service.bookingStatus === "closed"}
             onClick={onBookService}
           >
             Book Service

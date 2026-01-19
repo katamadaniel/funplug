@@ -431,7 +431,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant="contained"
-          disabled={loading || service.status === "closed"}
+          disabled={loading || service.bookingStatus === "closed"}
           onClick={handleBookService}
         >
           {loading ? <CircularProgress size={22} /> : "Book Service"}

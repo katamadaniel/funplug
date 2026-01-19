@@ -115,7 +115,7 @@ const Services = ({ token }) => {
     country: '',
     city: '',
     charges: '',
-    status: 'open',
+    bookingStatus: 'open',
     duration: '',
     images: [],
     lat: null,
@@ -174,7 +174,7 @@ const loadBookingsForServices = async (servicesList) => {
         country: service.country,
         city: service.city,
         charges: service.charges,
-        status: service.status,
+        bookingStatus: service.bookingStatus,
         duration: service.duration,
         images: service.images || [],
         lat: service.location?.coordinates?.[1] || null,
@@ -187,7 +187,7 @@ const loadBookingsForServices = async (servicesList) => {
         country: '',
         city: '',
         charges: '',
-        status: 'open',
+        bookingStatus: 'open',
         duration: '',
         images: []
       });
@@ -420,7 +420,7 @@ const loadBookingsForServices = async (servicesList) => {
                 <Typography variant="body2">Location: {service.city}, {service.country}</Typography>
                 <Typography variant="body2">Charges/hr: {service.charges}</Typography>
                 <Typography variant="body2">Duration: {service.duration}</Typography>
-                <Typography variant="body2">Status: {service.status}</Typography>
+                <Typography variant="body2">Booking Status: {service.bookingStatus}</Typography>
                 <Box display="flex" justifyContent="space-between" mt={1}>
                   <Button variant="contained" color="primary" startIcon={<Edit />} onClick={() => handleOpenModal(service)}>Edit</Button>
                   <Button variant="outlined" color="error" startIcon={<Delete />} onClick={() => handleDelete(service._id)}>Delete</Button>
@@ -470,7 +470,7 @@ const loadBookingsForServices = async (servicesList) => {
             <TextField fullWidth label="Duration (Hours per day)" name="duration" type="number" value={formData.duration} onChange={handleChange} margin="normal" required />
             <FormControl fullWidth margin="normal">
               <InputLabel>Status</InputLabel>
-              <Select name="status" value={formData.status} onChange={handleChange}>
+              <Select name="bookingStatus" value={formData.bookingStatus} onChange={handleChange}>
                 <MenuItem value="open">Open</MenuItem>
                 <MenuItem value="closed">Closed</MenuItem>
               </Select>
