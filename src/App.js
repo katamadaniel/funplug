@@ -40,6 +40,8 @@ import { TicketsProvider } from './contexts/TicketsContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { EventsProvider } from './contexts/EventsContext';
 import { VenuesProvider } from './contexts/VenuesContext';
+import { PerformanceProvider } from './contexts/PerformanceContext';
+import { ServicesProvider } from './contexts/ServicesContext';
 import { useSearch, SearchProvider } from './contexts/SearchContext';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminLayout from './components/admin/AdminLayout';
@@ -158,83 +160,87 @@ function App() {
 
   return (
     <LocationProvider>
-    <CacheProvider>
-    <NotificationProvider userId={user?._id} token={token}>
-      <UsersProvider>
-        <TicketsProvider>
-          <EventsProvider>
-            <VenuesProvider>
-              <SearchProvider>
-                <Router>
-                  <ScrollToTop />
-                  {isAdminAuthenticated ? (
-                    <div className="admin-portal">
-                      <AdminNavbar  admin={admin} onLogout={handleAdminLogout}  setAdminAuthenticated={setAdminAuthenticated}  setAdmin={setAdmin} />
-                      <AdminLayout>
-                        <Routes>
-                          <Route path="dashboard" element={<AdminDashboard />} />
-                          <Route path="admins" element={<Admins />} />
-                          <Route path="users" element={<UsersAdmin />} />
-                          <Route path="events" element={<EventsAdmin />} />
-                          <Route path="venues" element={<VenuesAdmin />} />
-                          <Route path="performance" element={<PerformanceAdmin />} />
-                          <Route path="services" element={<ServicesAdmin />} />
-                          <Route path="notifications" element={<AdminNotifications />} />
-                          <Route path="emails" element={<AdminEmails />} />
-                          <Route path="invoices" element={<AdminInvoices />} />
-                          <Route path="settings" element={<AdminSettings />} />
-                        </Routes>
-                      </AdminLayout>
-                    </div>
-                  ) : (
-                    <div className="App">
-                      <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} user={user} />
-                      <Menu isAuthenticated={isAuthenticated} />
-                      <div className="content">
-                        <Routes>
-                          <Route path="/admin" element={<AdminLogin setAdminAuthenticated={setAdminAuthenticated} setAdmin={setAdmin} />} />
-                          <Route path="/reset" element={<PasswordResetRequest />} />
-                          <Route path="/reset-password/:token" element={<PasswordResetVerify />} />
-                          <Route path="/verify-email/:token" element={<VerifyEmail />} />
-                          <Route path="/verify-email-update/:userId/:token" element={<EmailUpdateVerification />} />
-                          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
-                          <Route path="/signup" element={<Signup />} />
-                          <Route path="/" element={<Home />} />
-                          <Route path="/about" element={<About />} />
-                          <Route path="/faq" element={<FAQ />} />
-                          <Route path="/contact" element={<Contact />} />
-                          <Route path="/searchResults" element={<SearchResultsWrapper />} />
-                          <Route path="/profile/:id" element={<UserProfile />} />
-                          <Route path="/category" element={<Category />} />
-                          <Route path="/category/:slug" element={<CategoryRouter />} />
-                          <Route path="/category/:slug/:category" element={<CategoryRouter />} />
+      <CacheProvider>
+        <NotificationProvider userId={user?._id} token={token}>
+          <UsersProvider>
+            <TicketsProvider>
+              <EventsProvider>
+                <VenuesProvider>
+                  <PerformanceProvider>
+                    <ServicesProvider>
+                      <SearchProvider>
+                        <Router>
+                          <ScrollToTop />
+                          {isAdminAuthenticated ? (
+                            <div className="admin-portal">
+                              <AdminNavbar  admin={admin} onLogout={handleAdminLogout}  setAdminAuthenticated={setAdminAuthenticated}  setAdmin={setAdmin} />
+                              <AdminLayout>
+                                <Routes>
+                                  <Route path="dashboard" element={<AdminDashboard />} />
+                                  <Route path="admins" element={<Admins />} />
+                                  <Route path="users" element={<UsersAdmin />} />
+                                  <Route path="events" element={<EventsAdmin />} />
+                                  <Route path="venues" element={<VenuesAdmin />} />
+                                  <Route path="performance" element={<PerformanceAdmin />} />
+                                  <Route path="services" element={<ServicesAdmin />} />
+                                  <Route path="notifications" element={<AdminNotifications />} />
+                                  <Route path="emails" element={<AdminEmails />} />
+                                  <Route path="invoices" element={<AdminInvoices />} />
+                                  <Route path="settings" element={<AdminSettings />} />
+                                </Routes>
+                              </AdminLayout>
+                            </div>
+                          ) : (
+                            <div className="App">
+                              <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} user={user} />
+                              <Menu isAuthenticated={isAuthenticated} />
+                              <div className="content">
+                                <Routes>
+                                  <Route path="/admin" element={<AdminLogin setAdminAuthenticated={setAdminAuthenticated} setAdmin={setAdmin} />} />
+                                  <Route path="/reset" element={<PasswordResetRequest />} />
+                                  <Route path="/reset-password/:token" element={<PasswordResetVerify />} />
+                                  <Route path="/verify-email/:token" element={<VerifyEmail />} />
+                                  <Route path="/verify-email-update/:userId/:token" element={<EmailUpdateVerification />} />
+                                  <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
+                                  <Route path="/signup" element={<Signup />} />
+                                  <Route path="/" element={<Home />} />
+                                  <Route path="/about" element={<About />} />
+                                  <Route path="/faq" element={<FAQ />} />
+                                  <Route path="/contact" element={<Contact />} />
+                                  <Route path="/searchResults" element={<SearchResultsWrapper />} />
+                                  <Route path="/profile/:id" element={<UserProfile />} />
+                                  <Route path="/category" element={<Category />} />
+                                  <Route path="/category/:slug" element={<CategoryRouter />} />
+                                  <Route path="/category/:slug/:category" element={<CategoryRouter />} />
 
-                          {/* Protected routes */}
-                          <Route path="/profile/*" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Profile token={token} /> </PrivateRoute> } />
-                          <Route path="/events" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Events /> </PrivateRoute> } />
-                          <Route path="/venues" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Venues /> </PrivateRoute> } />
-                          <Route path="/performance" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Performance /> </PrivateRoute> } />
-                          <Route path="/services" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Services /> </PrivateRoute> } />
-                          <Route path="/notifications" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Notifications /> </PrivateRoute> } />
-                          <Route path="/change-password" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ChangePassword /> </PrivateRoute> } />
-                          <Route path="/delete-account" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <DeleteAccount /> </PrivateRoute> } />
-                          <Route path="/privacy-policy" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <PrivacyPolicy /> </PrivateRoute> } />
-                          <Route path="/report-problem" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ReportProblem /> </PrivateRoute> } />
-                          <Route path="/contact-support" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ContactSupport /> </PrivateRoute> } />
-                          <Route path="*" element={<Navigate to="/" />} />
-                        </Routes>
-                      </div>
-                      <Footer />
-                    </div>
-                  )}
-                </Router>
-              </SearchProvider>
-            </VenuesProvider>
-          </EventsProvider>
-        </TicketsProvider>
-      </UsersProvider>
-    </NotificationProvider>
-    </CacheProvider>
+                                  {/* Protected routes */}
+                                  <Route path="/profile/*" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Profile token={token} /> </PrivateRoute> } />
+                                  <Route path="/events" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Events /> </PrivateRoute> } />
+                                  <Route path="/venues" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Venues /> </PrivateRoute> } />
+                                  <Route path="/performance" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Performance /> </PrivateRoute> } />
+                                  <Route path="/services" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Services /> </PrivateRoute> } />
+                                  <Route path="/notifications" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Notifications /> </PrivateRoute> } />
+                                  <Route path="/change-password" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ChangePassword /> </PrivateRoute> } />
+                                  <Route path="/delete-account" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <DeleteAccount /> </PrivateRoute> } />
+                                  <Route path="/privacy-policy" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <PrivacyPolicy /> </PrivateRoute> } />
+                                  <Route path="/report-problem" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ReportProblem /> </PrivateRoute> } />
+                                  <Route path="/contact-support" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ContactSupport /> </PrivateRoute> } />
+                                  <Route path="*" element={<Navigate to="/" />} />
+                                </Routes>
+                              </div>
+                              <Footer />
+                            </div>
+                          )}
+                        </Router>
+                      </SearchProvider>
+                    </ServicesProvider>
+                  </PerformanceProvider>
+                </VenuesProvider>
+              </EventsProvider>
+            </TicketsProvider>
+          </UsersProvider>
+        </NotificationProvider>
+      </CacheProvider>
     </LocationProvider>
   );
 }

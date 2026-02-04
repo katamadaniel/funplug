@@ -6,81 +6,89 @@ const USERS_API_URL = `${API_URL}/api/users`;
 
 export const UsersContext = createContext();
 
+/* ===== Helpers ===== */
+const toNumber = (v) => Number(v) || 0;
+const toArray = (v) => (Array.isArray(v) ? v : []);
+
 export const UsersProvider = ({ children }) => {
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [dailyActiveUsers, setDailyActiveUsers] = useState(0);
-  const [weeklyActiveUsers, setWeeklyActiveUsers] = useState(0);
-  const [monthlyActiveUsers, setMonthlyActiveUsers] = useState(0);
-  const [highestSellingUsers, setHighestSellingUsers] = useState([]);
+  const [state, setState] = useState({
+    totalUsers: 0,
+    dailyActiveUsers: 0,
+    weeklyActiveUsers: 0,
+    monthlyActiveUsers: 0,
+
+    dailyTrend: [],
+    weeklyTrend: [],
+    monthlyTrend: [],
+
+    highestSellingUsers: [],
+
+    loading: true,
+    error: null,
+  });
 
   useEffect(() => {
-    // Fetch total users
-    const fetchTotalUsers = async () => {
-      try {
-        const response = await axios.get(`${USERS_API_URL}/total`);
-        setTotalUsers(response.data.count);
-      } catch (error) {
-        console.error('Error fetching total users:', error);
-      }
-    }; 
+    let mounted = true;
 
-    // Fetch daily active users
-    const fetchDailyActiveUsers = async () => {
+    const fetchAll = async () => {
       try {
-        const response = await axios.get(`${USERS_API_URL}/active/daily`);
-        setDailyActiveUsers(response.data.count);
-      } catch (error) {
-        console.error('Error fetching daily active users:', error);
+        setState(s => ({ ...s, loading: true, error: null }));
+
+        const [
+          total,
+          daily,
+          weekly,
+          monthly,
+          dailyTrend,
+          weeklyTrend,
+          monthlyTrend,
+          highestSelling,
+        ] = await Promise.all([
+          axios.get(`${USERS_API_URL}/total`),
+          axios.get(`${USERS_API_URL}/active/daily`),
+          axios.get(`${USERS_API_URL}/active/weekly`),
+          axios.get(`${USERS_API_URL}/active/monthly`),
+          axios.get(`${USERS_API_URL}/active/daily-trend`),
+          axios.get(`${USERS_API_URL}/active/weekly-trend`),
+          axios.get(`${USERS_API_URL}/active/monthly-trend`),
+          axios.get(`${USERS_API_URL}/highest-selling`),
+        ]);
+
+        if (!mounted) return;
+
+        setState({
+          totalUsers: toNumber(total.data?.count),
+          dailyActiveUsers: toNumber(daily.data?.count),
+          weeklyActiveUsers: toNumber(weekly.data?.count),
+          monthlyActiveUsers: toNumber(monthly.data?.count),
+
+          dailyTrend: toArray(dailyTrend.data),
+          weeklyTrend: toArray(weeklyTrend.data),
+          monthlyTrend: toArray(monthlyTrend.data),
+
+          highestSellingUsers: toArray(highestSelling.data?.users),
+
+          loading: false,
+          error: null,
+        });
+      } catch (err) {
+        console.error('UsersContext error:', err);
+        if (!mounted) return;
+
+        setState(s => ({
+          ...s,
+          loading: false,
+          error: 'Failed to load user statistics',
+        }));
       }
     };
 
-    // Fetch weekly active users
-    const fetchWeeklyActiveUsers = async () => {
-      try {
-        const response = await axios.get(`${USERS_API_URL}/active/weekly`);
-        setWeeklyActiveUsers(response.data.count);
-      } catch (error) {
-        console.error('Error fetching weekly active users:', error);
-      }
-    };
-
-    // Fetch monthly active users
-    const fetchMonthlyActiveUsers = async () => {
-      try {
-        const response = await axios.get(`${USERS_API_URL}/active/monthly`);
-        setMonthlyActiveUsers(response.data.count);
-      } catch (error) {
-        console.error('Error fetching monthly active users:', error);
-      }
-    };
-
-    // Fetch highest selling users
-    const fetchHighestSellingUsers = async () => {
-      try {
-        const response = await axios.get(`${USERS_API_URL}/highest-selling`);
-        setHighestSellingUsers(response.data.users);
-      } catch (error) {
-        console.error('Error fetching highest selling users:', error);
-      }
-    };
-
-    fetchTotalUsers();
-    fetchDailyActiveUsers();
-    fetchWeeklyActiveUsers();
-    fetchMonthlyActiveUsers();
-    fetchHighestSellingUsers();
+    fetchAll();
+    return () => { mounted = false; };
   }, []);
 
   return (
-    <UsersContext.Provider
-      value={{
-        totalUsers,
-        dailyActiveUsers,
-        weeklyActiveUsers,
-        monthlyActiveUsers,
-        highestSellingUsers,
-      }}
-    >
+    <UsersContext.Provider value={state}>
       {children}
     </UsersContext.Provider>
   );

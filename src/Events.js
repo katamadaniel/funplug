@@ -9,12 +9,12 @@ import {
   deleteEvent,
   fetchTicketPurchases,
 } from './services/eventService';
-
+import { exportBookingsToCSV } from './components/admin/adminHelpers';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Box, CircularProgress, Typography, Button, Collapse,
   TextField, Accordion, AccordionSummary, AccordionDetails,
-  IconButton, Card, CardContent, CardMedia
+  IconButton, Card, CardContent, CardMedia, Snackbar, Grid
 } from '@mui/material';
 
 import {
@@ -46,13 +46,11 @@ const Events = ({ token }) => {
 
   const [editingEventId, setEditingEventId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
-
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [showPurchases, setShowPurchases] = useState(false);
-
   const [purchases, setPurchases] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -60,12 +58,14 @@ const Events = ({ token }) => {
       const eventsData = await fetchMyEvents(token);
       setEvents(eventsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
-      console.error('Error fetching events:', error.message);
+      setSnackbar({ open: true, message: 'Error fetching events', severity: 'error' });
+      console.error(error);
     } finally {
       setLoading(false);
     }
   }, [token]);
 
+  // Load ticket purchases per event
   const fetchPurchases = useCallback(async () => {
     setLoading(true);
     try {
@@ -78,14 +78,20 @@ const Events = ({ token }) => {
       }
       setPurchases(purchasesByEvent);
     } catch (error) {
-      console.error('Error fetching purchases:', error.message);
+      setSnackbar({ open: true, message: 'Error fetching purchases', severity: 'error' });
+      console.error(error);
     } finally {
       setLoading(false);
     }
   }, [events]);
 
-  useEffect(() => { fetchEvents(); }, [fetchEvents]);
-  useEffect(() => { if (showPurchases) fetchPurchases(); }, [showPurchases, fetchPurchases]);
+  useEffect(() => {
+     fetchEvents(); 
+   }, [fetchEvents]);
+
+  useEffect(() => {
+   if (showPurchases) fetchPurchases();  
+   }, [showPurchases, fetchPurchases]);
 
   const handleFormSubmit = async (data) => {
     if (data.ticketType === 'free') {
@@ -105,16 +111,16 @@ const Events = ({ token }) => {
     try {
       if (editingEventId) {
         await updateEvent(editingEventId, formDataObj);
-        setStatusMessage('Event updated successfully');
+        setSnackbar({ open: true, message: 'Event updated successfully', severity: 'success' });
       } else {
         await createEvent(formDataObj);
-        setStatusMessage('Event created successfully');
+        setSnackbar({ open: true, message: 'Event created successfully', severity: 'success' });
       }
       fetchEvents();
       closeModal();
     } catch (error) {
-      console.error('Error saving event:', error.message);
-      setStatusMessage('Error saving event');
+      setSnackbar({ open: true, message: 'Error saving event', severity: 'error' });
+      console.error(error);
     }
   };
 
@@ -147,10 +153,10 @@ const Events = ({ token }) => {
     try {
       await deleteEvent(id);
       fetchEvents();
-      setStatusMessage('Event deleted successfully');
+      setSnackbar({ open: true, message: 'Event deleted successfully', severity: 'success' });
     } catch (error) {
-      console.error('Error deleting event:', error.message);
-      setStatusMessage('Error deleting event');
+      setSnackbar({ open: true, message: 'Error deleting event', severity: 'error' });
+      console.error(error);
     }
   };
 
@@ -209,17 +215,13 @@ const Events = ({ token }) => {
         </Button>
       </Box>
 
-      {statusMessage && (
-        <Typography sx={{ mb:2, color:'green', fontWeight:'bold' }}>{statusMessage}</Typography>
-      )}
-
       {showPurchases && (
         <Collapse in={showPurchases}>
           <Box sx={{ mt:4 }}>
             <Typography variant="h5" sx={{ mb:2 }}>Event Purchases</Typography>
 
             <TextField
-              placeholder="Search by email or phone"
+              placeholder="Search by name, email or phone"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               size="small"
@@ -230,7 +232,8 @@ const Events = ({ token }) => {
               const purchasesForEvent = (purchases[event._id] || []).filter(
                 (p) =>
                   p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  p.phone.toLowerCase().includes(searchTerm.toLowerCase())
+                  p.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  p.clientName?.toLowerCase().includes(searchTerm.toLowerCase())
               );
 
               const totalRevenue = purchasesForEvent.reduce((sum, p) => sum + p.totalAmount, 0);
@@ -238,9 +241,37 @@ const Events = ({ token }) => {
               return (
                 <Accordion key={event._id} sx={{ mb:2, borderRadius:2, boxShadow:2 }}>
                   <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Typography variant="h6">
-                      {event.title} ({purchasesForEvent.length} purchases)
+                  <Box>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      {event.title}
                     </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {event.category} — {event.city}, {event.country}
+                    </Typography>
+                  </Box>
+        
+                  <Grid container justifyContent="flex-end" direction= "row" gap={3} mx={2}>
+                    <Paper sx={{ p: 2 }}>
+                      <Typography>Total Tickets</Typography>
+                      <Typography><strong>({purchasesForEvent.length})</strong></Typography>
+                    </Paper>
+                    <Paper sx={{ p: 2 }}>
+                      <Typography>Total Revenue</Typography>
+                      <Typography>
+                        <strong>Ksh. {totalRevenue.toFixed(2)}</strong>
+                      </Typography>
+                    </Paper>
+        
+                  <Button
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                    onClick={() =>
+                      exportBookingsToCSV(purchasesForEvent, 'ticket-sales.csv')
+                    }
+                  >
+                    Export
+                  </Button>
+                  </Grid>
                   </AccordionSummary>
 
                   <AccordionDetails>
@@ -248,6 +279,8 @@ const Events = ({ token }) => {
                       <Table>
                         <TableHead>
                           <TableRow>
+                            <TableCell>#</TableCell>
+                            <TableCell>Client Name</TableCell>
                             <TableCell>Email</TableCell>
                             <TableCell>Phone</TableCell>
                             <TableCell>Ticket Type</TableCell>
@@ -260,8 +293,10 @@ const Events = ({ token }) => {
 
                         <TableBody>
                           {purchasesForEvent.length ? (
-                            purchasesForEvent.map((p) => (
+                            purchasesForEvent.map((p, i) => (
                               <TableRow key={p._id}>
+                                <TableCell>{i + 1}.</TableCell>
+                                <TableCell>{p.clientName}</TableCell>
                                 <TableCell>{p.email}</TableCell>
                                 <TableCell>{p.phone}</TableCell>
                                 <TableCell>{p.ticketType}</TableCell>
@@ -400,9 +435,15 @@ const Events = ({ token }) => {
         onSubmit={handleFormSubmit}
         onCancel={closeModal}
         editingEventId={editingEventId}
-        statusMessage={statusMessage}
       />
-    </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+      />      
+      </Box>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react';
-import { VenuesContext } from '../../contexts/VenuesContext';
+import { ServicesContext } from '../../contexts/ServicesContext';
 import {
   Typography,
   CircularProgress,
@@ -22,7 +22,7 @@ import {
 } from 'recharts';
 import moment from 'moment';
 
-const VENUE_TYPE_COLORS = {
+const SERVICE_TYPE_COLORS = {
   Hall: '#1976d2',
   Outdoor: '#2e7d32',
   Stadium: '#ef6c00',
@@ -30,42 +30,42 @@ const VENUE_TYPE_COLORS = {
   default: '#607d8b',
 };
 
-const VenueStats = () => {
+const ServiceStats = () => {
   const {
     totalBookings,
-    mostBookedVenues,
+    mostBookedServices,
     totalBookingAmount,
-    venueTypeMonthlyBookings,
+    serviceTypeMonthlyBookings,
     loading,
     error,
-  } = useContext(VenuesContext);
+  } = useContext(ServicesContext);
 
   /**
    * Normalize chart data:
-   * One row per month, venueTypes stacked side-by-side
+   * One row per month, serviceTypes stacked side-by-side
    */
-  const venueTypeChartData = useMemo(() => {
-    if(!venueTypeMonthlyBookings?.length) return[];
+  const serviceTypeChartData = useMemo(() => {
+    if (!serviceTypeMonthlyBookings?.length) return [];
 
     const grouped = {};
 
-    venueTypeMonthlyBookings.forEach(item => {
+    serviceTypeMonthlyBookings.forEach(item => {
       const monthLabel = moment()
         .month(item.month - 1)
         .format('MMM');
 
       if (!grouped[monthLabel]) grouped[monthLabel] = { month: monthLabel };
 
-      grouped[monthLabel][item.venueType] = item.bookingCount;
+      grouped[monthLabel][item.serviceType] = item.bookingCount;
     });
 
     return Object.values(grouped);
-  }, [venueTypeMonthlyBookings]);
+  }, [serviceTypeMonthlyBookings]);
 
-  const venueTypes = useMemo(() => {
-    if (!venueTypeMonthlyBookings?.length) return [];
-    return [...new Set(venueTypeMonthlyBookings.map(c => c.venueType))];
-  }, [venueTypeMonthlyBookings]);
+  const serviceTypes = useMemo(() => {
+    if (!serviceTypeMonthlyBookings?.length) return [];
+    return [...new Set(serviceTypeMonthlyBookings.map(s => s.serviceType))];
+  }, [serviceTypeMonthlyBookings]);
 
   if (loading) {
     return (
@@ -86,7 +86,7 @@ const VenueStats = () => {
   return (
     <Box mt={4}>
       {/* ===== Summary ===== */}
-      <Typography variant="h5">Total Venue Bookings</Typography>
+      <Typography variant="h5">Total Service Bookings</Typography>
       <Typography variant="h4" color="primary">{totalBookings}</Typography>
 
       <Typography variant="h5" mt={2}>Total Booking Amount</Typography>
@@ -97,41 +97,41 @@ const VenueStats = () => {
       {/* ===== Chart ===== */}
       <Paper sx={{ p: 3, mt: 4 }}>
         <Typography variant="h6" mb={2}>
-          Monthly Bookings by Venue Type
+          Monthly Bookings by Service Type
         </Typography>
 
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={venueTypeChartData}>
+          <BarChart data={serviceTypeChartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis allowDecimals={false} />
             <Tooltip />
-            {venueTypes.map(type => (
+            {serviceTypes.map(type => (
               <Bar
                 key={type}
                 dataKey={type}
-                fill={VENUE_TYPE_COLORS[type] || VENUE_TYPE_COLORS.default}
+                fill={SERVICE_TYPE_COLORS[type] || SERVICE_TYPE_COLORS.default}
               />
             ))}
           </BarChart>
         </ResponsiveContainer>
       </Paper>
 
-      {/* ===== Most Booked Venues ===== */}
+      {/* ===== Most Booked Services ===== */}
       <Typography variant="h5" mt={4}>
-        Top 10 Most Booked Venues
+        Top 10 Most Booked Services
       </Typography>
 
       <List>
-        {mostBookedVenues.map((venue, index) => (
-          <React.Fragment key={venue._id}>
+        {mostBookedServices.map((service, index) => (
+          <React.Fragment key={service._id}>
             <ListItem>
               <ListItemText
-                primary={`${index + 1}. ${venue.name} (${venue.venueType})`}
-                secondary={`Bookings: ${venue.bookingCount} | Amount: Ksh.${(venue.totalAmount || 0).toLocaleString()}`}
+                primary={`${index + 1}. ${service.name} (${service.serviceType})`}
+                secondary={`Bookings: ${service.bookingCount} | Amount: Ksh.${(service.totalAmount || 0).toLocaleString()}`}
               />
             </ListItem>
-            {index < mostBookedVenues.length - 1 && <Divider />}
+            {index < mostBookedServices.length - 1 && <Divider />}
           </React.Fragment>
         ))}
       </List>
@@ -139,4 +139,4 @@ const VenueStats = () => {
   );
 };
 
-export default VenueStats;
+export default ServiceStats;

@@ -23,7 +23,7 @@ const AdminNavbar = ({ admin, setAdminAuthenticated, setAdmin }) => {
         setAdmin(adminData);
       } catch (error) {
         console.error('Error fetching admin profile:', error);
-        handleLogout(); // If token is invalid or expired
+        handleLogout();
       }
     };
 

@@ -18,6 +18,8 @@ import EventIcon from "@mui/icons-material/Event";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CategoryIcon from "@mui/icons-material/Category";
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import RoomServiceIcon from '@mui/icons-material/RoomService';
 import InfoIcon from "@mui/icons-material/Info";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import HelpIcon from "@mui/icons-material/Help";
@@ -40,8 +42,8 @@ const Menu = ({ isAuthenticated }) => {
     { label: "Profile", icon: <PersonIcon />, path: "/profile" },
     { label: "Events", icon: <EventIcon />, path: "/events" },
     { label: "Venues", icon: <LocationOnIcon />, path: "/venues" },
-    { label: "Performance", icon: <EventIcon />, path: "/performance" },
-    { label: "Services", icon: <CategoryIcon />, path: "/services" },
+    { label: "Performance", icon: <SportsEsportsIcon />, path: "/performance" },
+    { label: "Services", icon: <RoomServiceIcon />, path: "/services" },
     { label: "Notifications", icon: <NotificationsIcon />, path: "/notifications" },
   ];
 

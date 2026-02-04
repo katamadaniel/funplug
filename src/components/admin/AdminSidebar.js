@@ -29,10 +29,10 @@ const AdminSidebar = () => {
   return (
     <Box
     sx={{
-      width: collapsed ? 70 : 250, // Sidebar width based on collapse state
+      width: collapsed ? 70 : 250,
       bgcolor: 'background.paper',
       height: '100vh',
-      transition: 'width 0.3s ease', // Smooth transition for width change
+      transition: 'width 0.3s ease',
       overflow: 'hidden', // Prevent content overflow when collapsed
     }}
     >
@@ -87,14 +87,14 @@ const AdminSidebar = () => {
 
         <ListItem button component={Link} to="performance">
           <ListItemIcon>
-            <RoomServiceIcon fontSize="large" />
+            <SportsEsportsIcon fontSize="large" />
           </ListItemIcon>
           <ListItemText primary="Performance" sx={{ display: collapsed ? 'none' : 'block', fontSize: '1rem' }} />
         </ListItem>
 
         <ListItem button component={Link} to="services">
           <ListItemIcon>
-            <SportsEsportsIcon fontSize="large" />
+            <RoomServiceIcon fontSize="large" />
           </ListItemIcon>
           <ListItemText primary="Services" sx={{ display: collapsed ? 'none' : 'block', fontSize: '1rem' }} />
         </ListItem>

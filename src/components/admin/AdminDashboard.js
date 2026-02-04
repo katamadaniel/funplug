@@ -5,11 +5,12 @@ import UserStats from './UserStats';
 import TicketStats from './TicketStats';
 import EventStats from './EventStats';
 import VenueStats from './VenueStats';
+import PerformanceStats from './PerformanceStats';
+import ServiceStats from './ServiceStats';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     if (!token) {
@@ -24,7 +25,7 @@ const AdminDashboard = () => {
       </Typography>
       <Grid container spacing={4}>
         {/* User Stats Card */}
-        <Grid item xs={12} md={6} lg={4}>
+        <Grid item xs={12} md={12} lg={12}>
           <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
             <Typography variant="h6" gutterBottom>
               User Statistics
@@ -34,7 +35,7 @@ const AdminDashboard = () => {
         </Grid>
 
         {/* Ticket Stats Card */}
-        <Grid item xs={12} md={6} lg={4}>
+        <Grid item xs={12} md={12} lg={12}>
           <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
             <Typography variant="h6" gutterBottom>
               Ticket Statistics
@@ -44,7 +45,7 @@ const AdminDashboard = () => {
         </Grid>
 
         {/* Event Stats Card */}
-        <Grid item xs={12} md={6} lg={4}>
+        <Grid item xs={12} md={12} lg={12}>
           <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
             <Typography variant="h6" gutterBottom>
               Event Statistics
@@ -54,12 +55,32 @@ const AdminDashboard = () => {
         </Grid>
 
         {/* Venue Stats Card */}
-        <Grid item xs={12} md={6} lg={4}>
+        <Grid item xs={12} md={12} lg={12}>
           <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
             <Typography variant="h6" gutterBottom>
               Venue Statistics
             </Typography>
             <VenueStats />
+          </Paper>
+        </Grid>
+
+        {/* Performance Stats Card */}
+        <Grid item xs={12} md={12} lg={12}>
+          <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
+            <Typography variant="h6" gutterBottom>
+              Performance Statistics
+            </Typography>
+            <PerformanceStats />
+          </Paper>
+        </Grid>
+
+        {/* Service Stats Card */}
+        <Grid item xs={12} md={12} lg={12}>
+          <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
+            <Typography variant="h6" gutterBottom>
+              Service Statistics
+            </Typography>
+            <ServiceStats />
           </Paper>
         </Grid>
       </Grid>

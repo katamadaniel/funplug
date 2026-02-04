@@ -8,26 +8,40 @@ export const EventsContext = createContext();
 
 export const EventsProvider = ({ children }) => {
   const [highestSellingEvents, setHighestSellingEvents] = useState([]);
+  const [eventCategoryTicketSales, setEventCategoryTicketSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchHighestSellingEvents = async () => {
+    const fetchEventStats = async () => {
       try {
-        const response = await axios.get(`${EVENTS_API_URL}/highest-selling?paymentStatus=Success`);
-        setHighestSellingEvents(response.data);
+        const [topEventsRes, eventCategoryRes] = await Promise.all([
+          axios.get(`${EVENTS_API_URL}/highest-selling?paymentStatus=Success`),
+          axios.get(`${EVENTS_API_URL}/stats/by-event-category?paymentStatus=Success`),
+        ]);
+
+        setHighestSellingEvents(topEventsRes.data);
+        setEventCategoryTicketSales(eventCategoryRes.data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch events');
+        console.error(err);
+        setError('Failed to fetch event stats');
         setLoading(false);
       }
     };
 
-    fetchHighestSellingEvents();
+    fetchEventStats();
   }, []);
 
   return (
-    <EventsContext.Provider value={{ highestSellingEvents, loading, error }}>
+    <EventsContext.Provider
+      value={{
+        highestSellingEvents,
+        eventCategoryTicketSales,
+        loading,
+        error,
+      }}
+    >
       {children}
     </EventsContext.Provider>
   );

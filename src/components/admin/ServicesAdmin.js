@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Typography,
@@ -13,33 +13,23 @@ import {
   TextField,
   Button,
   Modal,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
 } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
-import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-
 import { fetchAdminProfile } from '../../services/adminService';
 import { getAllUsers, getUserById } from '../../services/userService';
 import { getAllServices, updateServiceStatus, getBookingsByServiceId,} from '../../services/serviceService';
-import  { filterSuccessfulBookings, calculateStats, exportBookingsToCSV } from './adminHeplers';
+import  { exportBookingsToCSV } from './adminHelpers';
 
 const ServicesAdmin = () => {
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
   const [usersMap, setUsersMap] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
-
   const [selectedBookings, setSelectedBookings] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-
-//  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-//  const [serviceToDelete, setServiceToDelete] = useState(null);
+  const [bookingSearch, setBookingSearch] = useState('');
 
   const navigate = useNavigate();
 
@@ -138,10 +128,11 @@ const initialize = async () => {
   const handleViewReport = async (serviceId) => {
     try {
       const bookings = await getBookingsByServiceId(serviceId);
-      const successBookings = bookings.filter(
-        (b) => b.paymentStatus === 'Success'
+      setSelectedBookings(
+      bookings.filter(
+        (b) => b.paymentStatus === 'Success')
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       );
-      setSelectedBookings(successBookings);
       setOpenModal(true);
     } catch (err) {
       console.error('Failed to fetch service bookings:', err);
@@ -157,32 +148,27 @@ const initialize = async () => {
     }
   };
 
-/*  const handleDelete = (serviceId) => {
-    setServiceToDelete(serviceId);
-    setDeleteDialogOpen(true);
-  };
+  const filteredBookings = useMemo(() => {
+    const q = bookingSearch.toLowerCase();
+    return selectedBookings.filter(
+      b =>
+        b.email?.toLowerCase().includes(q) ||
+        b.phone?.includes(q) ||
+        b.clientName?.toLowerCase().includes(q)
+    );
+  }, [selectedBookings, bookingSearch]);
 
-  const confirmDelete = async () => {
-    try {
-      await deleteServiceById(serviceToDelete);
-      setServices((prev) => prev.filter((s) => s._id !== serviceToDelete));
-      setFilteredServices((prev) =>
-        prev.filter((s) => s._id !== serviceToDelete)
-      );
-      setDeleteDialogOpen(false);
-      setServiceToDelete(null);
-    } catch (err) {
-      console.error('Failed to delete service:', err);
-    }
-  }; */
-
-  const summary = selectedBookings.reduce(
-    (acc, service) => {
-      acc.totalBookings += service.bookingCount;
-      acc.totalRevenue += service.totalAmount;
-      return acc;
-    },
-    { totalBookings: 0, totalRevenue: 0 }
+  const summary = useMemo(
+    () =>
+    filteredBookings.reduce(
+        (acc, b) => {
+          acc.totalRevenue += Number(b.totalAmount) || 0;
+          acc.totalBookings += Number(b.bookingCount) || 0;
+          return acc;
+        },
+      { totalBookings: 0, totalRevenue: 0 }
+    ),
+    [filteredBookings]
   );
 
 return (
@@ -217,6 +203,7 @@ return (
             <TableHead>
               <TableRow>
                 <TableCell>Username</TableCell>
+                <TableCell>Provider Name</TableCell>
                 <TableCell>Service Type</TableCell>
                 <TableCell>Country</TableCell>
                 <TableCell>City</TableCell>
@@ -232,6 +219,7 @@ return (
               {filteredServices.map((service) => (
                 <TableRow key={service._id}>
                   <TableCell>{usersMap[service.userId] || 'Unknown'}</TableCell>
+                  <TableCell>{service.name}</TableCell>
                   <TableCell>{service.serviceType}</TableCell>
                   <TableCell>{service.country}</TableCell>
                   <TableCell>{service.city}</TableCell>
@@ -260,27 +248,31 @@ return (
         </TableContainer>
       </Box>
 
-      {/* Booking Report Modal */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Box sx={{ width: '70%', mx: 'auto', mt: 5, p: 4, bgcolor: 'white', borderRadius: 2, }}>
+      {/* Service booking Report */}
+      <Modal open={openModal} onClose={() => setOpenModal(false)} scroll="paper">
+        <Box sx={{
+           width: '70%',
+           maxHeight: '85vh',
+           overflowY: 'auto', 
+           mx: 'auto', 
+           mt: 5, p: 4, 
+           bgcolor: 'background.paper', 
+           borderRadius: 2, }}>
           <Typography variant="h6">Service Booking Report</Typography>
-            <Button
-              variant="outlined"
-              sx={{ mb: 2 }}
-              onClick={() =>
-                exportBookingsToCSV(
-                  selectedBookings,
-                  'service-bookings.csv'
-                )
-              }
-            >
-              Export CSV
-            </Button>
-          <TableContainer>
+
+          <TextField
+            size="small"
+            fullWidth
+            placeholder="Search bookings"
+            value={bookingSearch}
+            onChange={e => setBookingSearch(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+
             <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6">Total Bookings</Typography>
-                <Typography>{summary.totalBookings}</Typography>
+                <Typography>{filteredBookings.length}</Typography>
               </Paper>
 
               <Paper sx={{ p: 2 }}>
@@ -288,9 +280,24 @@ return (
                 <Typography>Ksh. {summary.totalRevenue.toFixed(2)}</Typography>
               </Paper>
             </Box>
+            
+            <Button
+              variant="outlined"
+              sx={{ mb: 2 }}
+              onClick={() =>
+                exportBookingsToCSV(
+                  filteredBookings,
+                  'service-bookings.csv'
+                )
+              }
+            >
+              Export CSV
+            </Button>
+          <TableContainer>
             <Table>
                 <TableHead>
                 <TableRow>
+                    <TableCell>#</TableCell>
                     <TableCell>Client Name</TableCell>
                     <TableCell>Phone</TableCell>
                     <TableCell>Email</TableCell>
@@ -300,8 +307,9 @@ return (
                 </TableRow>
                 </TableHead>
                 <TableBody>
-                {selectedBookings.map((booking) => (
+                {filteredBookings.map((booking, index) => (
                     <TableRow key={booking._id}>
+                    <TableCell>{index + 1}</TableCell>
                     <TableCell>{booking.clientName}</TableCell>
                     <TableCell>{booking.phone}</TableCell>
                     <TableCell>{booking.email}</TableCell>
@@ -315,23 +323,6 @@ return (
           </TableContainer>
         </Box>
       </Modal>
-
-      {/* Delete Confirmation 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Delete Service</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this service? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="secondary" onClick={confirmDelete}>Delete</Button>
-        </DialogActions>
-      </Dialog> */}
     </div>
   );
 };

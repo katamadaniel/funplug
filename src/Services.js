@@ -6,31 +6,11 @@ import {
   deleteService,
   fetchServiceBookings
 } from './services/serviceService';
+import { exportBookingsToCSV } from './components/admin/adminHelpers';
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Box,
-  Button,
-  Modal,
-  Typography,
-  Grid,
-  TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Snackbar,
-  Stack
+  Accordion, AccordionSummary, AccordionDetails, Box, Button, Modal, Typography, Grid,
+  TextField, Select, MenuItem, InputLabel, FormControl, CircularProgress, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Snackbar, Stack
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Add, Edit, Delete, Call, ExpandLess, ExpandMore } from '@mui/icons-material';
@@ -111,6 +91,7 @@ const Services = ({ token }) => {
 
   const [formData, setFormData] = useState({
     serviceType: '',
+    name: '',
     description: '',
     country: '',
     city: '',
@@ -128,6 +109,7 @@ const Services = ({ token }) => {
       const data = await fetchMyServices(token);
       setServices(data);
     } catch (error) {
+      setSnackbar({ open: true, message: 'Error fetching services', severity: 'error' });
       console.error(error);
     } finally {
       setLoading(false);
@@ -139,19 +121,20 @@ const Services = ({ token }) => {
   }, [loadMyServices]);
 
     // Fetch bookings for all services
-const loadBookingsForServices = async (servicesList) => {
+const loadBookings = async (servicesList) => {
     const results = {};
     setLoading(true);
     try {
       for (const service of servicesList) {
         const serviceBookings = await fetchServiceBookings(service._id);
           results[service._id] = serviceBookings.filter(
-            (b) => b.paymentStatus === "Success"
-          );
+            (b) => b.paymentStatus === "Success")
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       }
       setBookingsByService(results);
     } catch (error) {
       setSnackbar({ open: true, message: 'Error fetching bookings', severity: 'error' });
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -161,7 +144,7 @@ const loadBookingsForServices = async (servicesList) => {
     const next = !showBookings;
     setShowBookings(next);
     if (next) {
-      await loadBookingsForServices(services);
+      await loadBookings(services);
     }
   };
 
@@ -170,6 +153,7 @@ const loadBookingsForServices = async (servicesList) => {
     if (service) {
       setFormData({
         serviceType: service.serviceType,
+        name: service.name,
         description: service.description,
         country: service.country,
         city: service.city,
@@ -183,6 +167,7 @@ const loadBookingsForServices = async (servicesList) => {
     } else {
       setFormData({
         serviceType: '',
+        name: '',
         description: '',
         country: '',
         city: '',
@@ -230,6 +215,7 @@ const loadBookingsForServices = async (servicesList) => {
       loadMyServices();
     } catch (error) {
       setSnackbar({ open: true, message: 'Error saving service', severity: 'error' });
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -243,6 +229,7 @@ const loadBookingsForServices = async (servicesList) => {
       loadMyServices();
     } catch (error) {
       setSnackbar({ open: true, message: 'Error deleting service', severity: 'error' });
+      console.error(error);
     }
   };
 
@@ -251,7 +238,8 @@ const loadBookingsForServices = async (servicesList) => {
     filteredBookingsByService[serviceId] = bookings.filter(
       (b) =>
         b.email?.toLowerCase().includes(search.toLowerCase()) ||
-        b.phone?.toLowerCase().includes(search.toLowerCase())
+        b.phone?.toLowerCase().includes(search.toLowerCase()) ||
+        b.clientName?.toLowerCase().includes(search.toLowerCase())
     );
   }
 
@@ -312,11 +300,10 @@ const loadBookingsForServices = async (servicesList) => {
           <CircularProgress />
         </Box>
       ) : showBookings ? (
-        // BOOKINGS VIEW
         <Box mt={4}>
           <TextField
             fullWidth
-            label="Search by Email or Phone"
+            label="Search by name, email or phone"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             size="small"
@@ -325,16 +312,39 @@ const loadBookingsForServices = async (servicesList) => {
 
           {services.map((service) => {
             const serviceBookings = filteredBookingsByService[service._id] || [];
+              const totalRevenue = serviceBookings.reduce((sum, b) => sum + b.totalAmount, 0);
 
           return (
             <Accordion key={service._id} sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Box>
-                  <Typography variant="h6">{service.serviceType} ({serviceBookings.length} bookings)</Typography>
+                  <Typography variant="h6" sx={{ mb: 1 }}>{service.serviceType}</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {service.city}, {service.country} — {service.description}
+                    {service.name} — {service.city}, {service.country}
                   </Typography>
                 </Box>
+                  <Grid container justifyContent="flex-end" direction= "row" gap={3} mx={2}>
+                    <Paper sx={{ p: 2 }}>
+                      <Typography>Total Bookings</Typography>
+                      <Typography><strong>({serviceBookings.length})</strong></Typography>
+                    </Paper>
+                    <Paper sx={{ p: 2 }}>
+                      <Typography>Total Revenue</Typography>
+                      <Typography>
+                        <strong>Ksh. {totalRevenue.toFixed(2)}</strong>
+                      </Typography>
+                    </Paper>
+        
+                  <Button
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                    onClick={() =>
+                      exportBookingsToCSV(serviceBookings, 'service-bookings.csv')
+                    }
+                  >
+                    Export
+                  </Button>
+                  </Grid>
               </AccordionSummary>
 
               <AccordionDetails>
@@ -342,6 +352,7 @@ const loadBookingsForServices = async (servicesList) => {
                   <Table>
                     <TableHead>
                       <TableRow>
+                        <TableCell>#</TableCell>
                         <TableCell>Client Name</TableCell>
                         <TableCell>Email</TableCell>
                         <TableCell>Phone</TableCell>
@@ -355,8 +366,9 @@ const loadBookingsForServices = async (servicesList) => {
                     </TableHead>
                     <TableBody>
                       {serviceBookings.length > 0 ? (
-                        serviceBookings.map((b) => (
+                        serviceBookings.map((b, i) => (
                           <TableRow key={b._id}>
+                            <TableCell>{i + 1}.</TableCell>
                             <TableCell>{b.clientName}</TableCell>
                             <TableCell>{b.email}</TableCell>
                             <TableCell>{b.phone}</TableCell>
@@ -381,6 +393,12 @@ const loadBookingsForServices = async (servicesList) => {
                           </TableCell>
                         </TableRow>
                       )}
+                          {serviceBookings.length > 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} align="right"><strong>Total Revenue:</strong></TableCell>
+                              <TableCell><strong>Ksh.{totalRevenue.toFixed(2)}</strong></TableCell>
+                            </TableRow>
+                          )}
                     </TableBody>
                   </Table>
                 </TableContainer>
@@ -390,7 +408,6 @@ const loadBookingsForServices = async (servicesList) => {
         })}
       </Box>
       ) : (
-        // SERVICES GRID VIEW
         <Grid container spacing={2}>
           {services.map((service) => (
             <Grid item xs={12} sm={6} md={4} key={service._id}>
@@ -416,6 +433,7 @@ const loadBookingsForServices = async (servicesList) => {
                   </Box>
                 )}
                 <Typography variant="h6">{service.serviceType}</Typography>
+                <Typography variant="body2">Name: {service.name}</Typography>
                 <Typography variant="body2">Items: {service.description}</Typography>
                 <Typography variant="body2">Location: {service.city}, {service.country}</Typography>
                 <Typography variant="body2">Charges/hr: {service.charges}</Typography>
@@ -431,7 +449,6 @@ const loadBookingsForServices = async (servicesList) => {
         </Grid>
       )}
 
-      {/* Modal for Add/Edit Service */}
       <Modal open={openModal} onClose={handleCloseModal}>
         <Box sx={ModalStyle}>
           <Typography variant="h6" textAlign="center" gutterBottom>{selectedService ? 'Edit Service' : 'Add Service'}</Typography>
@@ -444,6 +461,7 @@ const loadBookingsForServices = async (servicesList) => {
                 ))}
               </Select>
             </FormControl>
+            <TextField fullWidth label="Provider / Business name" name="name" value={formData.name} onChange={handleChange} margin="normal" required />
             <TextField fullWidth label="Description / Items included" name="description" value={formData.description} onChange={handleChange} margin="normal" required />
             <TextField fullWidth label="Country" name="country" value={formData.country} onChange={handleChange} margin="normal" required />
             <TextField fullWidth label="City/Town" name="city" value={formData.city} onChange={handleChange} margin="normal" required />
@@ -490,7 +508,7 @@ const loadBookingsForServices = async (servicesList) => {
               />
             </Button>
 
-            {/* ✅ Image Preview Section */}
+            {/* Image Preview Section */}
             <Box mt={1} display="flex" flexWrap="wrap">
               {formData.images.map((img, index) => {
                 let src;

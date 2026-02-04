@@ -11,10 +11,7 @@ import ServiceDetailsModal from "./ServiceDetailsModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
 import { useUserLocation, useLocationContext, inferCityFromIP } from "./contexts/LocationContext";
 import { fetchUsers } from "./services/userService";
-import { fetchEvents } from "./services/eventService";
-import { fetchVenues } from "./services/venuesService";
-import { fetchCards } from "./services/performanceService";
-import { fetchServices } from "./services/serviceService";
+import { fetchRecommendations } from "./services/recommendationService";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import {
@@ -170,19 +167,31 @@ const loadAll = useCallback(async () => {
     if (Object.values(cached).every(Boolean)) return;
 
     /* ---------- FETCH ---------- */
-    const [
-      usersData,
-      eventsData,
-      venuesData,
-      perfData,
-      servicesData,
-    ] = await Promise.all([
-      cached.users ?? fetchUsers(),
-      cached.events ?? fetchEvents(params),
-      cached.venues ?? fetchVenues(params),
-      cached.performances ?? fetchCards(params),
-      cached.services ?? fetchServices(params),
-    ]);
+  const [
+    usersData,
+    eventsRes,
+    venuesRes,
+    performancesRes,
+    servicesRes,
+  ] = await Promise.all([
+    cached.users ?? fetchUsers(),
+
+    cached.events
+      ? Promise.resolve({ data: cached.events })
+      : fetchRecommendations("events", { ...params, limit: 50 }),
+
+    cached.venues
+      ? Promise.resolve({ data: cached.venues })
+      : fetchRecommendations("venues", { ...params, limit: 50 }),
+
+    cached.performances
+      ? Promise.resolve({ data: cached.performances })
+      : fetchRecommendations("performances", { ...params, limit: 50 }),
+
+    cached.services
+      ? Promise.resolve({ data: cached.services })
+      : fetchRecommendations("services", { ...params, limit: 50 }),
+  ]);
 
     /* ---------- USERS ---------- */
     if (!cached.users) {
@@ -197,26 +206,26 @@ const loadAll = useCallback(async () => {
       items.filter(i => validUserIds.has(i.userId));
 
     if (!cached.events) {
-      const filtered = filterByValidUser(eventsData)
+      const filtered = filterByValidUser(eventsRes.data)
         .filter(e => new Date(e.date) >= new Date());
       addToCache("events", filtered, 2 * 60 * 1000);
       setEvents(filtered);
     }
 
     if (!cached.venues) {
-      const filtered = filterByValidUser(venuesData);
+      const filtered = filterByValidUser(venuesRes.data);
       addToCache("venues", filtered, 5 * 60 * 1000);
       setVenues(filtered);
     }
 
     if (!cached.performances) {
-      const filtered = filterByValidUser(perfData);
+      const filtered = filterByValidUser(performancesRes.data);
       addToCache("performances", filtered, 5 * 60 * 1000);
       setPerformances(filtered);
     }
 
     if (!cached.services) {
-      const filtered = filterByValidUser(servicesData);
+      const filtered = filterByValidUser(servicesRes.data);
       addToCache("services", filtered, 5 * 60 * 1000);
       setServices(filtered);
     }

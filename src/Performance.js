@@ -6,31 +6,11 @@ import {
   deleteCard,
   fetchCardBookings
 } from './services/performanceService';
+import { exportBookingsToCSV } from './components/admin/adminHelpers';
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Box,
-  Button,
-  Modal,
-  Typography,
-  Grid,
-  TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Snackbar,
-  Stack
+  Accordion, AccordionSummary, AccordionDetails, Box, Button, Modal, Typography, 
+  Grid, TextField, Select, MenuItem, InputLabel, FormControl, CircularProgress, Table,
+  TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Snackbar, Stack
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Add, Edit, Delete, Call, ExpandMore, ExpandLess } from '@mui/icons-material';
@@ -127,6 +107,7 @@ const Performance = ({ token }) => {
       const data = await fetchMyCards(token);
       setCards(data);
     } catch (error) {
+      setSnackbar({ open: true, message: 'Error fetching cards', severity: 'error' });
       console.error(error);
     } finally {
       setLoading(false);
@@ -145,12 +126,13 @@ const Performance = ({ token }) => {
       for (const card of cardsList) {
         const cardBookings = await fetchCardBookings(card._id);
           results[card._id] = cardBookings.filter(
-            (b) => b.paymentStatus === "Success"
-          );
+            (b) => b.paymentStatus === "Success")
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       }
       setBookingsByCard(results);
     } catch (error) {
       setSnackbar({ open: true, message: 'Error fetching bookings', severity: 'error' });
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -226,6 +208,7 @@ const Performance = ({ token }) => {
       loadMyCards();
     } catch (error) {
       setSnackbar({ open: true, message: 'Error saving card', severity: 'error' });
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -239,6 +222,7 @@ const Performance = ({ token }) => {
       loadMyCards();
     } catch (error) {
       setSnackbar({ open: true, message: 'Error deleting card', severity: 'error' });
+      console.error(error);
     }
   };
 
@@ -247,7 +231,8 @@ const Performance = ({ token }) => {
     filteredBookingsByCard[cardId] = bookings.filter(
       (b) =>
         b.email?.toLowerCase().includes(search.toLowerCase()) ||
-        b.phone?.toLowerCase().includes(search.toLowerCase())
+        b.phone?.toLowerCase().includes(search.toLowerCase()) ||
+        b.clientName?.toLowerCase().includes(search.toLowerCase())
     );
   }
 
@@ -316,7 +301,7 @@ const Performance = ({ token }) => {
         <Box mt={2}>
           <TextField
             fullWidth
-            label="Search by Email or Phone"
+            label="Search by name, email or phone"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             size="small"
@@ -325,16 +310,39 @@ const Performance = ({ token }) => {
 
           {cards.map((card) => {
             const cardBookings = filteredBookingsByCard[card._id] || [];
+              const totalRevenue = cardBookings.reduce((sum, b) => sum + b.totalAmount, 0);
 
             return (
               <Accordion key={card._id} sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Box>
-                    <Typography variant="h6">{card.artType} ({cardBookings.length} bookings)</Typography>
+                    <Typography variant="h6" sx={{ mb: 1 }}>{card.artType}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {card.city}, {card.country} — {card.charges}/hr
+                      {card.name} — {card.city}, {card.country}
                     </Typography>
                   </Box>
+                  <Grid container justifyContent="flex-end" direction= "row" gap={3} mx={2}>
+                    <Paper sx={{ p: 2 }}>
+                      <Typography>Total Bookings</Typography>
+                      <Typography><strong>({cardBookings.length})</strong></Typography>
+                    </Paper>
+                    <Paper sx={{ p: 2 }}>
+                      <Typography>Total Revenue</Typography>
+                      <Typography>
+                        <strong>Ksh. {totalRevenue.toFixed(2)}</strong>
+                      </Typography>
+                    </Paper>
+        
+                  <Button
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                    onClick={() =>
+                      exportBookingsToCSV(cardBookings, 'performance-bookings.csv')
+                    }
+                  >
+                    Export
+                  </Button>
+                  </Grid>
                 </AccordionSummary>
 
                 <AccordionDetails>
@@ -342,6 +350,7 @@ const Performance = ({ token }) => {
                     <Table>
                       <TableHead>
                         <TableRow>
+                          <TableCell>#</TableCell>
                           <TableCell>Client Name</TableCell>
                           <TableCell>Email</TableCell>
                           <TableCell>Phone</TableCell>
@@ -355,8 +364,9 @@ const Performance = ({ token }) => {
                       </TableHead>
                       <TableBody>
                         {cardBookings.length > 0 ? (
-                          cardBookings.map((b) => (
+                          cardBookings.map((b, i) => (
                             <TableRow key={b._id}>
+                              <TableCell>{i + 1}.</TableCell>
                               <TableCell>{b.clientName}</TableCell>
                               <TableCell>{b.email}</TableCell>
                               <TableCell>{b.phone}</TableCell>
@@ -379,6 +389,12 @@ const Performance = ({ token }) => {
                             </TableCell>
                           </TableRow>
                         )}
+                          {cardBookings.length > 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} align="right"><strong>Total Revenue:</strong></TableCell>
+                              <TableCell><strong>Ksh.{totalRevenue.toFixed(2)}</strong></TableCell>
+                            </TableRow>
+                          )}
                       </TableBody>
                     </Table>
                   </TableContainer>

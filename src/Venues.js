@@ -1,25 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Box,
-  Button,
-  CircularProgress,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Collapse,
-  TextField,
-  Card,
-  CardContent,
-  IconButton,
-  Snackbar
+  Accordion, AccordionSummary, AccordionDetails, Box, Button, CircularProgress, Typography,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Collapse,
+  TextField, Card, CardContent, IconButton, Snackbar, Grid
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Add, Delete, Edit, Call, ExpandMore, ExpandLess } from '@mui/icons-material';
@@ -27,6 +10,7 @@ import { Carousel } from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import VenueFormModal from './VenueFormModal';
 import { fetchMyVenues, createVenue, updateVenue, deleteVenue, fetchVenueBookings } from './services/venuesService';
+import { exportBookingsToCSV } from './components/admin/adminHelpers';
 
 const Venues = ({ token }) => {
   const [venues, setVenues] = useState([]);
@@ -34,7 +18,7 @@ const Venues = ({ token }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentVenue, setCurrentVenue] = useState(null);
   const [showBookings, setShowBookings] = useState(false);
-  const [bookings, setBookings] = useState([]);
+  const [bookingsByVenue, setBookingsByVenue] = useState({});
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -57,12 +41,14 @@ const Venues = ({ token }) => {
   const loadBookings = useCallback(async () => {
     setLoading(true);
     try {
-      const allBookings = [];
+      const results = {};
       for (const venue of venues) {
         const venueBookings = await fetchVenueBookings(venue._id);
-        allBookings.push(...venueBookings);
+        results[venue._id] = venueBookings.filter(
+          (b) => b.paymentStatus === 'Success')
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       }
-      setBookings(allBookings);
+      setBookingsByVenue(results);
     } catch (error) {
       setSnackbar({ open: true, message: 'Error fetching bookings', severity: 'error' });
       console.error(error);
@@ -105,6 +91,7 @@ const Venues = ({ token }) => {
     } catch (error) {
       console.error(error);
       setSnackbar({ open: true, message: 'Error saving venue', severity: 'error' });
+      console.error(error);
     }
   };
 
@@ -123,9 +110,20 @@ const Venues = ({ token }) => {
       } catch (error) {
         console.error(error);
         setSnackbar({ open: true, message: 'Error deleting venue', severity: 'error' });
+        console.error(error);
       }
     }
   };
+
+  const filteredBookingsByVenue = {};
+  for (const [venueId, bookings] of Object.entries(bookingsByVenue)) {
+    filteredBookingsByVenue[venueId] = bookings.filter(
+      (b) =>
+        b.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.clientName?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
 
   if (loading)
     return (
@@ -206,7 +204,7 @@ const Venues = ({ token }) => {
             Venue Bookings
           </Typography>
           <TextField
-            placeholder="Search by Email or Phone"
+            placeholder="Search by name, email or phone"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             size="small"
@@ -214,21 +212,41 @@ const Venues = ({ token }) => {
           />
 
           {venues.map((venue) => {
-            const venueBookings = bookings.filter(
-              (b) =>
-                b.venueId === venue._id &&
-                b.paymentStatus === 'Success' &&
-                (b.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  b.phone.toLowerCase().includes(searchTerm.toLowerCase()))
-            );
+            const venueBookings = filteredBookingsByVenue[venue._id] || [];
+            const totalRevenue = venueBookings.reduce((sum, b) => sum + b.totalAmount, 0);
 
             return (
               <Accordion key={venue._id} sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Box>
                 <Typography variant="h6" sx={{ mb: 1 }}>
-                  {venue.name} ({venueBookings.length} bookings) </Typography>
+                  {venue.venueType}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {venue.name} — {venue.city}, {venue.country}
+                  </Typography>
                 </Box>
+                  <Grid container justifyContent="flex-end" direction= "row" gap={3} mx={2}>
+                    <Paper sx={{ p: 2 }}>
+                      <Typography>Total Bookings</Typography>
+                      <Typography><strong>({venueBookings.length})</strong></Typography>
+                    </Paper>
+                    <Paper sx={{ p: 2 }}>
+                      <Typography>Total Revenue</Typography>
+                      <Typography>
+                        <strong>Ksh. {totalRevenue.toFixed(2)}</strong>
+                      </Typography>
+                    </Paper>
+        
+                  <Button
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                    onClick={() =>
+                      exportBookingsToCSV(venueBookings, 'venue-bookings.csv')
+                    }
+                  >
+                    Export
+                  </Button>
+                  </Grid>
                 </AccordionSummary>
 
                 <AccordionDetails>
@@ -236,6 +254,7 @@ const Venues = ({ token }) => {
                   <Table>
                     <TableHead>
                       <TableRow>
+                        <TableCell>#</TableCell>
                         <TableCell>Client Name</TableCell>
                         <TableCell>Phone</TableCell>
                         <TableCell>Email</TableCell>
@@ -249,8 +268,9 @@ const Venues = ({ token }) => {
                     </TableHead>
                     <TableBody>
                       {venueBookings.length > 0 ? (
-                        venueBookings.map((b) => (
+                        venueBookings.map((b, i) => (
                           <TableRow key={b._id}>
+                            <TableCell>{i + 1}.</TableCell>
                             <TableCell>{b.clientName}</TableCell>
                             <TableCell>{b.phone}</TableCell>
                             <TableCell>{b.email}</TableCell>
@@ -273,6 +293,12 @@ const Venues = ({ token }) => {
                           </TableCell>
                         </TableRow>
                       )}
+                          {venueBookings.length > 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} align="right"><strong>Total Revenue:</strong></TableCell>
+                              <TableCell><strong>Ksh.{totalRevenue.toFixed(2)}</strong></TableCell>
+                            </TableRow>
+                          )}
                     </TableBody>
                   </Table>
                 </TableContainer>

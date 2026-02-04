@@ -245,6 +245,7 @@ const ServiceDetailsModal = ({ service, user, onClose, onBookService }) => {
 
           {/* INFO SECTION */}
           <Box mt={3}>
+            <Typography mt={1}><strong>Provider:</strong> {service.name}</Typography>
             <Typography mt={1}><strong>Description:</strong> {service.description}</Typography>
             <Typography mt={1}><strong>Duration:</strong> {service.duration} hours/day</Typography>
             <Typography mt={1}><strong>Charges:</strong> Ksh {service.charges}/hour</Typography>

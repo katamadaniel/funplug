@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Typography,
@@ -13,29 +13,23 @@ import {
   TextField,
   Button,
   Modal,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { fetchAdminProfile } from '../../services/adminService';
 import { getAllUsers, getUserById } from '../../services/userService';
 import { getAllVenues, updateVenueStatus, getBookingsByVenueId } from '../../services/venuesService';
-import  { exportBookingsToCSV } from './adminHeplers';
+import  { exportBookingsToCSV } from './adminHelpers';
 
 const VenuesAdmin = () => {
   const [venues, setVenues] = useState([]);
   const [usersMap, setUsersMap] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredVenues, setFilteredVenues] = useState([]);
-  const [selectedVenueBookings, setSelectedVenueBookings] = useState([]);
+  const [selectedBookings, setSelectedBookings] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-//  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-//  const [venueToDelete, setVenueToDelete] = useState(null);
+  const [bookingSearch, setBookingSearch] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -125,10 +119,11 @@ const fetchVenues = async () => {
   const handleViewReport = async (venueId) => {
     try {
       const bookings = await getBookingsByVenueId(venueId);
-          const successBookings = bookings.filter(
-      (b) => b.paymentStatus === 'Success'
-    );
-      setSelectedVenueBookings(successBookings);
+      setSelectedBookings(
+        bookings.filter(
+          (b) => b.paymentStatus === 'Success')
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        );
       setOpenModal(true);
     } catch (error) {
       console.error('Failed to fetch venue bookings:', error);
@@ -144,30 +139,27 @@ const fetchVenues = async () => {
     }
   };
 
-/*  const handleDelete = (venueId) => {
-    setVenueToDelete(venueId);
-    setDeleteDialogOpen(true);
-  };
+  const filteredBookings = useMemo(() => {
+    const q = bookingSearch.toLowerCase();
+    return selectedBookings.filter(
+      b =>
+        b.email?.toLowerCase().includes(q) ||
+        b.phone?.includes(q) ||
+        b.clientName?.toLowerCase().includes(q)
+    );
+  }, [selectedBookings, bookingSearch]);
 
-  const confirmDelete = async () => {
-    try {
-      await deleteVenueById(venueToDelete);
-      setVenues((prev) => prev.filter((v) => v._id !== venueToDelete));
-      setFilteredVenues((prev) => prev.filter((v) => v._id !== venueToDelete));
-      setDeleteDialogOpen(false);
-      setVenueToDelete(null);
-    } catch (error) {
-      console.error('Failed to delete venue:', error);
-    }
-  }; */
-
-  const summary = selectedVenueBookings.reduce(
-    (acc, venue) => {
-      acc.totalBookings += venue.bookingCount;
-      acc.totalRevenue += venue.totalAmount;
-      return acc;
-    },
-    { totalBookings: 0, totalRevenue: 0 }
+  const summary = useMemo(
+    () =>
+    filteredBookings.reduce(
+        (acc, b) => {
+          acc.totalRevenue += Number(b.totalAmount) || 0;
+          acc.totalBookings += Number(b.bookingCount) || 0;
+          return acc;
+        },
+      { totalBookings: 0, totalRevenue: 0 }
+    ),
+    [filteredBookings]
   );
 
 return (
@@ -205,9 +197,9 @@ return (
               <TableRow>
                 <TableCell>Username</TableCell>
                 <TableCell>Venue Name</TableCell>
+                <TableCell>Venue Type</TableCell>
                 <TableCell>Country</TableCell>
                 <TableCell>City</TableCell>
-                <TableCell>Size (sq ft)</TableCell>
                 <TableCell>Capacity</TableCell>
                 <TableCell>Booking Status</TableCell>
                 <TableCell>Charges (per hour)</TableCell>
@@ -221,9 +213,9 @@ return (
                 <TableRow key={venue._id}>
                   <TableCell>{usersMap[venue.userId] || 'Unknown User'}</TableCell>
                   <TableCell>{venue.name}</TableCell>
+                  <TableCell>{venue.venueType}</TableCell>
                   <TableCell>{venue.country}</TableCell>
                   <TableCell>{venue.city}</TableCell>
-                  <TableCell>{venue.size}</TableCell>
                   <TableCell>{venue.capacity}</TableCell>
                   <TableCell>{venue.bookingStatus}</TableCell>
                   <TableCell>{venue.charges.toFixed(2)}</TableCell>
@@ -251,27 +243,31 @@ return (
         </TableContainer>
       </Box>
 
-      {/* Modal for viewing venue booking report */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Box sx={{ width: '70%', margin: 'auto', mt: 5, p: 4, backgroundColor: 'white', borderRadius: 2 }}>
+      {/* Venue booking report */}
+      <Modal open={openModal} onClose={() => setOpenModal(false)} scroll="paper">
+        <Box sx={{
+           width: '70%',
+           maxHeight: '85vh',
+           overflowY: 'auto', 
+           mx: 'auto', 
+           mt: 5, p: 4, 
+           bgcolor: 'background.paper', 
+           borderRadius: 2, }}>
           <Typography variant="h6">Venue Booking Report</Typography>
-            <Button
-              variant="outlined"
-              sx={{ mb: 2 }}
-              onClick={() =>
-                exportBookingsToCSV(
-                  selectedVenueBookings,
-                  'venue-bookings.csv'
-                )
-              }
-            >
-              Export CSV
-            </Button>
-          <TableContainer>
+
+          <TextField
+            size="small"
+            fullWidth
+            placeholder="Search bookings"
+            value={bookingSearch}
+            onChange={e => setBookingSearch(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+
             <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6">Total Bookings</Typography>
-                <Typography>{summary.totalBookings}</Typography>
+                <Typography>{filteredBookings.length}</Typography>
               </Paper>
 
               <Paper sx={{ p: 2 }}>
@@ -279,9 +275,24 @@ return (
                 <Typography>Ksh. {summary.totalRevenue.toFixed(2)}</Typography>
               </Paper>
             </Box>
+
+            <Button
+              variant="outlined"
+              sx={{ mb: 2 }}
+              onClick={() =>
+                exportBookingsToCSV(
+                  filteredBookings,
+                  'venue-bookings.csv'
+                )
+              }
+            >
+              Export CSV
+            </Button>
+          <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell>#</TableCell>
                   <TableCell>Client Name</TableCell>
                   <TableCell>Phone</TableCell>
                   <TableCell>Email</TableCell>
@@ -291,8 +302,9 @@ return (
                 </TableRow>
               </TableHead>
               <TableBody>
-                {selectedVenueBookings.map((booking) => (
+                {filteredBookings.map((booking, index) => (
                   <TableRow key={booking._id}>
+                    <TableCell>{index + 1}</TableCell>
                     <TableCell>{booking.clientName}</TableCell>
                     <TableCell>{booking.phone}</TableCell>
                     <TableCell>{booking.email}</TableCell>
@@ -306,18 +318,6 @@ return (
           </TableContainer>
         </Box>
       </Modal>
-
-      {/* Delete Confirmation Dialog 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Venue</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Are you sure you want to delete this venue? This action cannot be undone.</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">Cancel</Button>
-          <Button onClick={confirmDelete} color="secondary">Delete</Button>
-        </DialogActions>
-      </Dialog> */}
     </div>
   );
 };
