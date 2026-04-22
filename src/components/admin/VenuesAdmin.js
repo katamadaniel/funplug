@@ -35,7 +35,7 @@ const VenuesAdmin = () => {
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     if (!token) {
-      navigate('/admin-login');
+      navigate('/admin');
     } else {
       initialize();
     }

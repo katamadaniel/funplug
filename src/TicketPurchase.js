@@ -273,19 +273,15 @@ const TicketPurchase = ({ event, onClose }) => {
               <MenuItem value="Free">Free Ticket</MenuItem>
             )}
 
-            {event.regularTicketsRemaining > 0 && (
-              <MenuItem value="Regular">
-                Regular — Ksh.{event.regularPrice}
-              </MenuItem>
-            )}
-
-            {event.vipTicketsRemaining > 0 && (
-              <MenuItem value="VIP">VIP — Ksh.{event.vipPrice}</MenuItem>
-            )}
-
-            {event.vvipTicketsRemaining > 0 && (
-              <MenuItem value="VVIP">VVIP — Ksh.{event.vvipPrice}</MenuItem>
-            )}
+            <MenuItem value="Regular" disabled={event.regularTicketsRemaining <= 0}>
+  Regular — Ksh.{event.regularPrice} {event.regularTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+</MenuItem>
+<MenuItem value="VIP" disabled={event.vipTicketsRemaining <= 0}>
+  VIP — Ksh.{event.vipPrice} {event.vipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+</MenuItem>
+<MenuItem value="VVIP" disabled={event.vvipTicketsRemaining <= 0}>
+  VVIP — Ksh.{event.vvipPrice} {event.vvipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+</MenuItem>
           </TextField>
 
           <TextField

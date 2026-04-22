@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -7,12 +7,12 @@ import {
   Grid,
   Chip,
   Avatar,
-  Skeleton,
   Box,
   Button,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 
-import { Switch, FormControlLabel } from "@mui/material";
 import { useUserLocation } from "./contexts/LocationContext";
 import { useSearch } from "./contexts/SearchContext";
 import EventModal from "./EventModal";
@@ -24,11 +24,7 @@ import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
 import ServiceDetailsModal from "./ServiceDetailsModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
 
-import axios from "axios";
 import { getAvatarUrl } from "./utils/avatar";
-
-const API_URL = process.env.REACT_APP_API_URL;
-const USERS_API_URL = `${API_URL}/api/users`;
 
 const FILTER_TAGS = [
   { label: "All", value: "all" },
@@ -39,22 +35,13 @@ const FILTER_TAGS = [
   { label: "Services", value: "service" },
 ];
 
-const formatLocationLabel = (item) => {
-  if (item.city && item.country) return `${item.city}, ${item.country}`;
-  if (item.city) return item.city;
-  if (item.country) return item.country;
-  return "Location not specified";
-};
-
 const toRad = (v) => (v * Math.PI) / 180;
 
 const getDistanceKm = (a, b) => {
   if (!a || !b) return null;
-
   const R = 6371;
   const dLat = toRad(b.lat - a.lat);
   const dLng = toRad(b.lng - a.lng);
-
   const lat1 = toRad(a.lat);
   const lat2 = toRad(b.lat);
 
@@ -65,40 +52,21 @@ const getDistanceKm = (a, b) => {
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 };
 
-const isFutureDate = (date) => {
-  if (!date) return false;
-  return new Date(date).getTime() > Date.now();
-};
+const isFutureDate = (date) =>
+  date ? new Date(date).getTime() > Date.now() : false;
 
 const SearchResults = ({ results, onViewProfile }) => {
   const { searchQuery, nearMe, setNearMe } = useSearch();
   const userLocation = useUserLocation();
 
-  const [users, setUsers] = useState([]);
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   const handleImageError = (e) => {
-      e.target.onerror = null;
+    e.target.onerror = null;
     e.target.src = process.env.REACT_APP_AVATAR_URL;
   };
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(USERS_API_URL);
-        setUsers(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
-
-  //QUERY & FILTER LOGIC
   const query = searchQuery.toLowerCase();
 
   const filteredResults = results
@@ -119,14 +87,14 @@ const SearchResults = ({ results, onViewProfile }) => {
       if (!JSON.stringify(item).toLowerCase().includes(query)) return false;
 
       if (item.type === "event") {
-        const eventDate = item.date || item.startDate;
-        if (!isFutureDate(eventDate)) return false;
+        if (!isFutureDate(item.date || item.startDate)) return false;
       }
 
       if (nearMe) {
         if (item.distanceKm == null) return false;
         if (item.distanceKm > 100) return false;
       }
+
       return true;
     })
     .sort((a, b) => {
@@ -143,28 +111,11 @@ const SearchResults = ({ results, onViewProfile }) => {
     performance: filteredResults.filter(r => r.type === "performance"),
     service: filteredResults.filter(r => r.type === "service"),
   };
-
-  if (loading)
-    return (
-      <Grid container spacing={2} sx={{ p: 2 }}>
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
-            <Card>
-              <Skeleton variant="rectangular" height={160} />
-              <CardContent>
-                <Skeleton width="60%" />
-                <Skeleton width="40%" />
-                <Skeleton width="80%" />
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    );
-
+  
   return (
     <Box sx={{ p: 2 }}>
-      
+
+      {/* FILTER CHIPS */}
       <Box sx={{ mb: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
         {FILTER_TAGS.map(tag => (
           <Chip
@@ -175,6 +126,8 @@ const SearchResults = ({ results, onViewProfile }) => {
           />
         ))}
       </Box>
+
+      {/* NEAR ME SWITCH */}
       <FormControlLabel
         control={
           <Switch
@@ -190,6 +143,8 @@ const SearchResults = ({ results, onViewProfile }) => {
         }
         label="Near Me"
       />
+
+      {/* RESULTS */}
       {Object.keys(grouped).map(type => {
         const list = grouped[type];
         if (!list.length) return null;
@@ -201,9 +156,12 @@ const SearchResults = ({ results, onViewProfile }) => {
             </Typography>
 
             <Grid container spacing={2}>
-              {list.map((item, i) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
-                  <Card sx={{ cursor: "pointer" }} onClick={() => setSelected(item)}>
+              {list.map((item) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={item._id}>
+                  <Card
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => setSelected(item)}
+                  >
                     {/* USER CARD */}
                     {item.type === "user" ? (
                       <CardContent sx={{ textAlign: "center" }}>
@@ -212,7 +170,9 @@ const SearchResults = ({ results, onViewProfile }) => {
                           onError={handleImageError}
                           sx={{ width: 100, height: 100, margin: "auto", mb: 1 }}
                         />
-                        <Typography variant="h6">{item.username}</Typography>
+                        <Typography variant="h6">
+                          {item.username}
+                        </Typography>
                         <Button
                           variant="outlined"
                           size="small"
@@ -226,7 +186,6 @@ const SearchResults = ({ results, onViewProfile }) => {
                         </Button>
                       </CardContent>
                     ) : (
-                      // MEDIA CARD (Event/Venue/Service/Performance)
                       <>
                         <CardMedia
                           component="img"
@@ -246,7 +205,8 @@ const SearchResults = ({ results, onViewProfile }) => {
                             {item.title || item.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            {item.description || formatLocationLabel(item)}
+                            {item.description ||
+                              `${item.city || ""} ${item.country || ""}`}
                           </Typography>
                         </CardContent>
                       </>
@@ -259,12 +219,9 @@ const SearchResults = ({ results, onViewProfile }) => {
         );
       })}
 
-      {/* ===================== MODALS ======================= */}
-
-      {selected?.type === "event"  && !selected?.modal && (
+      {selected?.type === "event" && !selected?.modal && (
         <EventModal
           event={selected}
-          user={users.find(u => u._id === selected.userId)}
           onBuyTicket={() => setSelected({ ...selected, modal: "ticket" })}
           onClose={() => setSelected(null)}
         />
@@ -272,15 +229,15 @@ const SearchResults = ({ results, onViewProfile }) => {
 
       {selected?.modal === "ticket" && (
         <TicketPurchase
-         event={selected} 
-         open={selected?.modal === "ticket"}
-         onClose={() => setSelected(null)} />
+          event={selected}
+          open
+          onClose={() => setSelected(null)}
+        />
       )}
 
       {selected?.type === "venue" && !selected?.modal && (
         <VenueDetailsModal
           venue={selected}
-          user={users.find(u => u._id === selected.userId)}
           onBookVenue={() => setSelected({ ...selected, modal: "venue-book" })}
           onClose={() => setSelected(null)}
         />
@@ -288,41 +245,46 @@ const SearchResults = ({ results, onViewProfile }) => {
 
       {selected?.modal === "venue-book" && (
         <VenueBookingFormModal
-         venue={selected}
-         open={selected?.modal === "venue-book"}
-         onClose={() => setSelected(null)} />
+          venue={selected}
+          open
+          onClose={() => setSelected(null)}
+        />
       )}
 
       {selected?.type === "performance" && !selected?.modal && (
         <PerformanceDetailsModal
           performance={selected}
-          user={users.find(u => u._id === selected.userId)}
-          onBookPerformance={() => setSelected({ ...selected, modal: "performance-book" })}
+          onBookPerformance={() =>
+            setSelected({ ...selected, modal: "performance-book" })
+          }
           onClose={() => setSelected(null)}
         />
       )}
 
-      {selected?.modal === "performance-book"&& (
+      {selected?.modal === "performance-book" && (
         <PerformanceBookingFormModal
-         performance={selected}
-         open={selected?.modal === "performance-book"} 
-         onClose={() => setSelected(null)} />
+          performance={selected}
+          open
+          onClose={() => setSelected(null)}
+        />
       )}
 
       {selected?.type === "service" && !selected?.modal && (
         <ServiceDetailsModal
           service={selected}
-          user={users.find(u => u._id === selected.userId)}
-          onBookService={() => setSelected({ ...selected, modal: "service-book" })}
+          onBookService={() =>
+            setSelected({ ...selected, modal: "service-book" })
+          }
           onClose={() => setSelected(null)}
         />
       )}
 
       {selected?.modal === "service-book" && (
         <ServiceBookingFormModal
-         service={selected}
-         open={selected?.modal === "service-book"}
-         onClose={() => setSelected(null)} />
+          service={selected}
+          open
+          onClose={() => setSelected(null)}
+        />
       )}
     </Box>
   );

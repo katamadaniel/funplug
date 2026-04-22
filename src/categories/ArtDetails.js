@@ -14,12 +14,10 @@ import PerformanceCard from "./PerformanceCard";
 import PerformanceDetailsModal from "../PerformanceDetailsModal";
 import PerformanceBookingFormModal from "../PerformanceBookingFormModal";
 import { fetchActiveCards } from "../services/performanceService";
-import { fetchUsers } from "../services/userService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
 
 const ArtDetails = () => {
   const [performances, setPerformances] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [countryFilter, setCountryFilter] = useState("");
@@ -34,16 +32,11 @@ useEffect(() => {
 
   const load = async () => {
     try {
-      const [performances, users] = await Promise.all([
-        fetchActiveCards(),
-        fetchUsers(),
-      ]);
+      const performances = await fetchActiveCards();
 
       if (!mounted) return;
 
-      const validUserIds = new Set(users.map(u => u._id));
-      setPerformances(performances.filter(p => validUserIds.has(p.userId)));
-      setUsers(users);
+      setPerformances(performances.filter(p => p.userSnapshot?._id));
     } catch (err) {
       console.error("ArtDetails load error:", err);
     } finally {
@@ -160,7 +153,6 @@ useEffect(() => {
       {selectedPerformance && (
         <PerformanceDetailsModal
           open={detailsOpen}
-          user={users.find(u => u._id === selectedPerformance.userId)}
           performance={selectedPerformance}
           onClose={() => setDetailsOpen(false)}
           onBookPerformance={() => {

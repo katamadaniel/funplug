@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signup } from './services/userService';
+import { parseApiError } from './utils/errorHandler';
 import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl, Typography, IconButton, 
   InputAdornment, Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
@@ -18,10 +19,11 @@ const Signup = () => {
     gender: '',
     category: '',
     password: '',
+    firstName: '',
+    lastName: '',
     agreedToTerms: false,
   });
   const [errors, setErrors] = useState({});
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
@@ -43,7 +45,12 @@ const Signup = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -52,53 +59,82 @@ const Signup = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.username) newErrors.username = 'Username is required';
+    
+    // Username validation
+    if (!formData.username) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    }
+    
+    // Email validation
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email address is invalid';
     }
+    
+    // Phone validation
     if (!formData.phone) newErrors.phone = 'Phone number is required';
+    
+    // Gender validation
     if (!formData.gender) newErrors.gender = 'Gender is required';
+    
+    // Category validation
     if (!formData.category) newErrors.category = 'Category is required';
+    
+    // Password validation - match backend requirements
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters long';
-    } else if (!/[A-Za-z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
-      newErrors.password = 'Password must contain both letters and numbers';
+    } else if (!/[a-z]/.test(formData.password)) {
+      newErrors.password = 'Password must contain lowercase letters';
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password = 'Password must contain uppercase letters';
+    } else if (!/[0-9]/.test(formData.password)) {
+      newErrors.password = 'Password must contain numbers';
+    } else if (!/[@$!%*?&]/.test(formData.password)) {
+      newErrors.password = 'Password must contain a special character (@$!%*?&)';
     }
+    
+    // Terms agreement
     if (!formData.agreedToTerms) newErrors.agreedToTerms = 'You must agree to the terms and conditions';
+    
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-    } else {
-      setErrors({});
-      setError('');
-      setLoading(true);
-      try {
-        await signup(formData);
-        showToast('User signed up successfully');
-        navigate('/login');
-      } catch (error) {
-        console.error('Error signing up:', error);
+      showToast('Please fix the errors below', 'warning');
+      return;
+    }
+    
+    setErrors({});
+    setLoading(true);
+    
+    try {
+      await signup(formData);
+      showToast('Account created successfully! Redirecting to login...', 'success');
+      setTimeout(() => navigate('/login'), 1500);
+    } catch (error) {
+      console.error('Error signing up:', error);
+      const parsedError = parseApiError(error);
 
-      const status = error.response?.status;
-      const message = error.response?.data?.message;
-
-      if (status === 429) {
-        showToast(message || "Too many signup attempts. Please try again later.", "error");
+      // Handle validation errors from backend
+      if (parsedError.isValidationError) {
+        setErrors(parsedError.fieldErrors);
+        showToast(parsedError.message, "warning");
       } else {
-        showToast(message || "Email already in use.", "error");
+        // Handle other errors
+        showToast(parsedError.message, "error");
       }
-      } finally {
-        setLoading(false);
-      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -199,7 +235,7 @@ const Signup = () => {
           control={<Checkbox checked={formData.agreedToTerms} onChange={(e) => setFormData({ ...formData, agreedToTerms: e.target.checked })} />}
           label={<Typography> I agree to the <span style={{ color: 'blue', cursor: 'pointer' }} onClick={() => setTermsOpen(true)}>Terms and Conditions</span></Typography>}
         />
-        {error.agreedToTerms && <Typography color="error">{error.agreedToTerms}</Typography>}
+        {errors.agreedToTerms && <Typography color="error">{errors.agreedToTerms}</Typography>}
         <Button
         type="submit"
         variant="contained"

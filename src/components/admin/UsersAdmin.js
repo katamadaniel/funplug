@@ -48,7 +48,7 @@ const UsersAdmin = () => {
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     if (!token) {
-      navigate('/admin-login');
+      navigate('/admin');
     } else {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       loadUsers();

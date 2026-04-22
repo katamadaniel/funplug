@@ -1,6 +1,6 @@
-import axios from "axios";
+import axiosInstance from '../services/axiosInstance';
 
-const api = axios.create({
+const api = axiosInstance.create({
   baseURL: process.env.REACT_APP_API_URL,
   timeout: 15000,
 });
@@ -17,7 +17,6 @@ api.interceptors.response.use(
   async (error) => {
     const config = error.config;
 
-    // No config → nothing to retry
     if (!config) {
       return Promise.reject(error);
     }

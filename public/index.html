@@ -1,47 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- BASIC -->
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <link rel="stylesheet" href="style.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+
+    <!-- TITLE (CRITICAL) -->
+    <title>
+      FunPlug | Event Booking, Ticketing & Talent Marketplace
+    </title>
+
+    <!-- PRIMARY META -->
     <meta
       name="description"
-      content="Event booking and management platform."
+      content="FunPlug is an all-in-one event booking and ticketing platform. Discover events, book performers and vendors, manage venues, and sell tickets seamlessly."
     />
+    <meta
+      name="keywords"
+      content="event booking platform, event ticketing Kenya, hire performers, book event vendors, event management system"
+    />
+    <meta name="author" content="FunPlug" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- CANONICAL -->
+    <link rel="canonical" href="https://www.funplug.net/" />
+
+    <!-- FAVICONS -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/FunPlug.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="preconnect"
+      href="https://cdnjs.cloudflare.com"
+      crossorigin
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+
+    <!-- OPEN GRAPH (SOCIAL SHARING) -->
+    <meta property="og:site_name" content="FunPlug" />
+    <meta property="og:title" content="FunPlug | Everything Events in One Platform" />
+    <meta
+      property="og:description"
+      content="Book events, performers, vendors and sell tickets effortlessly with FunPlug."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.funplug.net/" />
+    <meta property="og:image" content="%PUBLIC_URL%/FunPlug.png" />
+
+    <!-- TWITTER -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FunPlug | Event Booking & Ticketing" />
+    <meta
+      name="twitter:description"
+      content="Discover events, book talent, vendors and venues — all in one trusted platform."
+    />
+    <meta name="twitter:image" content="%PUBLIC_URL%/FunPlug.png" />
+
+    <!-- MANIFEST -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>FunPlug</title>
+    <!-- STRUCTURED DATA (ORG) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "FunPlug",
+        "url": "https://www.funplug.net",
+        "logo": "https://www.funplug.net/FunPlug.png",
+        "description": "Event booking and ticketing marketplace for performers, vendors, venues and event hosts.",
+        "sameAs": []
+      }
+    </script>
   </head>
+
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root">
-    </div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    <noscript>
+      FunPlug helps you discover events, book performers and vendors, and sell tickets —
+      please enable JavaScript to continue.
+    </noscript>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-
+    <div id="root"></div>
   </body>
 </html>

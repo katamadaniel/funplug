@@ -27,6 +27,7 @@ import PasswordResetRequest from './PasswordResetRequest';
 import PasswordResetVerify from './PasswordResetVerify';
 import EmailUpdateVerification from './EmailUpdateVerification';
 import VerifyEmail from './VerifyEmail';
+import UnsubscribePage from './UnsubscribePage';
 import ChangePassword from './ChangePassword';
 import DeleteAccount from './DeleteAccount';
 import PrivacyPolicy from './PrivacyPolicy';
@@ -46,6 +47,8 @@ import { useSearch, SearchProvider } from './contexts/SearchContext';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminLayout from './components/admin/AdminLayout';
 import Admins from './components/admin/Admins';
+import AdminTasks from './components/admin/AdminTasks';
+import AdminModeration from './components/admin/AdminModeration';
 import EventsAdmin from './components/admin/EventsAdmin';
 import UsersAdmin from './components/admin/UsersAdmin';
 import VenuesAdmin from './components/admin/VenuesAdmin';
@@ -53,7 +56,7 @@ import PerformanceAdmin from './components/admin/PerformanceAdmin';
 import ServicesAdmin from './components/admin/ServicesAdmin';
 import AdminNotifications from './components/admin/AdminNotifications';
 import AdminEmails from './components/admin/AdminEmails';
-import AdminInvoices from './components/admin/AdminInvoices';
+import AdminPayments from './components/admin/AdminPayments';
 import AdminSettings from './components/admin/AdminSettings';
 import AdminLogin from './components/admin/AdminLogin';
 import AdminNavbar from './components/admin/AdminNavbar';
@@ -80,22 +83,22 @@ function App() {
   )}
 
   useEffect(() => {
+    let logoutTimer;
+
     const loadUserProfile = async () => {
       if (token) {
         const decoded = decodeToken(token);
         const now = Date.now() / 1000; // in seconds
 
-      if (decoded?.exp) {
-        const timeout = (decoded.exp - now) * 1000; // ms
-        const logoutTimer = setTimeout(() => {
-          handleLogout();
-        }, timeout);
-
-        return () => clearTimeout(logoutTimer);
+        if (decoded?.exp) {
+          const timeout = (decoded.exp - now) * 1000; // ms
+          logoutTimer = setTimeout(() => {
+            handleLogout();
+          }, timeout);
         }
 
         try {
-          const profile = await fetchProfile(token).then(setUser);
+          const profile = await fetchProfile(token);
           setUser(profile);
           localStorage.setItem('userId', profile._id);
         } catch (error) {
@@ -110,17 +113,15 @@ function App() {
         const decoded = decodeToken(adminToken);
         const now = Date.now() / 1000;
 
-      if (decoded?.exp) {
-        const timeout = (decoded.exp - now) * 1000; // ms
-        const logoutTimer = setTimeout(() => {
-          handleLogout();
-        }, timeout);
-
-        return () => clearTimeout(logoutTimer);
+        if (decoded?.exp) {
+          const timeout = (decoded.exp - now) * 1000; // ms
+          logoutTimer = setTimeout(() => {
+            handleAdminLogout();
+          }, timeout);
         }
 
         try {
-          const adminProfile = await fetchAdminProfile(adminToken).then(setAdmin);
+          const adminProfile = await fetchAdminProfile(adminToken);
           setAdmin(adminProfile);
           localStorage.setItem('adminId', adminProfile._id);
         } catch (error) {
@@ -132,6 +133,12 @@ function App() {
 
     loadUserProfile();
     loadAdminProfile();
+
+    return () => {
+      if (logoutTimer) {
+        clearTimeout(logoutTimer);
+      }
+    };
   }, [isAuthenticated, token, isAdminAuthenticated, adminToken]);
 
   const handleLogout = async () => {
@@ -178,6 +185,8 @@ function App() {
                                 <Routes>
                                   <Route path="dashboard" element={<AdminDashboard />} />
                                   <Route path="admins" element={<Admins />} />
+                                  <Route path="tasks" element={<AdminTasks />} />
+                                  <Route path="moderation" element={<AdminModeration />} />
                                   <Route path="users" element={<UsersAdmin />} />
                                   <Route path="events" element={<EventsAdmin />} />
                                   <Route path="venues" element={<VenuesAdmin />} />
@@ -185,7 +194,7 @@ function App() {
                                   <Route path="services" element={<ServicesAdmin />} />
                                   <Route path="notifications" element={<AdminNotifications />} />
                                   <Route path="emails" element={<AdminEmails />} />
-                                  <Route path="invoices" element={<AdminInvoices />} />
+                                  <Route path="payments" element={<AdminPayments />} />
                                   <Route path="settings" element={<AdminSettings />} />
                                 </Routes>
                               </AdminLayout>
@@ -201,6 +210,7 @@ function App() {
                                   <Route path="/reset-password/:token" element={<PasswordResetVerify />} />
                                   <Route path="/verify-email/:token" element={<VerifyEmail />} />
                                   <Route path="/verify-email-update/:userId/:token" element={<EmailUpdateVerification />} />
+                                  <Route path="/unsubscribe/:token" element={<UnsubscribePage />} />
                                   <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
                                   <Route path="/signup" element={<Signup />} />
                                   <Route path="/" element={<Home />} />

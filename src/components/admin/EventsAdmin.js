@@ -47,7 +47,7 @@ const EventsAdmin = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
-    if (!token) navigate('/admin-login');
+    if (!token) navigate('/admin');
     else initialize();
   }, [navigate]);
 

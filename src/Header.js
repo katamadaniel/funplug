@@ -101,13 +101,21 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
             {isMobile ? (
               <>
                 <IconButton onClick={(e) => setMobileMenu(e.currentTarget)}>
-                      <Avatar
-                        key={avatarSrc || "no-avatar"}
-                        src={avatarSrc}
-                        alt={user?.username}
-                        sx={{ width: 36, height: 36 }}
-                      />
-                    <SettingsIcon sx={{ ml: 0.5 }} />
+                  {avatarSrc ? (
+                    <Avatar
+                      key={avatarSrc || "no-avatar"}
+                      src={avatarSrc}
+                      alt={user?.username}
+                      sx={{ width: 36, height: 36 }}
+                    />
+                  ) : (
+                    <Skeleton
+                      variant="circular"
+                      width={36}
+                      height={36}
+                    />
+                  )}
+                  <SettingsIcon sx={{ ml: 0.5 }} />
                 </IconButton>
 
                 <Menu

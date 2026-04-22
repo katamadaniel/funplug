@@ -1,25 +1,9 @@
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
-  Grid,
-  TextField,
-  Button,
-  Avatar,
-  Typography,
-  CircularProgress,
-  Box,
-  TableContainer,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  IconButton,
-  Stack,
-  Rating,
-  Chip,
-  Divider,
-  Paper
+  Grid, TextField, Button, Avatar, Typography, CircularProgress, Box,
+  TableContainer,Table, TableBody, TableCell, TableHead, TableRow, IconButton,
+  Stack, Rating, Chip, Divider, Paper
 } from "@mui/material";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import LanguageIcon from "@mui/icons-material/Language";
@@ -28,10 +12,24 @@ import TwitterIcon from "@mui/icons-material/Twitter";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import EmailIcon from "@mui/icons-material/Email";
 
 import { fetchProfile, updateProfile, logoutUser } from "./services/userService";
 import { getAvatarUrl } from "./utils/avatar";
+import {
+  getFollowerAnalytics,
+  getFollowerGrowth,
+  getFollowers,
+  sendBroadcastEmail
+} from "./services/followService";
+
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 
 const API_URL = process.env.REACT_APP_API_URL;
 const Profile = ({ token }) => {
@@ -43,6 +41,14 @@ const Profile = ({ token }) => {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [followers, setFollowers] = useState([]);
+  const [followersLoading, setFollowersLoading] = useState(false);
+  const [followersPage, setFollowersPage] = useState(0);
+  const [followersTotal, setFollowersTotal] = useState(0);
+  const [analytics, setAnalytics] = useState(null);
+  const [growthData, setGrowthData] = useState([]);
+  const [broadcastSubject, setBroadcastSubject] = useState("");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
 
   const [formData, setFormData] = useState({
     username: "",
@@ -66,7 +72,11 @@ const Profile = ({ token }) => {
     const loadProfile = async () => {
       try {
         const profile = await fetchProfile(token);
-        setUser(profile);
+        setUser({
+          ...profile,
+          followers: profile.followersCount || 0,
+          profileViews: profile.stats?.profileViews || 0,
+          });
 
         setFormData({
           username: profile.username || "",
@@ -97,6 +107,63 @@ const Profile = ({ token }) => {
     loadProfile();
   }, [token]);
 
+  const loadFollowers = useCallback(async (page = 0) => {
+    if (!user?._id) return;
+    if (followersLoading) return;
+
+    try {
+      setFollowersLoading(true);
+
+      const data = await getFollowers(user._id, page);
+
+      setFollowers((prev) =>
+        page === 0 ? data.followers || [] : [...prev, ...(data.followers || [])]
+      );
+
+      setFollowersTotal(data.total || 0);
+      setFollowersPage(page);
+
+    } catch (err) {
+      console.error("Followers load error:", err);
+    } finally {
+      setFollowersLoading(false);
+    }
+  }, [user?._id]);
+
+  const loadAnalytics = useCallback(async () => {
+    try {
+      const data = await getFollowerAnalytics(user._id);
+      setAnalytics(data);
+
+    } catch (err) {
+      console.error(err);
+    }
+  }, [user?._id]);
+
+  const loadGrowth = useCallback(async () => {
+    try {
+      const data = await getFollowerGrowth(user._id);
+      setGrowthData(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [user?._id]);
+
+  const handleBroadcast = async () => {
+    try {
+      await sendBroadcastEmail(user._id, {
+        subject: broadcastSubject,
+        message: broadcastMessage,
+      });
+
+      setBroadcastSubject("");
+      setBroadcastMessage("");
+      setStatusMessage("Broadcast sent successfully");
+    } catch (err) {
+      setStatusMessage("Failed to send broadcast");
+    }
+  };
+
     const fetchUserReviews = async () => {
     try {
       setReviewsLoading(true);
@@ -109,9 +176,16 @@ const Profile = ({ token }) => {
     }
   };
 
-    useEffect(() => {
+  useEffect(() => {
+    if (!user?._id) return;
+
     if (activeTab === "reviews") fetchUserReviews();
-  }, [activeTab]);
+    if (activeTab === "followers") loadFollowers(0);
+    if (activeTab === "analytics") {
+      loadAnalytics();
+      loadGrowth();
+    }
+  }, [activeTab, user?._id]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -271,21 +345,23 @@ const Profile = ({ token }) => {
         <Box flex={1}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="h5">{user.username}</Typography>
-            {user.isVerified && (
+            {user.accountVerified && (
               <VerifiedIcon color="primary" titleAccess="Verified account" />
             )}
           </Stack>
-          {!user.isVerified && user.verificationStatus !== "pending" && (
+
+          {/* Verification Status Logic */}
+          {user.isVerified && (user.verificationStatus === "none" || user.verificationStatus === "rejected") && (
             <Chip
-              label="Request verification"
+              label={user.verificationStatus === "rejected" ? "Request verification again" : "Request verification"}
               variant="outlined"
               onClick={requestVerification}
-              sx={{ ml: 1 }}
+              sx={{ ml: 1, mt: 0.5 }}
             />
           )}
 
           {user.verificationStatus === "pending" && (
-            <Chip label="Verification pending" color="warning" sx={{ ml: 1 }} />
+            <Chip label="Verification pending" color="warning" sx={{ ml: 1, mt: 0.5 }} />
           )}
 
           {user.shortIntro && (
@@ -303,6 +379,22 @@ const Profile = ({ token }) => {
             <Typography variant="body2" color="text.secondary">
               ({user.reviewCount || 0} reviews)
             </Typography>
+          </Stack>
+
+          <Stack direction="row" spacing={3} mt={1}>
+            <Box>
+              <Typography fontWeight={600}>{ user.followers || 0}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Followers
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography fontWeight={600}>{user.profileViews || 0}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Profile Views
+              </Typography>
+            </Box>
           </Stack>
 
           {(user.location?.city || user.location?.country) && (
@@ -492,7 +584,7 @@ const Profile = ({ token }) => {
           )}
         </Box>
       )}
-      {activeTab === "analytics" && (
+      {activeTab === "analytics" && analytics && (
         <Box mt={3}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={4}>
@@ -534,45 +626,143 @@ const Profile = ({ token }) => {
                 </Typography>
               </Box>
             </Grid>
+
+            <Grid item xs={12} sm={3}>
+                <Box sx={{ p: 2, boxShadow: 1 }}>
+                  <Typography variant="h4">
+                    {analytics.totalFollowers}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Total Followers
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <Box sx={{ p: 2, boxShadow: 1 }}>
+                  <Typography variant="h4">
+                    {analytics.emailSubscribers}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Email Subscribers
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <Box sx={{ p: 2, boxShadow: 1 }}>
+                  <Typography variant="h4">
+                    {analytics.unsubscribed}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Unsubscribed
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid item xs={12} sm={3}>
+                <Box sx={{ p: 2, boxShadow: 1 }}>
+                  <Typography variant="h4">
+                    {analytics.last30Days}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    New (30 days)
+                  </Typography>
+                </Box>
+              </Grid>
           </Grid>
+
+          {/* GROWTH CHART */}
+          <Box mt={4} height={300}>
+            <Typography variant="h6">Follower Growth</Typography>
+
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={growthData}>
+                <XAxis dataKey="_id" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="count" stroke="#1976d2" />
+              </LineChart>
+            </ResponsiveContainer>
+          </Box>
         </Box>
       )}
       {activeTab === "followers" && (
         <Box mt={3}>
-            <Grid item xs={12} sm={4}>
-          {/* FOLLOWERS DIALOG */}
           <TableContainer component={Paper}>
-            <Typography variant="h5" sx={{padding: 2}}> Followers ({user.followers.length || 0})</Typography>
-            {user.followers && user.followers.length > 0 ? (
+            <Typography variant="h5" sx={{ padding: 2 }}>
+              Followers ({user.followers || 0})
+            </Typography>
+
+            {followers.length === 0 && followersLoading ? (
+              <CircularProgress />
+            ) : followers.length > 0 ? (
               <Table>
                 <TableHead>
                   <TableRow>
                     <TableCell>Name</TableCell>
                     <TableCell>Email</TableCell>
                     <TableCell>Followed Date</TableCell>
-                    <TableCell>Action</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {user.followers.map((follower, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{follower.name}</TableCell>
-                      <TableCell>{follower.email}</TableCell>
-                      <TableCell>{new Date(follower.followedAt).toLocaleDateString()}</TableCell>
+                  {followers.map((f) => (
+                    <TableRow key={f._id}>
+                      <TableCell>{f.followerName}</TableCell>
+                      <TableCell>{f.followerEmail}</TableCell>
                       <TableCell>
-                        <IconButton href={`mailto:${follower.email}`}>
-                          <EmailIcon />
-                        </IconButton>
+                        {new Date(f.createdAt).toLocaleDateString()}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             ) : (
-              <Typography>No followers yet.</Typography>
+              <Typography sx={{ p: 2 }}>No followers yet.</Typography>
             )}
-            </TableContainer>
-          </Grid>
+            {followers.length < followersTotal && (
+              <Box display="flex" justifyContent="center" mt={2}>
+                <Button
+                  variant="outlined"
+                  onClick={() => loadFollowers(followersPage + 1)}
+                  disabled={followersLoading}
+                >
+                  {followersLoading ? "Loading..." : "Load More"}
+                </Button>
+              </Box>
+            )}
+          </TableContainer>
+
+          {/* BROADCAST SECTION */}
+          <Box mt={4}>
+            <Typography variant="h6">Send Broadcast Email</Typography>
+
+            <TextField
+              label="Subject"
+              fullWidth
+              sx={{ mt: 2 }}
+              value={broadcastSubject}
+              onChange={(e) => setBroadcastSubject(e.target.value)}
+            />
+
+            <TextField
+              label="Message"
+              fullWidth
+              multiline
+              rows={4}
+              sx={{ mt: 2 }}
+              value={broadcastMessage}
+              onChange={(e) => setBroadcastMessage(e.target.value)}
+            />
+
+            <Button
+              variant="contained"
+              sx={{ mt: 2 }}
+              onClick={handleBroadcast}
+            >
+              Send Broadcast
+            </Button>
+          </Box>
         </Box>
       )}
 

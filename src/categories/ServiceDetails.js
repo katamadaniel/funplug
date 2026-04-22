@@ -15,12 +15,10 @@ import ServiceCard from "./ServiceCard";
 import ServiceDetailsModal from "../ServiceDetailsModal";
 import ServiceBookingFormModal from "../ServiceBookingFormModal";
 import { fetchActiveServices } from "../services/serviceService";
-import { fetchUsers } from "../services/userService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
 
 const ServiceDetails = () => {
   const [services, setServices] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [countryFilter, setCountryFilter] = useState("");
@@ -35,16 +33,11 @@ const ServiceDetails = () => {
 
     const load = async () => {
       try {
-        const [services, users] = await Promise.all([
-          fetchActiveServices(),
-          fetchUsers(),
-        ]);
+        const services = await fetchActiveServices();
 
         if (!mounted) return;
 
-        const validUserIds = new Set(users.map(u => u._id));
-        setServices(services.filter(s => validUserIds.has(s.userId)));
-        setUsers(users);
+        setServices(services.filter(s => s.userSnapshot?._id));
       } catch (err) {
         console.error("ServiceDetails load error:", err);
       } finally {
@@ -57,7 +50,8 @@ const ServiceDetails = () => {
   }, []);
 
   const countries = useMemo(
-    () => [...new Set(services.map((s) => s.country).filter(Boolean))].sort(),
+    () =>
+      [...new Set(services.map((s) => s.country).filter(Boolean))].sort(),
     [services]
   );
 
@@ -69,7 +63,8 @@ const ServiceDetails = () => {
   }, [services, countryFilter]);
 
   const grouped = useMemo(() => {
-    return services.filter((s) => {
+    return services
+      .filter((s) => {
         if (countryFilter && s.country !== countryFilter) return false;
         if (cityFilter && s.city !== cityFilter) return false;
         return true;
@@ -155,11 +150,9 @@ const ServiceDetails = () => {
         ))
       )}
 
-      {/* Details Modal */}
       {selectedService && (
         <ServiceDetailsModal
           open={detailsOpen}
-          user={users.find(u => u._id === selectedService.userId)}
           service={selectedService}
           onClose={() => setDetailsOpen(false)}
           onBookService={() => {
@@ -169,7 +162,6 @@ const ServiceDetails = () => {
         />
       )}
 
-      {/* Booking Modal */}
       {selectedService && (
         <ServiceBookingFormModal
           open={bookingOpen}

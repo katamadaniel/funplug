@@ -14,12 +14,10 @@ import VenueCard from "./VenueCard";
 import VenueDetailsModal from "../VenueDetailsModal";
 import VenueBookingFormModal from "../VenueBookingFormModal";
 import { fetchActiveVenues } from "../services/venuesService";
-import { fetchUsers } from "../services/userService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
 
 const LocationDetails = () => {
   const [venues, setVenues] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [countryFilter, setCountryFilter] = useState("");
@@ -34,16 +32,11 @@ const LocationDetails = () => {
 
     const load = async () => {
       try {
-        const [venues, users] = await Promise.all([
-          fetchActiveVenues(),
-          fetchUsers(),
-        ]);
+        const venues = await fetchActiveVenues();
 
         if (!mounted) return;
 
-        const validUserIds = new Set(users.map(u => u._id));
-        setVenues(venues.filter(v => validUserIds.has(v.userId)));
-        setUsers(users);
+        setVenues(venues.filter(v => v.userSnapshot?._id));
       } catch (err) {
         console.error("LocationDetails load error:", err);
       } finally {
@@ -157,7 +150,6 @@ if (loading)
       {selectedVenue && (
         <VenueDetailsModal
           open={detailsOpen}
-          user={users.find(u => u._id === selectedVenue.userId)}
           venue={selectedVenue}
           onClose={() => setDetailsOpen(false)}
           onBookVenue={() => {

@@ -1,24 +1,40 @@
 import axiosInstance from './axiosInstance';
+import { parseApiError } from '../utils/errorHandler';
+
 const API_URL = process.env.REACT_APP_API_URL;
 const USERS_API_URL = `${API_URL}/api/users`;
 
+/**
+ * Sign up a new user
+ * @param {Object} formData - User signup data
+ * @returns {Promise<Object>} - Response with token and user data
+ * @throws {Object} - Error with parsed validation errors
+ */
 export const signup = async (formData) => {
   try {
     const response = await axiosInstance.post(`${USERS_API_URL}/signup`, formData);
     return response.data;
   } catch (error) {
-    console.error('Error signing up:', error.response ? error.response.data : error.message);
-    throw error;
+    const parsedError = parseApiError(error);
+    console.error('Error signing up:', parsedError);
+    throw parsedError;
   }
 };
 
+/**
+ * Login user
+ * @param {Object} formData - User login credentials (email, password)
+ * @returns {Promise<Object>} - Response with token and user data
+ * @throws {Object} - Error with parsed validation errors
+ */
 export const login = async (formData) => {
   try {
     const response = await axiosInstance.post(`${USERS_API_URL}/login`, formData);
     return response.data;
   } catch (error) {
-    console.error('Error logging in:', error.response ? error.response.data : error.message);
-    throw error;
+    const parsedError = parseApiError(error);
+    console.error('Error logging in:', parsedError);
+    throw parsedError;
   }
 };
 
@@ -27,8 +43,9 @@ export const fetchUsers = async () => {
     const response = await axiosInstance.get(USERS_API_URL);
     return response.data;
   } catch (error) {
-    console.error('Error fetching venues:', error.response ? error.response.data : error.message);
-    throw error;
+    const parsedError = parseApiError(error);
+    console.error('Error fetching users:', parsedError);
+    throw parsedError;
   }
 };
 
@@ -37,11 +54,18 @@ export const fetchProfile = async () => {
     const response = await axiosInstance.get(`${USERS_API_URL}/profile`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching user profile:', error.response ? error.response.data : error.message);
-    throw error;
+    const parsedError = parseApiError(error);
+    console.error('Error fetching user profile:', parsedError);
+    throw parsedError;
   }
 };
 
+/**
+ * Update user profile
+ * @param {FormData} formData - Profile data including avatar file
+ * @returns {Promise<Object>} - Updated profile
+ * @throws {Object} - Error with parsed validation errors
+ */
 export const updateProfile = async (formData) => {
   try {
     const response = await axiosInstance.put(`${USERS_API_URL}/profile`, formData, {
@@ -51,21 +75,35 @@ export const updateProfile = async (formData) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error updating profile:', error.response ? error.response.data : error.message);
-    throw error;
+    const parsedError = parseApiError(error);
+    console.error('Error updating profile:', parsedError);
+    throw parsedError;
   }
 };
 
+/**
+ * Resend verification email
+ * @param {string} email - User email
+ * @returns {Promise<Object>} - Response
+ * @throws {Object} - Error with parsed validation errors
+ */
 export const resendVerification = async (email) => {
   try {
     const response = await axiosInstance.post(`${USERS_API_URL}/resend-verification`, { email });
     return response.data;
   } catch (error) {
-    console.error('Error resending verification:', error.response ? error.response.data : error.message);
-    throw error;
+    const parsedError = parseApiError(error);
+    console.error('Error resending verification:', parsedError);
+    throw parsedError;
   }
 };
 
+/**
+ * Change user password
+ * @param {Object} passwordData - Current and new password
+ * @returns {Promise<Object>} - Response
+ * @throws {Object} - Error with parsed validation errors
+ */
 export const changePassword = async ({ currentPassword, newPassword }) => {
   try {
     const response = await axiosInstance.put(`${USERS_API_URL}/change-password`, {
@@ -74,8 +112,9 @@ export const changePassword = async ({ currentPassword, newPassword }) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error changing password:', error.response ? error.response.data : error.message);
-    throw error;
+    const parsedError = parseApiError(error);
+    console.error('Error changing password:', parsedError);
+    throw parsedError;
   }
 };
 
@@ -85,8 +124,9 @@ export const deleteUser = async (password) => {
       data: { password },
     });
   } catch (error) {
-    console.error('Error deleting user:', error.response ? error.response.data : error.message);
-    throw error;
+    const parsedError = parseApiError(error);
+    console.error('Error deleting user:', parsedError);
+    throw parsedError;
   }
 };
 
@@ -96,20 +136,66 @@ export const logoutUser = async () => {
   };
 
     //Admin functions
-export const banUser = async (userId) => {
-  return await axiosInstance.put(`${USERS_API_URL}/${userId}/ban`);
+/**
+ * Ban a user
+ * @param {string} userId - User ID
+ * @param {string} reason - Ban reason
+ * @param {number} duration - Ban duration in days
+ * @returns {Promise<Object>} - Response
+ * @throws {Object} - Error with parsed validation errors
+ */
+export const banUser = async (userId, reason, duration) => {
+  try {
+    return await axiosInstance.put(`${USERS_API_URL}/${userId}/ban`, { reason, duration });
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error banning user:', parsedError);
+    throw parsedError;
+  }
 };
 
 export const unbanUser = async (userId) => {
-  return await axiosInstance.put(`${USERS_API_URL}/${userId}/unban`);
+  try {
+    return await axiosInstance.put(`${USERS_API_URL}/${userId}/unban`);
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error unbanning user:', parsedError);
+    throw parsedError;
+  }
 };
 
+/**
+ * Send warning to user
+ * @param {string} userId - User ID
+ * @param {string} message - Warning message
+ * @returns {Promise<Object>} - Response
+ * @throws {Object} - Error with parsed validation errors
+ */
 export const warnUser = async (userId, message) => {
-  return await axiosInstance.post(`${USERS_API_URL}/${userId}/warn`, { message });
+  try {
+    return await axiosInstance.post(`${USERS_API_URL}/${userId}/warn`, { message });
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error warning user:', parsedError);
+    throw parsedError;
+  }
 };
 
+/**
+ * Reset user password (admin action)
+ * @param {string} userId - User ID
+ * @param {string} newPassword - New password
+ * @returns {Promise<Object>} - Response
+ * @throws {Object} - Error with parsed validation errors
+ */
 export const resetUserPassword = async (userId, newPassword) => {
-  return await axiosInstance.put(`${USERS_API_URL}/${userId}/reset-password`, { newPassword });
+  try {
+    return await axiosInstance.put(`${USERS_API_URL}/${userId}/reset-password`, { newPassword });
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error resetting user password:', parsedError);
+    throw parsedError;
+  }
 };
 
 export const getAllUsers = async () => {
@@ -119,5 +205,20 @@ export const getAllUsers = async () => {
 
 export const getUserById = async (userId) => {
   const response = await axiosInstance.get(`${USERS_API_URL}/${userId}`);
+  return response.data;
+};
+
+export const fetchRecentUsers = async () => {
+  let visitorId = localStorage.getItem("visitorId");
+
+  if (!visitorId) {
+    visitorId = crypto.randomUUID();
+    localStorage.setItem("visitorId", visitorId);
+  }
+
+  const response = await axiosInstance.get(`${USERS_API_URL}/recent`, {
+    params: { visitorId },
+  });
+
   return response.data;
 };

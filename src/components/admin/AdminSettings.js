@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Avatar, IconButton, Grid } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import adminService from '../../services/adminService';
+import {fetchAdminProfile, updateProfile, uploadAvatar, removeAvatar } from '../../services/adminService';
 
 const AdminSettings = ({ initialAdmin }) => {
   const [admin, setAdmin] = useState(initialAdmin || null);
@@ -15,7 +15,7 @@ const AdminSettings = ({ initialAdmin }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await adminService.fetchAdminProfile();
+        const data = await fetchAdminProfile();
         setAdmin(data);
         setFormData((prev) => ({ ...prev, name: data.name }));
         setPreviewUrl(data.avatarUrl); // Use Cloudinary URL directly
@@ -50,15 +50,15 @@ const AdminSettings = ({ initialAdmin }) => {
       const updateData = { ...formData };
       if (!formData.password) delete updateData.password;
 
-      await adminService.updateProfile(updateData);
+      await updateProfile(updateData);
 
       if (selectedFile) {
         const formData = new FormData();
         formData.append('avatar', selectedFile);
-        await adminService.uploadAvatar(formData);
+        await uploadAvatar(formData);
       }
 
-      const updated = await adminService.fetchAdminProfile();
+      const updated = await fetchAdminProfile();
       setAdmin(updated);
       setPreviewUrl(updated.avatarUrl);
       alert('Profile updated successfully!');
@@ -71,8 +71,8 @@ const AdminSettings = ({ initialAdmin }) => {
   const handleRemoveAvatar = async () => {
   if (!window.confirm('Are you sure you want to remove your avatar?')) return;
   try {
-    await adminService.removeAvatar();
-    const updated = await adminService.fetchAdminProfile();
+    await removeAvatar();
+    const updated = await fetchAdminProfile();
     setAdmin(updated);
     alert('Avatar removed successfully!');
   } catch (error) {

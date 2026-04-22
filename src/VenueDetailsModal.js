@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -27,20 +27,21 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import VerifiedIcon from "@mui/icons-material/Verified";
+import { followService } from "./services/followService";
 
-import axios from "axios";
-import { getAvatarUrl } from "./utils/avatar";
-
-const API_URL = process.env.REACT_APP_API_URL;
-
-const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
+const VenueDetailsModal = ({ venue, onClose, onBookVenue }) => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isFollowOpen, setIsFollowOpen] = useState(false);
   const [fullImage, setFullImage] = useState(null);
 
   const [followName, setFollowName] = useState("");
   const [followEmail, setFollowEmail] = useState("");
-  const [followerCount, setFollowerCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(
+    venue?.userSnapshot?.followersCount || 0
+  );
+
+  const user = venue?.userSnapshot;
 
     const handleImageError = (e) => {
     e.target.src = process.env.REACT_APP_AVATAR_URL;
@@ -60,34 +61,35 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
     shareText
   )}&url=${encodeURIComponent(shareUrl)}`;
 
-  const fetchFollowerCount = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/users/followers/count/${user._id}`);
-      setFollowerCount(res.data.followerCount);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    if (user) fetchFollowerCount();
-  }, [user]);
+  const creatorId = venue?.userSnapshot?._id;
 
   const handleFollowSubmit = async (e) => {
     e.preventDefault();
+
+    if (!creatorId) {
+      alert("Creator not found.");
+      return;
+    }
+
     try {
-      await axios.post(`${API_URL}/api/users/follow/${user._id}`, {
+      const res = await followService.follow(creatorId, {
         name: followName,
         email: followEmail,
       });
 
+      // use backend count instead of guessing
+      if (res?.followersCount !== undefined) {
+        setFollowerCount(res.followersCount);
+      } else {
+        setFollowerCount((prev) => prev + 1);
+      }
+      
       setFollowName("");
       setFollowEmail("");
       setIsFollowOpen(false);
-      fetchFollowerCount();
-      alert("Successfully followed!");
+
+      alert(res?.message || "Successfully followed!");
     } catch (err) {
-      console.error(err);
       alert("Subscription failed.");
     }
   };
@@ -145,13 +147,18 @@ const VenueDetailsModal = ({ venue, user, onClose, onBookVenue }) => {
             {/* USER INFO */}
             <Stack direction="row" spacing={2} alignItems="center">
               <Avatar
-                src={getAvatarUrl(user)} 
+                src={user?.avatar} 
                 sx={{ width: 60, height: 60 }}
                 onError={handleImageError} />
               <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {user?.username || "Unknown User"}
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {user?.username || "Unknown User"}
+                  </Typography>
+                  {(user?.accountVerified || user?.verificationStatus === 'verified') && (
+                    <VerifiedIcon fontSize="small" color="primary" titleAccess="Verified creator" />
+                  )}
+                </Stack>
                 <Typography variant="body2" color="text.secondary">
                   {followerCount} Followers
                 </Typography>

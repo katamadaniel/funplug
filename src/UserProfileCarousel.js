@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Slider from "react-slick";
 import {
@@ -11,18 +11,43 @@ import {
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { getAvatarUrl } from "./utils/avatar";
+import { fetchRecentUsers } from "./services/userService";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 const PLACEHOLDERS = Array.from({ length: 6 });
 
-const UserProfileCarousel = ({ users = [], loading = false }) => {
+const UserProfileCarousel = () => {
   const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const handleProfileClick = (userId) => {
     navigate(`/profile/${userId}`);
   };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadUsers = async () => {
+      try {
+        const data = await fetchRecentUsers();
+        const safe = (Array.isArray(data) ? data : []).filter(u => u?.isBanned !== true);
+        if (mounted) setUsers(safe);
+      } catch (err) {
+        console.error("Failed to fetch recent users:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadUsers();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const settings = {
     arrows: false,

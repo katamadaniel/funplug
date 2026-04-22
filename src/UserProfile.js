@@ -48,6 +48,7 @@ import PerformanceDetailsModal from "./PerformanceDetailsModal";
 import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
 import ServiceDetailsModal from "./ServiceDetailsModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
+import { followService } from "./services/followService";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -60,7 +61,7 @@ const UserProfile = () => {
   const [isFollowOpen, setIsFollowOpen] = useState(false);
   const [followName, setFollowName] = useState("");
   const [followEmail, setFollowEmail] = useState("");
-  const [followerCount, setFollowerCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
 
   const [averageRating, setAverageRating] = useState(0);
   const [canReview, setCanReview] = useState(false);
@@ -155,7 +156,15 @@ const UserProfile = () => {
   }, [id]);
 
 useEffect(() => {
-  axios.post(`${API_URL}/api/users/profile-view/${id}`);
+  const visitorId =
+    localStorage.getItem("visitorId") ||
+    crypto.randomUUID();
+
+  localStorage.setItem("visitorId", visitorId);
+
+  axios.post(`${API_URL}/api/users/profile-view/${id}`, {
+    visitorId
+  });
 }, [id]);
 
 useEffect(() => {
@@ -189,44 +198,42 @@ useEffect(() => {
     setTabIndex(newValue);
   };
 
-  const fetchFollowerCount = async () => {
-    try {
-      const res = await axios.get(
-        `${API_URL}/api/users/followers/count/${user._id}`
-      );
-      setFollowerCount(res.data.followerCount);
-    } catch (err) {
-      console.error("Error fetching follower count");
-    }
-  };
-
-  useEffect(() => {
-    if (user) fetchFollowerCount();
-  }, [user]);
-
   const handleFollowSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await axios.post(`${API_URL}/api/users/follow/${id}`, {
+      const res = await followService.follow(user._id, {
         name: followName,
         email: followEmail,
       });
+
+      // use backend count instead of guessing
+      if (res?.followersCount !== undefined) {
+        setFollowersCount(res.followersCount);
+      } else {
+        setFollowersCount((prev) => prev + 1);
+      }
+
       setFollowName("");
       setFollowEmail("");
       setIsFollowOpen(false);
-      fetchFollowerCount();
-      alert("Successfully followed!");
+
+      alert(res?.message || "Successfully followed!");
     } catch (err) {
       alert("Subscription failed.");
     }
   };
 
-
   // Reviews handling (GET/POST)
   const fetchReviews = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/reviews/user/${id}`);
-      const { reviews = [], averageRating = 0, canReview = false } = res.data;
+      const { 
+        reviews = [], 
+        averageRating = 0, 
+        reviewCount = 0,
+        canReview = true 
+      } = res.data;
 
       setReviews(reviews);
       setAverageRating(averageRating);
@@ -234,20 +241,44 @@ useEffect(() => {
     } catch (err) {
       setReviews([]);
       setAverageRating(0);
-      setCanReview(false);
+      setCanReview(true);
     }
   };
 
   const submitReview = async (e) => {
     e.preventDefault();
 
-    if (!reviewText.trim()) return;
+    // Validate inputs
+    if (!reviewText.trim()) {
+      setReviewError("Review text is required");
+      return;
+    }
+
+    if (reviewRating < 1 || reviewRating > 5) {
+      setReviewError("Rating must be between 1 and 5");
+      return;
+    }
+
+    if (reviewText.length < 10) {
+      setReviewError("Review must be at least 10 characters");
+      return;
+    }
+
+    if (reviewText.length > 1000) {
+      setReviewError("Review must not exceed 1000 characters");
+      return;
+    }
+
+    if (!email && !phone) {
+      setReviewError("Email or phone number is required");
+      return;
+    }
 
     setReviewLoading(true);
     setReviewError(null);
 
     try {
-      await axios.post(`${API_URL}/api/reviews`, {
+      const response = await axios.post(`${API_URL}/api/reviews`, {
         userId: id,
         rating: reviewRating,
         text: reviewText.trim(),
@@ -258,18 +289,21 @@ useEffect(() => {
         phone,
       });
 
+      // Show success message
+      setReviewError(null);
       setReviewText("");
       setReviewerName("");
       setEmail("");
       setPhone("");
       setReviewRating(5);
 
+      // Notify user of pending approval
+      alert(response?.data?.message || "Review submitted! It will be visible after admin approval.");
       await fetchReviews();
     } catch (err) {
-      setReviewError(
-        err?.response?.data?.message ||
-        "You can only review after attending this event or booking."
-      );
+      const errorMsg = err?.response?.data?.message || 
+        "Failed to submit review. You can only review after attending this event or booking.";
+      setReviewError(errorMsg);
     } finally {
       setReviewLoading(false);
     }
@@ -332,7 +366,7 @@ useEffect(() => {
                   {user.username}
                 </Typography>
 
-                {user.isVerified && (
+                {(user.accountVerified || user.verificationStatus === 'verified') && (
                   <VerifiedIcon
                     fontSize="small"
                     color="primary"
@@ -355,7 +389,7 @@ useEffect(() => {
                 )}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                {followerCount} Followers
+                {user.followersCount} Followers
               </Typography>
               <Box>
                       {/* FOLLOW FORM */}

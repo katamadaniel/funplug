@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, fetchProfile, resendVerification } from "./services/userService";
+import { parseApiError } from "./utils/errorHandler";
 import {
   Container,
   Typography,
@@ -37,7 +38,12 @@ const Login = ({ setIsAuthenticated, setUser }) => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
+    }
   };
 
   const validateForm = () => {
@@ -66,13 +72,13 @@ const Login = ({ setIsAuthenticated, setUser }) => {
       const { token } = await login(formData);
       localStorage.setItem("token", token);
 
-      const profile = await fetchProfile(token);
+      const profile = await fetchProfile();
 
-      if (profile.warningCount >= 3) {
+      if (profile.isBanned) {
         localStorage.removeItem("token");
         setIsAuthenticated(false);
         showToast(
-          "Your account has been banned due to multiple warnings. Contact support.",
+          "Your account has been banned. Please contact support.",
           "error"
         );
         return;
@@ -104,16 +110,15 @@ const Login = ({ setIsAuthenticated, setUser }) => {
       setTimeout(() => navigate("/profile"), 800);
     } catch (err) {
       console.error("Login error:", err);
+      const parsedError = parseApiError(err);
 
-      const status = err.response?.status;
-      const message = err.response?.data?.message;
-
-      if (status === 429) {
-        showToast(message || "Too many attempts. Please try again later.", "error");
-      } else if (status === 403) {
-        showToast(message || "Access denied.", "warning");
+      // Handle validation errors
+      if (parsedError.isValidationError) {
+        setErrors(parsedError.fieldErrors);
+        showToast(parsedError.message, "warning");
       } else {
-        showToast(message || "Login failed. Check your credentials.", "error");
+        // Handle other errors
+        showToast(parsedError.message, "error");
       }
     } finally {
       setLoading(false);
