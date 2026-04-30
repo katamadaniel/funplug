@@ -15,13 +15,10 @@ import {
 
 import { useUserLocation } from "./contexts/LocationContext";
 import { useSearch } from "./contexts/SearchContext";
-import EventModal from "./EventModal";
+import ListingDetailsModal from "./ListingDetailsModal";
 import TicketPurchase from "./TicketPurchase";
-import VenueDetailsModal from "./VenueDetailsModal";
 import VenueBookingFormModal from "./VenueBookingFormModal";
-import PerformanceDetailsModal from "./PerformanceDetailsModal";
 import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
-import ServiceDetailsModal from "./ServiceDetailsModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
 
 import { getAvatarUrl } from "./utils/avatar";
@@ -220,10 +217,12 @@ const SearchResults = ({ results, onViewProfile }) => {
       })}
 
       {selected?.type === "event" && !selected?.modal && (
-        <EventModal
-          event={selected}
-          onBuyTicket={() => setSelected({ ...selected, modal: "ticket" })}
+        <ListingDetailsModal
+          open={!!selected}
+          type="event"
+          data={selected}
           onClose={() => setSelected(null)}
+          onAction={() => setSelected({ ...selected, modal: "ticket" })}
         />
       )}
 
@@ -236,10 +235,12 @@ const SearchResults = ({ results, onViewProfile }) => {
       )}
 
       {selected?.type === "venue" && !selected?.modal && (
-        <VenueDetailsModal
-          venue={selected}
-          onBookVenue={() => setSelected({ ...selected, modal: "venue-book" })}
+        <ListingDetailsModal
+          open={!!selected}
+          type="venue"
+          data={selected}
           onClose={() => setSelected(null)}
+          onAction={() => setSelected({ ...selected, modal: "venue-book" })}
         />
       )}
 
@@ -252,12 +253,12 @@ const SearchResults = ({ results, onViewProfile }) => {
       )}
 
       {selected?.type === "performance" && !selected?.modal && (
-        <PerformanceDetailsModal
-          performance={selected}
-          onBookPerformance={() =>
-            setSelected({ ...selected, modal: "performance-book" })
-          }
+        <ListingDetailsModal
+          open={!!selected}
+          type="performance"
+          data={selected}
           onClose={() => setSelected(null)}
+          onAction={() =>  setSelected({ ...selected, modal: "performance-book" })}
         />
       )}
 
@@ -270,12 +271,12 @@ const SearchResults = ({ results, onViewProfile }) => {
       )}
 
       {selected?.type === "service" && !selected?.modal && (
-        <ServiceDetailsModal
-          service={selected}
-          onBookService={() =>
-            setSelected({ ...selected, modal: "service-book" })
-          }
+        <ListingDetailsModal
+          open={!!selected}
+          type="service"
+          data={selected}
           onClose={() => setSelected(null)}
+          onAction={() => setSelected({ ...selected, modal: "service-book" })}
         />
       )}
 

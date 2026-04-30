@@ -1,6 +1,6 @@
 {
   "name": "funplug",
-  "version": "1.2.0",
+  "version": "1.1.0",
   "private": true,
   "homepage": "",
   "dependencies": {
@@ -42,7 +42,6 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build-and-version": "npm version patch && run build"

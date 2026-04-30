@@ -31,6 +31,8 @@ import UnsubscribePage from './UnsubscribePage';
 import ChangePassword from './ChangePassword';
 import DeleteAccount from './DeleteAccount';
 import PrivacyPolicy from './PrivacyPolicy';
+import TermsOfService from './TermsOfService';
+import UserAgreement from './UserAgreement';
 import ReportProblem from './ReportProblem';
 import ContactSupport from './ContactSupport';
 import './App.css';
@@ -58,6 +60,10 @@ import AdminNotifications from './components/admin/AdminNotifications';
 import AdminEmails from './components/admin/AdminEmails';
 import AdminPayments from './components/admin/AdminPayments';
 import AdminSettings from './components/admin/AdminSettings';
+import PolicyManagement from './components/admin/PolicyManagement';
+import PolicyVersionControl from './components/admin/PolicyVersionControl';
+import PolicyUpdateSchedule from './components/admin/PolicyUpdateSchedule';
+import PolicyComplianceReport from './components/admin/PolicyComplianceReport';
 import AdminLogin from './components/admin/AdminLogin';
 import AdminNavbar from './components/admin/AdminNavbar';
 import PrivateRoute from './PrivateRoute';
@@ -196,6 +202,10 @@ function App() {
                                   <Route path="emails" element={<AdminEmails />} />
                                   <Route path="payments" element={<AdminPayments />} />
                                   <Route path="settings" element={<AdminSettings />} />
+                                  <Route path="policies" element={<PolicyManagement />} />
+                                  <Route path="policies/versions" element={<PolicyVersionControl />} />
+                                  <Route path="policies/schedule" element={<PolicyUpdateSchedule />} />
+                                  <Route path="policies/compliance" element={<PolicyComplianceReport />} />
                                 </Routes>
                               </AdminLayout>
                             </div>
@@ -217,6 +227,9 @@ function App() {
                                   <Route path="/about" element={<About />} />
                                   <Route path="/faq" element={<FAQ />} />
                                   <Route path="/contact" element={<Contact />} />
+                                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                                  <Route path="/terms-of-service" element={<TermsOfService />} />
+                                  <Route path="/user-agreement" element={<UserAgreement />} />
                                   <Route path="/searchResults" element={<SearchResultsWrapper />} />
                                   <Route path="/profile/:id" element={<UserProfile />} />
                                   <Route path="/category" element={<Category />} />
@@ -232,7 +245,6 @@ function App() {
                                   <Route path="/notifications" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <Notifications /> </PrivateRoute> } />
                                   <Route path="/change-password" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ChangePassword /> </PrivateRoute> } />
                                   <Route path="/delete-account" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <DeleteAccount /> </PrivateRoute> } />
-                                  <Route path="/privacy-policy" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <PrivacyPolicy /> </PrivateRoute> } />
                                   <Route path="/report-problem" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ReportProblem /> </PrivateRoute> } />
                                   <Route path="/contact-support" element={ <PrivateRoute isAuthenticated={isAuthenticated}> <ContactSupport /> </PrivateRoute> } />
                                   <Route path="*" element={<Navigate to="/" />} />

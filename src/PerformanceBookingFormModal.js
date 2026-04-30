@@ -37,16 +37,17 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
   const [duration, setDuration] = useState(0);
   const [total, setTotal] = useState(0);
   const [reservationFee, setReservationFee] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("mpesa");
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("mpesa");
 
   const [bookingStatus, setBookingStatus] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [confirmationCode, setConfirmationCode] = useState("");
+
   const [lastBookingId, setLastBookingId] = useState(null);
   const [checkoutRequestId, setCheckoutRequestId] = useState(null);
-
   const [pollingKey, setPollingKey] = useState(0);
 
   useEffect(() => {
@@ -80,13 +81,13 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
     if (from && to) {
       const start = new Date(`1970-01-01T${from}`);
       const end = new Date(`1970-01-01T${to}`);
-      const diff = (end - start) / (1000 * 60 * 60);
+      const hours = (end - start) / (1000 * 60 * 60);
 
-      if (diff > 0) {
-        setDuration(diff);
-        const cost = diff * Number(performance.charges || 0);
-        setTotal(cost);
-        setReservationFee(Math.ceil(cost * 0.1));
+      if (hours > 0) {
+        setDuration(hours);
+        const totalCost = hours * Number(performance.charges || 0);
+        setTotal(totalCost);
+        setReservationFee(Math.ceil(totalCost * 0.1));
       } else {
         setDuration(0);
         setTotal(0);
@@ -95,6 +96,8 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
     }
   }, [form.from, form.to, performance.charges]);
 
+  const today = new Date().toISOString().split("T")[0];
+  
   const formatPhone = (phone) => {
     const digits = phone.replace(/\D/g, "");
     if (!digits) return "";
@@ -116,23 +119,30 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
       errs.email = "Invalid email address";
 
     if (!form.bookingDate) errs.bookingDate = "Select a date";
-    if (!form.from) errs.from = "Start time required";
-    if (!form.to) errs.to = "End time required";
+    if (!form.from) errs.from = "Select start time";
+    if (!form.to) errs.to = "Select end time";
     if (duration <= 0) errs.duration = "Invalid duration";
 
     return errs;
   };
 
+  const handleInputChange = (field) => (e) =>
+    setForm((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+
   const checkAvailability = async () => {
     try {
       const params = new URLSearchParams();
+      const { bookingDate, from, to } = form;
       params.append("cardId", performance._id);
-      params.append("bookingDate", form.bookingDate);
-      params.append("from", form.from);
-      params.append("to", form.to);
+      params.append("bookingDate", bookingDate);
+      params.append("from", from);
+      params.append("to", to);
 
       const res = await axios.get(
-        `${API_URL}/api/performance_bookings/check?${params}`
+        `${API_URL}/api/performance_bookings/check?${params.toString()}`
       );
       return res.data;
     } catch (err) {
@@ -295,9 +305,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
                 fullWidth
                 label="Name"
                 value={form.clientName}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, clientName: e.target.value }))
-                }
+                onChange={handleInputChange("clientName")}
                 error={Boolean(errors.clientName)}
                 helperText={errors.clientName}
               />
@@ -308,9 +316,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
                 fullWidth
                 label="Phone"
                 value={form.phone}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, phone: e.target.value }))
-                }
+                onChange={handleInputChange("phone")}
                 error={Boolean(errors.phone)}
                 helperText={errors.phone}
               />
@@ -321,9 +327,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
                 fullWidth
                 label="Email"
                 value={form.email}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, email: e.target.value }))
-                }
+                onChange={handleInputChange("email")}
                 error={Boolean(errors.email)}
                 helperText={errors.email}
               />
@@ -335,13 +339,9 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
                 type="date"
                 label="Booking Date"
                 InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    min: new Date().toISOString().split("T")[0],
-                  }}
+                inputProps={{ min: today }}
                 value={form.bookingDate}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, bookingDate: e.target.value }))
-                }
+                onChange={handleInputChange("bookingDate")}
                 error={Boolean(errors.bookingDate)}
                 helperText={errors.bookingDate}
               />
@@ -354,9 +354,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
                 label="From"
                 InputLabelProps={{ shrink: true }}
                 value={form.from}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, from: e.target.value }))
-                }
+                onChange={handleInputChange("from")}
                 error={Boolean(errors.from)}
                 helperText={errors.from}
               />
@@ -369,9 +367,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
                 label="To"
                 InputLabelProps={{ shrink: true }}
                 value={form.to}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, to: e.target.value }))
-                }
+                onChange={handleInputChange("to")}
                 error={Boolean(errors.to)}
                 helperText={errors.to}
               />
@@ -384,9 +380,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
                 multiline
                 minRows={3}
                 value={form.eventDetails}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, eventDetails: e.target.value }))
-                }
+                onChange={handleInputChange("eventDetails")}
               />
             </Grid>
 

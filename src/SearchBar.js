@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { FaSearch } from 'react-icons/fa';
 import CloseIcon from '@mui/icons-material/Close';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSearch } from './contexts/SearchContext';
 
 const SearchBar = () => {
@@ -19,7 +19,6 @@ const SearchBar = () => {
   const [modalOpen, setModalOpen] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
   const { search } = useSearch();
 
   useEffect(() => {

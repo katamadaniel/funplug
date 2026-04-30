@@ -635,7 +635,7 @@ const Profile = ({ token }) => {
                   <Typography color="text.secondary">
                     Total Followers
                   </Typography>
-                </Box>
+                </Box>[]
               </Grid>
 
               <Grid item xs={12} sm={3}>

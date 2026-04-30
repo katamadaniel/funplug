@@ -4,16 +4,19 @@ const API_URL = process.env.REACT_APP_API_URL;
 const VENUES_API_URL = `${API_URL}/api/venues`;
 const BOOKINGS_API_URL = `${API_URL}/api/venue_bookings`;
 
-export const createVenue = async (formData) => {
+export const createVenue = async (data, token, onProgress) => {
   try {
-    const token = localStorage.getItem('token');
-    const config = {
+    const response = await axiosInstance.post(VENUES_API_URL, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`
-      }
-    };
-    const response = await axiosInstance.post(VENUES_API_URL, formData, config);
+      },
+      onUploadProgress: (progressEvent) => {
+        if (!progressEvent.total) return;
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        if (onProgress) onProgress(percent);
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating venue:', error.response ? error.response.data : error.message);
@@ -91,16 +94,19 @@ export const fetchVenueBookings = async (venueId) => { // Fetch bookings for a s
   }
 };
 
-export const updateVenue = async (id, formData) => {
+export const updateVenue = async (id, data, token, onProgress) => {
   try {
-    const token = localStorage.getItem('token');
-    const config = {
+    const response = await axiosInstance.put(`${VENUES_API_URL}/${id}`, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`
-      }
-    };
-    const response = await axiosInstance.put(`${VENUES_API_URL}/${id}`, formData, config);
+      },
+      onUploadProgress: (progressEvent) => {
+        if (!progressEvent.total) return;
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        if (onProgress) onProgress(percent);
+      },          
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating venue:', error.response ? error.response.data : error.message);

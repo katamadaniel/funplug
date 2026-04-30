@@ -11,12 +11,12 @@ import {
   Chip,
 } from "@mui/material";
 import VenueCard from "./VenueCard";
-import VenueDetailsModal from "../VenueDetailsModal";
+import ListingDetailsModal from "../ListingDetailsModal";
 import VenueBookingFormModal from "../VenueBookingFormModal";
 import { fetchActiveVenues } from "../services/venuesService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
 
-const LocationDetails = () => {
+const VenueDetails = () => {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +38,7 @@ const LocationDetails = () => {
 
         setVenues(venues.filter(v => v.userSnapshot?._id));
       } catch (err) {
-        console.error("LocationDetails load error:", err);
+        console.error("Venue details load error:", err);
       } finally {
         mounted && setLoading(false);
       }
@@ -72,6 +72,31 @@ const LocationDetails = () => {
       return acc;
     }, {});
   }, [venues, countryFilter, cityFilter]);
+
+  const handleSelectVenue = (venue) => {
+    setSelectedVenue(venue);
+    setBookingOpen(false); // ensure booking modal is closed
+    setDetailsOpen(true);   // open listing modal first
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsOpen(false);
+    setSelectedVenue(null);
+  };
+
+  const handleProceedToBooking = () => {
+    setDetailsOpen(false);
+
+    // allow Listing modal to unmount first before booking opens
+    setTimeout(() => {
+      setBookingOpen(true);
+    }, 150);
+  };
+
+  const handleCloseBooking = () => {
+    setBookingOpen(false);
+    setSelectedVenue(null);
+  };
 
 if (loading)
     return (
@@ -135,10 +160,7 @@ if (loading)
               <Grid item xs={12} sm={6} md={4} key={v._id}>
                 <VenueCard
                   venue={v}
-                  onView={() => {
-                    setSelectedVenue(v);
-                    setDetailsOpen(true);
-                  }}
+                  onView={() => handleSelectVenue(v)}
                 />
               </Grid>
             )}
@@ -147,31 +169,26 @@ if (loading)
       )}
 
       {/* Details Modal */}
-      {selectedVenue && (
-        <VenueDetailsModal
+      {selectedVenue && detailsOpen && (
+        <ListingDetailsModal
           open={detailsOpen}
-          venue={selectedVenue}
-          onClose={() => setDetailsOpen(false)}
-          onBookVenue={() => {
-            setDetailsOpen(false);
-            setBookingOpen(true);
-          }}
+          type="venue"
+          data={selectedVenue}
+          onClose={handleCloseDetails}
+          onAction={handleProceedToBooking}
         />
       )}
 
       {/* Booking Modal */}
-      {selectedVenue && (
+      {selectedVenue && bookingOpen && (
         <VenueBookingFormModal
           open={bookingOpen}
           venue={selectedVenue}
-          onClose={() => {
-            setBookingOpen(false);
-            setSelectedVenue(null);
-          }}
+          onClose={handleCloseBooking}
         />
       )}
     </Box>
   );
 };
 
-export default LocationDetails;
+export default VenueDetails;

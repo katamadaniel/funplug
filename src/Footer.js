@@ -1,10 +1,13 @@
 import React from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Grid,
   Typography,
   IconButton,
   Divider,
+  Link,
+  Stack,
 } from "@mui/material";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import TwitterIcon from "@mui/icons-material/Twitter";
@@ -56,14 +59,56 @@ const Footer = () => {
           </Box>
         </Grid>
 
-        {/* INFO */}
+        {/* INFO & LEGAL LINKS */}
         <Grid item xs={12} md={4} textAlign="center">
           <Typography variant="h6" fontWeight={700}>
             FunPlug
           </Typography>
-          <Typography variant="body2" color="text.secondary" mt={1}>
+          <Typography variant="body2" color="text.secondary" mt={1} mb={2}>
             Events, Venues & Services Management Platform
           </Typography>
+
+          <Divider sx={{ my: 2 }} />
+
+          {/* Legal Links */}
+          <Stack spacing={1} sx={{ mb: 2 }}>
+            <Link
+              component={RouterLink}
+              to="/privacy-policy"
+              sx={{
+                fontSize: "0.85rem",
+                color: "text.secondary",
+                textDecoration: "none",
+                "&:hover": { color: "primary.main", textDecoration: "underline" },
+              }}
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              component={RouterLink}
+              to="/terms-of-service"
+              sx={{
+                fontSize: "0.85rem",
+                color: "text.secondary",
+                textDecoration: "none",
+                "&:hover": { color: "primary.main", textDecoration: "underline" },
+              }}
+            >
+              Terms of Service
+            </Link>
+            <Link
+              component={RouterLink}
+              to="/user-agreement"
+              sx={{
+                fontSize: "0.85rem",
+                color: "text.secondary",
+                textDecoration: "none",
+                "&:hover": { color: "primary.main", textDecoration: "underline" },
+              }}
+            >
+              User Agreement
+            </Link>
+          </Stack>
 
           <Divider sx={{ my: 2 }} />
 
@@ -83,7 +128,7 @@ const Footer = () => {
               { icon: <FacebookIcon />, link: "https://facebook.com/profile.php?id=61585229759024" },
               { icon: <TwitterIcon />, link: "https://x.com/FunplugEvents" },
               { icon: <InstagramIcon />, link: "https://instagram.com/funplugevents" },
-              { icon: <LinkedInIcon />, link: "https://https://www.linkedin.com/company/funplug-events-management/" },
+              { icon: <LinkedInIcon />, link: "https://www.linkedin.com/company/funplug-events-management/" },
             ].map((s, i) => (
               <IconButton
                 key={i}

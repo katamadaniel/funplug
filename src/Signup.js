@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { signup } from './services/userService';
 import { parseApiError } from './utils/errorHandler';
 import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl, Typography, IconButton, 
@@ -233,7 +233,31 @@ const Signup = () => {
         />
         <FormControlLabel
           control={<Checkbox checked={formData.agreedToTerms} onChange={(e) => setFormData({ ...formData, agreedToTerms: e.target.checked })} />}
-          label={<Typography> I agree to the <span style={{ color: 'blue', cursor: 'pointer' }} onClick={() => setTermsOpen(true)}>Terms and Conditions</span></Typography>}
+          label={
+            <Typography variant="body2">
+              I agree to the{' '}
+              <Link
+                to="/user-agreement"
+                style={{ color: '#1976d2', textDecoration: 'none', fontWeight: 500 }}
+              >
+                User Agreement
+              </Link>
+              {', '}
+              <Link
+                to="/terms-of-service"
+                style={{ color: '#1976d2', textDecoration: 'none', fontWeight: 500 }}
+              >
+                Terms of Service
+              </Link>
+              {', and '}
+              <Link
+                to="/privacy-policy"
+                style={{ color: '#1976d2', textDecoration: 'none', fontWeight: 500 }}
+              >
+                Privacy Policy
+              </Link>
+            </Typography>
+          }
         />
         {errors.agreedToTerms && <Typography color="error">{errors.agreedToTerms}</Typography>}
         <Button

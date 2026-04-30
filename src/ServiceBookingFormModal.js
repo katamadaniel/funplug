@@ -37,12 +37,15 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
   const [duration, setDuration] = useState(0);
   const [total, setTotal] = useState(0);
   const [reservationFee, setReservationFee] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
   const [paymentMethod, setPaymentMethod] = useState("mpesa");
+
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  const [successMessage, setSuccessMessage] = useState("");
   const [bookingStatus, setBookingStatus] = useState(null);
   const [confirmationCode, setConfirmationCode] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+
   const [lastBookingId, setLastBookingId] = useState(null);
   const [checkoutRequestId, setCheckoutRequestId] = useState(null);
   const [pollingKey, setPollingKey] = useState(0);
@@ -56,8 +59,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
       if (status === "Success") {
         setBookingStatus("success");
         if (mpesaCode) setConfirmationCode(mpesaCode);
-        setSuccessMessage("Booking confirmed! A confirmation email has been sent.");
-
+        setSuccessMessage("Booking confirmed! Confirmation sent to your email.");
         setTimeout(() => {
           onClose?.();
           onBooked?.();
@@ -78,10 +80,10 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
     if (from && to) {
       const start = new Date(`1970-01-01T${from}`);
       const end = new Date(`1970-01-01T${to}`);
-      const diff = (end - start) / (1000 * 60 * 60);
+      const hours = (end - start) / (1000 * 60 * 60);
 
-      if (diff > 0) {
-        setDuration(diff);
+      if (hours > 0) {
+        setDuration(hours);
       } else {
         setDuration(0);
       }
@@ -91,6 +93,8 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
     setTotal(total);
     setReservationFee(Math.ceil(total * 0.1));
   }, [form.from, form.to, service?.charges]);
+
+  const today = new Date().toISOString().split("T")[0];
 
   const formatPhone = (phone) => {
     const digits = phone.replace(/\D/g, "");
@@ -110,8 +114,8 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
     else if (!/\S+@\S+\.\S+/.test(form.email))
       errs.email = "Invalid email format";
     if (!form.bookingDate) errs.bookingDate = "Select a date";
-    if (!form.from) errs.from = "Start time required";
-    if (!form.to) errs.to = "End time required";
+    if (!form.from) errs.from = "Select start time";
+    if (!form.to) errs.to = "Select end time";
     if (duration <= 0) errs.duration = "Invalid duration";
     if (!form.quantity || form.quantity < 1)
       errs.quantity = "Enter a valid quantity";
@@ -126,11 +130,12 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
 
   const checkAvailability = async () => {
     try {
+      const { bookingDate, from, to } = form;
       const params = new URLSearchParams();
       params.append("serviceId", service._id);
-      params.append("bookingDate", form.bookingDate);
-      params.append("from", form.from);
-      params.append("to", form.to);
+      params.append("bookingDate", bookingDate);
+      params.append("from", from);
+      params.append("to", to);
 
       const res = await axios.get(
         `${API_URL}/api/service_bookings/check?${params.toString()}`
@@ -200,7 +205,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
     } finally {
       setLoading(false);
     }
-  };
+    };
 
   const handleSuccess = useCallback((mpesaCode) => {
       setBookingStatus("success");
@@ -261,8 +266,6 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
     }
   };
 
-  const today = new Date().toISOString().split("T")[0];
-
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
       <DialogTitle>Book Service — {service.serviceType}</DialogTitle>
@@ -292,9 +295,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
               label="Name"
               fullWidth
               value={form.clientName}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, clientName: e.target.value }))
-              }
+              onChange={handleInputChange("clientName")}
               error={Boolean(errors.clientName)}
               helperText={errors.clientName}
             />
@@ -305,9 +306,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
               label="Phone"
               fullWidth
               value={form.phone}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, phone: e.target.value }))
-              }
+              onChange={handleInputChange("phone")}
               error={Boolean(errors.phone)}
               helperText={errors.phone}
             />
@@ -318,9 +317,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
               label="Email"
               fullWidth
               value={form.email}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, email: e.target.value }))
-              }
+              onChange={handleInputChange("email")}
               error={Boolean(errors.email)}
               helperText={errors.email}
             />
@@ -347,9 +344,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
                 label="From"
                 InputLabelProps={{ shrink: true }}
                 value={form.from}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, from: e.target.value }))
-                }
+                onChange={handleInputChange("from")}
                 error={Boolean(errors.from)}
                 helperText={errors.from}
               />
@@ -362,9 +357,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
                 label="To"
                 InputLabelProps={{ shrink: true }}
                 value={form.to}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, to: e.target.value }))
-                }
+                onChange={handleInputChange("to")}
                 error={Boolean(errors.to)}
                 helperText={errors.to}
               />

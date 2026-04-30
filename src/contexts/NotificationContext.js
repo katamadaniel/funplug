@@ -30,6 +30,7 @@ const SOURCES = {
       date: b.bookingDate,
       duration: b.duration,
       total: b.totalAmount,
+      eventDetails: b.eventDetails,
     }),
   },
   performanceBooking: {

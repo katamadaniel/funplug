@@ -10,6 +10,7 @@ import {
   fetchTicketPurchases,
 } from './services/eventService';
 import { exportBookingsToCSV } from './components/admin/adminHelpers';
+import UploadProgressModal from "./components/UploadProgressModal";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Box, CircularProgress, Typography, Button, Collapse,
@@ -24,6 +25,8 @@ import {
 
 const Events = ({ token }) => {
   const [events, setEvents] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -103,25 +106,39 @@ const Events = ({ token }) => {
       data.vvipSlots = '0';
     }
 
-    const formDataObj = new FormData();
+    const formData = new FormData();
     for (const key in data) {
-      formDataObj.append(key, key === 'image' && data[key]?.length > 0 ? data[key][0] : data[key]);
+      formData.append(key, key === 'image' && data[key]?.length > 0 ? data[key][0] : data[key]);
     }
 
     try {
-      if (editingEventId) {
-        await updateEvent(editingEventId, formDataObj);
+      setUploading(true);
+      setUploadProgress(0);
+
+    if (editingEventId) {
+        await updateEvent(editingEventId, formData, token, (percent) => {
+        setUploadProgress(percent);
+      });
         setSnackbar({ open: true, message: 'Event updated successfully', severity: 'success' });
+        
       } else {
-        await createEvent(formDataObj);
+        await createEvent(formData, token, (percent) => {
+        setUploadProgress(percent);
+      });
         setSnackbar({ open: true, message: 'Event created successfully', severity: 'success' });
       }
+
+      setIsModalOpen(false);
+      setEditingEventId(false);
+
       fetchEvents();
-      closeModal();
     } catch (error) {
       setSnackbar({ open: true, message: 'Error saving event', severity: 'error' });
       console.error(error);
-    }
+    } finally {
+    setUploading(false);
+    setUploadProgress(0);
+  }
   };
 
   const handleEditClick = (event) => {
@@ -151,9 +168,9 @@ const Events = ({ token }) => {
     if (!window.confirm('Are you sure you want to delete this event?')) return;
 
     try {
-      await deleteEvent(id);
-      fetchEvents();
+      await deleteEvent(id, token);
       setSnackbar({ open: true, message: 'Event deleted successfully', severity: 'success' });
+      fetchEvents();
     } catch (error) {
       setSnackbar({ open: true, message: 'Error deleting event', severity: 'error' });
       console.error(error);
@@ -161,8 +178,8 @@ const Events = ({ token }) => {
   };
 
   const closeModal = () => {
+    if (uploading) return;
     setIsModalOpen(false);
-    setEditingEventId(null);
 
     setFormData({
       title: '',
@@ -384,7 +401,7 @@ const Events = ({ token }) => {
             {upcomingEvents.map((event) => (
               <Card key={event._id} sx={{ borderRadius:3, boxShadow:3 }}>
                 <CardContent>
-                  <CardMedia showThumbs={false}>
+                  <CardMedia showthumbs="false">
                         <div key={event._id}>
                           <img
                             src={event.image}
@@ -436,7 +453,11 @@ const Events = ({ token }) => {
         onCancel={closeModal}
         editingEventId={editingEventId}
       />
-
+      <UploadProgressModal
+        open={uploading}
+        progress={uploadProgress}
+        text={editingEventId ? "Updating Event..." : "Creating Event..."}
+      />
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

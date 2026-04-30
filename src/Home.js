@@ -1,20 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 import UserProfileCarousel from "./UserProfileCarousel";
-import EventModal from "./EventModal";
+import ListingDetailsModal from "./ListingDetailsModal";
 import TicketPurchase from "./TicketPurchase";
-import VenueDetailsModal from "./VenueDetailsModal";
 import VenueBookingFormModal from "./VenueBookingFormModal";
-import PerformanceDetailsModal from "./PerformanceDetailsModal";
 import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
-import ServiceDetailsModal from "./ServiceDetailsModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
 
 import {
   useUserLocation,
   useLocationContext,
   inferCityFromIP,
-} from "./contexts/LocationContext";
+} from "./contexts/LocationContext"; 
 
 import { fetchRecommendations } from "./services/recommendationService";
 
@@ -739,10 +736,12 @@ const Home = () => {
       </Box>
 
       {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={handleCloseModal}
-          onBuyTicket={() => handleBuyTicket(selectedEvent)}
+        <ListingDetailsModal
+          open={!!selectedEvent}
+          type="event"
+          data={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onAction={() => handleBuyTicket(selectedEvent)}
         />
       )}
 
@@ -755,10 +754,12 @@ const Home = () => {
       )}
 
       {isVenueModalOpen && selectedVenue && (
-        <VenueDetailsModal
-          venue={selectedVenue}
-          onClose={handleCloseModal}
-          onBookVenue={() => handleBookVenue(selectedVenue)}
+        <ListingDetailsModal
+          open={!!selectedVenue}
+          type="venue"
+          data={selectedVenue}
+          onClose={() => setSelectedVenue(null)}
+          onAction={() => handleBookVenue(selectedVenue)}
         />
       )}
 
@@ -771,10 +772,12 @@ const Home = () => {
       )}
 
       {isPerformanceModalOpen && selectedPerformance && (
-        <PerformanceDetailsModal
-          performance={selectedPerformance}
-          onClose={handleCloseModal}
-          onBookPerformance={() => handleBookPerformance(selectedPerformance)}
+        <ListingDetailsModal
+          open={!!selectedPerformance}
+          type="performance"
+          data={selectedPerformance}
+          onClose={() => setSelectedPerformance(null)}
+          onAction={() => handleBookPerformance(selectedPerformance)}
         />
       )}
 
@@ -787,10 +790,12 @@ const Home = () => {
       )}
 
       {isServiceModalOpen && selectedService && (
-        <ServiceDetailsModal
-          service={selectedService}
-          onClose={handleCloseModal}
-          onBookService={() => handleBookService(selectedService)}
+        <ListingDetailsModal
+          open={!!selectedService}
+          type="service"
+          data={selectedService}
+          onClose={() => setSelectedService(null)}
+          onAction={() => handleBookService(selectedService)}
         />
       )}
 

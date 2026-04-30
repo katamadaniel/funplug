@@ -30,6 +30,8 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
     bookingDate: "",
     from: "",
     to: "",
+    eventDetails: "",
+    quantity: 1,
   });
 
   const [duration, setDuration] = useState(0);
@@ -66,7 +68,6 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
         setBookingStatus("failed");
         setErrors({ general: reason || "Payment failed." });
       }
-
       setLoading(false);
     };
 
@@ -99,27 +100,27 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
 
   const formatPhone = (phone) => {
     const digits = phone.replace(/\D/g, "");
-    return digits.startsWith("0")
-      ? `254${digits.slice(1)}`
-      : digits.startsWith("254")
-      ? digits
-      : `254${digits}`;
+    if (!digits) return "";
+    if (digits.startsWith("0")) return `254${digits.slice(1)}`;
+    if (digits.startsWith("254")) return digits;
+    return `254${digits}`;
   };
 
   const validateForm = () => {
     const errs = {};
 
     if (!form.clientName) errs.clientName = "Enter your name";
-    if (!form.phone) errs.phone = "Enter phone number";
+    if (!form.phone) errs.phone = "Enter your phone number";
     else if (!/^254\d{9}$/.test(formatPhone(form.phone)))
       errs.phone = "Invalid phone number";
-
-    if (!form.email) errs.email = "Enter email";
-    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Invalid email";
-
-    if (!form.bookingDate) errs.bookingDate = "Pick a date";
+    if (!form.email) errs.email = "Enter your email";
+    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Invalid email format";
+    if (!form.bookingDate) errs.bookingDate = "Select a date";
     if (!form.from) errs.from = "Select start time";
     if (!form.to) errs.to = "Select end time";
+    if (duration <= 0) errs.duration = "Invalid duration";
+    if (!form.quantity || form.quantity < 1)
+      errs.quantity = "Enter a valid quantity";
 
     return errs;
   };
@@ -154,35 +155,44 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
 
   const handleBookVenue = async () => {
     const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0)
-      return setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
 
     setErrors({});
     setLoading(true);
     setSuccessMessage("");
     setBookingStatus(null);
 
-    try {
-      const avail = await checkAvailability();
-      if (!avail.available) {
-        setErrors({ general: avail.reason });
-        setLoading(false);
-        return;
-      }
+    const avail = await checkAvailability();
+    if (!avail.available) {
+      setErrors({ general: avail.reason });
+      setLoading(false);
+      return;
+    }
 
-      const response = await axios.post(`${API_URL}/api/venue_bookings`, {
-        ...form,
-        phone: formatPhone(form.phone),
-        duration,
-        totalAmount: total,
+    try{
+      const payload = {
         venueId: venue._id,
         creatorId: venue.userId,
+        clientName: form.clientName,
+        email: form.email,
+        phone: formatPhone(form.phone),
+        bookingDate: form.bookingDate,
+        from: form.from,
+        to: form.to,
+        quantity: form.quantity,
+        eventDetails: form.eventDetails,
+        duration: String(duration),
+        totalAmount: total,
         venueTitle: venue.name,
         venueType: venue.venueType,
         paymentMethod,
         amount: reservationFee,
-      });
+      };
 
+      const response = await axios.post(`${API_URL}/api/venue_bookings`, payload);
       const { booking, checkoutRequestId } = response.data;
       setLastBookingId(booking._id);
       setCheckoutRequestId(checkoutRequestId);
@@ -292,9 +302,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
                 fullWidth
                 label="Name"
                 value={form.clientName}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, clientName: e.target.value }))
-                }
+                onChange={handleInputChange("clientName")}
                 error={Boolean(errors.clientName)}
                 helperText={errors.clientName}
               />
@@ -305,9 +313,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
                 fullWidth
                 label="Phone"
                 value={form.phone}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, phone: e.target.value }))
-                }
+                onChange={handleInputChange("phone")}
                 error={Boolean(errors.phone)}
                 helperText={errors.phone}
               />
@@ -318,9 +324,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
                 fullWidth
                 label="Email"
                 value={form.email}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, email: e.target.value }))
-                }
+                onChange={handleInputChange("email")}
                 error={Boolean(errors.email)}
                 helperText={errors.email}
               />
@@ -367,8 +371,36 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
           </Grid>
 
           <Grid item xs={12}>
-            <TextField fullWidth label="Duration (hours)" value={duration} InputProps={{ readOnly: true }} />
+            <TextField
+             fullWidth 
+             label="Duration (hours)" 
+             value={duration} 
+             InputProps={{ readOnly: true }} 
+             />
           </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Estimate number of guests"
+                  type="number"
+                  fullWidth
+                  value={form.quantity}
+                  onChange={handleInputChange("quantity")}
+                  error={Boolean(errors.endTime)}
+                  helperText={errors.quantity}
+                />
+              </Grid>
+    
+              <Grid item xs={12}>
+                <TextField
+                  label="Event Details / Notes"
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  value={form.eventDetails}
+                  onChange={handleInputChange("eventDetails")}
+                />
+              </Grid>
 
           <Grid item xs={12}>
             <TextField

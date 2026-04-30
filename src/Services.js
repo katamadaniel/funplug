@@ -1,83 +1,128 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   fetchMyServices,
   createService,
   updateService,
   deleteService,
-  fetchServiceBookings
-} from './services/serviceService';
-import { exportBookingsToCSV } from './components/admin/adminHelpers';
+  fetchServiceBookings,
+} from "./services/serviceService";
+import UploadProgressModal from "./components/UploadProgressModal";
+import { exportBookingsToCSV } from "./components/admin/adminHelpers";
+
 import {
-  Accordion, AccordionSummary, AccordionDetails, Box, Button, Modal, Typography, Grid,
-  TextField, Select, MenuItem, InputLabel, FormControl, CircularProgress, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Snackbar, Stack
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Add, Edit, Delete, Call, ExpandLess, ExpandMore } from '@mui/icons-material';
-import { Carousel } from 'react-responsive-carousel';
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Box,
+  Button,
+  Modal,
+  Typography,
+  Grid,
+  TextField,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Snackbar,
+  Stack,
+  Divider,
+} from "@mui/material";
+
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Add, Edit, Delete, Call, ExpandLess, ExpandMore } from "@mui/icons-material";
+
+import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
-import { styled } from '@mui/material/styles';
-import CloseIcon from '@mui/icons-material/Close';
+
+import { styled } from "@mui/material/styles";
+import CloseIcon from "@mui/icons-material/Close";
+
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 const ModalStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '95%',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "95%",
   maxWidth: 500,
-  bgcolor: 'background.paper',
+  bgcolor: "background.paper",
   borderRadius: 3,
   boxShadow: 24,
   p: 4,
-  maxHeight: '90vh',
-  overflow: 'auto',
-  display: 'flex',
-  flexDirection: 'column',
+  maxHeight: "90vh",
+  overflow: "auto",
+  display: "flex",
+  flexDirection: "column",
   gap: 2,
 };
 
-const ImagePreview = styled('img')({
-  width: '70px',
-  height: '70px',
-  borderRadius: '8px',
-  objectFit: 'cover',
-  marginRight: '8px',
+const PreviewContainer = styled(Box)({
+  position: "relative",
+  display: "inline-block",
+  marginRight: "8px",
+  marginBottom: "8px",
 });
 
-const ImagePreviewContainer = styled(Box)({
-  position: 'relative',
-  display: 'inline-block',
-  marginRight: '8px',
-  marginBottom: '8px',
+const ImagePreview = styled("img")({
+  width: "70px",
+  height: "70px",
+  borderRadius: "8px",
+  objectFit: "cover",
+});
+
+const VideoPreview = styled("video")({
+  width: "90px",
+  height: "70px",
+  borderRadius: "8px",
+  objectFit: "cover",
 });
 
 const RemoveButton = styled(IconButton)({
-  position: 'absolute',
-  top: '-6px',
-  right: '-6px',
-  backgroundColor: 'rgba(0,0,0,0.6)',
-  color: 'white',
-  width: '20px',
-  height: '20px',
+  position: "absolute",
+  top: "-6px",
+  right: "-6px",
+  backgroundColor: "rgba(0,0,0,0.6)",
+  color: "white",
+  width: "20px",
+  height: "20px",
   padding: 0,
-  '&:hover': {
-    backgroundColor: 'rgba(255,0,0,0.7)',
+  "&:hover": {
+    backgroundColor: "rgba(255,0,0,0.7)",
   },
 });
+
+const SERVICE_TYPES = [
+  "Audio visual",
+  "Catering",
+  "Décor",
+  "Lighting",
+  "Mobile toilets",
+  "Photography",
+  "Rentals",
+  "Sound system",
+  "Security",
+  "Transport",
+  "Videography",
+];
 
 const Services = ({ token }) => {
   const [services, setServices] = useState([]);
@@ -86,19 +131,26 @@ const Services = ({ token }) => {
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  const [search, setSearch] = useState('');
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [search, setSearch] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const [formData, setFormData] = useState({
-    serviceType: '',
-    name: '',
-    description: '',
-    country: '',
-    city: '',
-    charges: '',
-    bookingStatus: 'open',
-    duration: '',
+    serviceType: "",
+    name: "",
+    description: "",
+    country: "",
+    city: "",
+    charges: "",
+    bookingStatus: "open",
+    duration: "",
     images: [],
+    videos: [],
     lat: null,
     lng: null,
   });
@@ -109,7 +161,9 @@ const Services = ({ token }) => {
       const data = await fetchMyServices(token);
       setServices(data);
     } catch (error) {
-      setSnackbar({ open: true, message: 'Error fetching services', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: "Error fetching services", severity: "error" });
       console.error(error);
     } finally {
       setLoading(false);
@@ -120,20 +174,26 @@ const Services = ({ token }) => {
     loadMyServices();
   }, [loadMyServices]);
 
-    // Fetch bookings for all services
-const loadBookings = async (servicesList) => {
+  // Fetch bookings for all services
+  const loadBookings = async (servicesList) => {
     const results = {};
     setLoading(true);
+
     try {
       for (const service of servicesList) {
         const serviceBookings = await fetchServiceBookings(service._id);
-          results[service._id] = serviceBookings.filter(
-            (b) => b.paymentStatus === "Success")
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        results[service._id] = serviceBookings
+          .filter((b) => b.paymentStatus === "Success")
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       }
+
       setBookingsByService(results);
     } catch (error) {
-      setSnackbar({ open: true, message: 'Error fetching bookings', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: "Error fetching bookings",
+        severity: "error",
+      });
       console.error(error);
     } finally {
       setLoading(false);
@@ -143,6 +203,7 @@ const loadBookings = async (servicesList) => {
   const handleToggleBookings = async () => {
     const next = !showBookings;
     setShowBookings(next);
+
     if (next) {
       await loadBookings(services);
     }
@@ -150,6 +211,7 @@ const loadBookings = async (servicesList) => {
 
   const handleOpenModal = (service = null) => {
     setSelectedService(service);
+
     if (service) {
       setFormData({
         serviceType: service.serviceType,
@@ -161,26 +223,32 @@ const loadBookings = async (servicesList) => {
         bookingStatus: service.bookingStatus,
         duration: service.duration,
         images: service.images || [],
+        videos: service.videos || [],
         lat: service.location?.coordinates?.[1] || null,
         lng: service.location?.coordinates?.[0] || null,
       });
     } else {
       setFormData({
-        serviceType: '',
-        name: '',
-        description: '',
-        country: '',
-        city: '',
-        charges: '',
-        bookingStatus: 'open',
-        duration: '',
-        images: []
+        serviceType: "",
+        name: "",
+        description: "",
+        country: "",
+        city: "",
+        charges: "",
+        bookingStatus: "open",
+        duration: "",
+        images: [],
+        videos: [],
+        lat: null,
+        lng: null,
       });
     }
+
     setOpenModal(true);
   };
 
   const handleCloseModal = () => {
+    if (uploading) return;
     setOpenModal(false);
     setSelectedService(null);
   };
@@ -189,46 +257,119 @@ const loadBookings = async (servicesList) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e) => {
-    setFormData({ ...formData, images: Array.from(e.target.files).slice(0, 10) });
+  /* -----------------------------
+      IMAGE UPLOAD
+  ------------------------------ */
+  const handleImageUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files || []).slice(0, 5);
+
+    setFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, ...selectedFiles].slice(0, 5),
+    }));
+
+    e.target.value = "";
   };
 
+  const removeImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  /* -----------------------------
+      VIDEO UPLOAD
+  ------------------------------ */
+  const handleVideoUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files || []).slice(0, 2);
+
+    setFormData((prev) => ({
+      ...prev,
+      videos: [...prev.videos, ...selectedFiles].slice(0, 2),
+    }));
+
+    e.target.value = "";
+  };
+
+  const removeVideo = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index),
+    }));
+  };
+
+  /* -----------------------------
+      SUBMIT CREATE / UPDATE
+  ------------------------------ */
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const submission = new FormData();
     Object.keys(formData).forEach((key) => {
-      if (key === 'images') {
-        formData.images.forEach((img) => submission.append('images', img));
-      } else submission.append(key, formData[key]);
+      if (key === "images") {
+        formData.images.forEach((img) => submission.append("images", img));
+      } else if (key === "videos") {
+        formData.videos.forEach((vid) => submission.append("videos", vid));
+      } else {
+        submission.append(key, formData[key]);
+      }
     });
 
     try {
-      setLoading(true);
+      setUploading(true);
+      setUploadProgress(0);
+
       if (selectedService) {
-        await updateService(selectedService._id, submission);
-        setSnackbar({ open: true, message: 'Service updated successfully', severity: 'success' });
+        await updateService(selectedService._id, submission, token, (percent) => {
+          setUploadProgress(percent);
+        });
+
+        setSnackbar({
+          open: true,
+          message: "Service updated successfully",
+          severity: "success",
+        });
       } else {
-        await createService(submission);
-        setSnackbar({ open: true, message: 'Service created successfully', severity: 'success' });
+        await createService(submission, token, (percent) => {
+          setUploadProgress(percent);
+        });
+
+        setSnackbar({
+          open: true,
+          message: "Service created successfully",
+          severity: "success",
+        });
       }
+
       handleCloseModal();
       loadMyServices();
     } catch (error) {
-      setSnackbar({ open: true, message: 'Error saving service', severity: 'error' });
       console.error(error);
+      setSnackbar({ open: true, message: "Upload failed", severity: "error" });
     } finally {
-      setLoading(false);
+      setUploading(false);
+      setUploadProgress(0);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this service?')) return;
+    if (!window.confirm("Are you sure you want to delete this service?")) return;
+
     try {
       await deleteService(id);
-      setSnackbar({ open: true, message: 'Service deleted successfully', severity: 'success' });
+      setSnackbar({
+        open: true,
+        message: "Service deleted successfully",
+        severity: "success",
+      });
       loadMyServices();
     } catch (error) {
-      setSnackbar({ open: true, message: 'Error deleting service', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: "Error deleting service",
+        severity: "error",
+      });
       console.error(error);
     }
   };
@@ -244,7 +385,7 @@ const loadBookings = async (servicesList) => {
   }
 
   const LocationPicker = ({ lat, lng, onChange }) => {
-    const position = lat && lng ? [lat, lng] : [-1.286389, 36.817223]; // Nairobi fallback
+    const position = lat && lng ? [lat, lng] : [-1.286389, 36.817223];
 
     function LocationMarker() {
       useMapEvents({
@@ -284,15 +425,26 @@ const loadBookings = async (servicesList) => {
 
   return (
     <Box p={2}>
-      <Typography variant="h5" gutterBottom textAlign="center">My Services</Typography>
+      <Typography variant="h5" gutterBottom textAlign="center">
+        My Services
+      </Typography>
 
       <Box display="flex" justifyContent="space-between" mb={2}>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenModal()}>Add Service</Button>
-        <Button variant="outlined"
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => handleOpenModal()}
+        >
+          Add Service
+        </Button>
+
+        <Button
+          variant="outlined"
           onClick={handleToggleBookings}
           startIcon={showBookings ? <ExpandLess /> : <ExpandMore />}
-          >
-          {showBookings ? 'Hide Bookings' : 'Show Bookings'}</Button>
+        >
+          {showBookings ? "Hide Bookings" : "Show Bookings"}
+        </Button>
       </Box>
 
       {loading ? (
@@ -307,164 +459,287 @@ const loadBookings = async (servicesList) => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             size="small"
-            sx={{ mb: 2, width: '100%', maxWidth: 400 }}
+            sx={{ mb: 2, width: "100%", maxWidth: 400 }}
           />
 
           {services.map((service) => {
             const serviceBookings = filteredBookingsByService[service._id] || [];
-              const totalRevenue = serviceBookings.reduce((sum, b) => sum + b.totalAmount, 0);
+            const totalRevenue = serviceBookings.reduce(
+              (sum, b) => sum + b.totalAmount,
+              0
+            );
 
-          return (
-            <Accordion key={service._id} sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box>
-                  <Typography variant="h6" sx={{ mb: 1 }}>{service.serviceType}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {service.name} — {service.city}, {service.country}
-                  </Typography>
-                </Box>
-                  <Grid container justifyContent="flex-end" direction= "row" gap={3} mx={2}>
+            return (
+              <Accordion key={service._id} sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Box>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      {service.serviceType}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {service.name} — {service.city}, {service.country}
+                    </Typography>
+                  </Box>
+
+                  <Grid container justifyContent="flex-end" direction="row" gap={3} mx={2}>
                     <Paper sx={{ p: 2 }}>
                       <Typography>Total Bookings</Typography>
-                      <Typography><strong>({serviceBookings.length})</strong></Typography>
+                      <Typography>
+                        <strong>({serviceBookings.length})</strong>
+                      </Typography>
                     </Paper>
+
                     <Paper sx={{ p: 2 }}>
                       <Typography>Total Revenue</Typography>
                       <Typography>
                         <strong>Ksh. {totalRevenue.toFixed(2)}</strong>
                       </Typography>
                     </Paper>
-        
-                  <Button
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                    onClick={() =>
-                      exportBookingsToCSV(serviceBookings, 'service-bookings.csv')
-                    }
-                  >
-                    Export
-                  </Button>
-                  </Grid>
-              </AccordionSummary>
 
-              <AccordionDetails>
-                <TableContainer component={Paper}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>#</TableCell>
-                        <TableCell>Client Name</TableCell>
-                        <TableCell>Email</TableCell>
-                        <TableCell>Phone</TableCell>
-                        <TableCell>Booking Date</TableCell>
-                        <TableCell>From</TableCell>
-                        <TableCell>To</TableCell>
-                        <TableCell>Duration</TableCell>
-                        <TableCell>Total Amount</TableCell>
-                        <TableCell>Action</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {serviceBookings.length > 0 ? (
-                        serviceBookings.map((b, i) => (
-                          <TableRow key={b._id}>
-                            <TableCell>{i + 1}.</TableCell>
-                            <TableCell>{b.clientName}</TableCell>
-                            <TableCell>{b.email}</TableCell>
-                            <TableCell>{b.phone}</TableCell>
-                            <TableCell>
-                              {new Date(b.bookingDate).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>{b.from}</TableCell>
-                            <TableCell>{b.to}</TableCell>
-                            <TableCell>{b.duration}</TableCell>
-                            <TableCell>{b.totalAmount}</TableCell>
-                            <TableCell>
-                              <IconButton href={`tel:${b.phone}`}>
-                                <Call color="primary" />
-                              </IconButton>
+                    <Button
+                      variant="outlined"
+                      sx={{ mb: 2 }}
+                      onClick={() => exportBookingsToCSV(serviceBookings, "service-bookings.csv")}
+                    >
+                      Export
+                    </Button>
+                  </Grid>
+                </AccordionSummary>
+
+                <AccordionDetails>
+                  <TableContainer component={Paper}>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>#</TableCell>
+                          <TableCell>Client Name</TableCell>
+                          <TableCell>Email</TableCell>
+                          <TableCell>Phone</TableCell>
+                          <TableCell>Booking Date</TableCell>
+                          <TableCell>From</TableCell>
+                          <TableCell>To</TableCell>
+                          <TableCell>Duration</TableCell>
+                          <TableCell>Total Amount</TableCell>
+                          <TableCell>Action</TableCell>
+                        </TableRow>
+                      </TableHead>
+
+                      <TableBody>
+                        {serviceBookings.length > 0 ? (
+                          serviceBookings.map((b, i) => (
+                            <TableRow key={b._id}>
+                              <TableCell>{i + 1}.</TableCell>
+                              <TableCell>{b.clientName}</TableCell>
+                              <TableCell>{b.email}</TableCell>
+                              <TableCell>{b.phone}</TableCell>
+                              <TableCell>
+                                {new Date(b.bookingDate).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>{b.from}</TableCell>
+                              <TableCell>{b.to}</TableCell>
+                              <TableCell>{b.duration}</TableCell>
+                              <TableCell>{b.totalAmount}</TableCell>
+                              <TableCell>
+                                <IconButton href={`tel:${b.phone}`}>
+                                  <Call color="primary" />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={10} align="center">
+                              No bookings found for this service
                             </TableCell>
                           </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={9} align="center">
-                            No bookings found for this service
-                          </TableCell>
-                        </TableRow>
-                      )}
-                          {serviceBookings.length > 0 && (
-                            <TableRow>
-                              <TableCell colSpan={4} align="right"><strong>Total Revenue:</strong></TableCell>
-                              <TableCell><strong>Ksh.{totalRevenue.toFixed(2)}</strong></TableCell>
-                            </TableRow>
-                          )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </AccordionDetails>
-            </Accordion>
-          );
-        })}
-      </Box>
+                        )}
+
+                        {serviceBookings.length > 0 && (
+                          <TableRow>
+                            <TableCell colSpan={8} align="right">
+                              <strong>Total Revenue:</strong>
+                            </TableCell>
+                            <TableCell colSpan={2}>
+                              <strong>Ksh.{totalRevenue.toFixed(2)}</strong>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
+        </Box>
       ) : (
         <Grid container spacing={2}>
-          {services.map((service) => (
-            <Grid item xs={12} sm={6} md={4} key={service._id}>
-              <Box sx={{ borderRadius: 3, boxShadow: 3, overflow: 'hidden' }} borderRadius={2} p={2}>
-                {service.images && service.images.length > 0 && (
+          {services.map((service) => {
+            const images = service.images || [];
+            const videos = service.videos || [];
+
+            const hasMedia = images.length > 0 || videos.length > 0;
+
+            return (
+              <Grid item xs={12} sm={6} md={4} key={service._id}>
+                <Box sx={{ borderRadius: 3, boxShadow: 3, overflow: "hidden" }} p={2}>
                   <Box mt={2}>
-                    <Carousel showThumbs={false} infiniteLoop showStatus={false} autoPlay>
-                      {service.images.map((img, index) => (
-                        <div key={index}>
-                          <img
-                            src={img.url}
-                            alt={`Service ${index}`}
-                            style={{
-                              width: '100%',
-                              height: '200px',
-                              borderRadius: '10px',
-                              objectFit: 'cover',
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </Carousel>
+                    {hasMedia ? (
+                      <Carousel showThumbs={false} infiniteLoop showStatus={false} autoPlay>
+                        {images.map((img, index) => (
+                          <div key={`img-${index}`}>
+                            <img
+                              src={img.url}
+                              alt={`Service-img-${index}`}
+                              style={{
+                                width: "100%",
+                                height: "200px",
+                                borderRadius: "10px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          </div>
+                        ))}
+
+                        {videos.map((vid, index) => (
+                          <div key={`vid-${index}`}>
+                            <video
+                              src={vid.url}
+                              controls
+                              style={{
+                                width: "100%",
+                                height: "200px",
+                                borderRadius: "10px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </Carousel>
+                    ) : (
+                      <Box
+                        sx={{
+                          height: 200,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          bgcolor: "#f5f5f5",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Typography color="text.secondary">No media uploaded</Typography>
+                      </Box>
+                    )}
                   </Box>
-                )}
-                <Typography variant="h6">{service.serviceType}</Typography>
-                <Typography variant="body2">Name: {service.name}</Typography>
-                <Typography variant="body2">Items: {service.description}</Typography>
-                <Typography variant="body2">Location: {service.city}, {service.country}</Typography>
-                <Typography variant="body2">Charges/hr: {service.charges}</Typography>
-                <Typography variant="body2">Duration: {service.duration}</Typography>
-                <Typography variant="body2">Booking Status: {service.bookingStatus}</Typography>
-                <Box display="flex" justifyContent="space-between" mt={1}>
-                  <Button variant="contained" color="primary" startIcon={<Edit />} onClick={() => handleOpenModal(service)}>Edit</Button>
-                  <Button variant="outlined" color="error" startIcon={<Delete />} onClick={() => handleDelete(service._id)}>Delete</Button>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Typography variant="h6">{service.serviceType}</Typography>
+                  <Typography variant="body2">Name: {service.name}</Typography>
+                  <Typography variant="body2">Items: {service.description}</Typography>
+                  <Typography variant="body2">
+                    Location: {service.city}, {service.country}
+                  </Typography>
+                  <Typography variant="body2">Charges/hr: {service.charges}</Typography>
+                  <Typography variant="body2">Duration: {service.duration}</Typography>
+                  <Typography variant="body2">Booking Status: {service.bookingStatus}</Typography>
+
+                  <Typography variant="caption" color="text.secondary">
+                    Images: {images.length} | Videos: {videos.length}
+                  </Typography>
+
+                  <Box display="flex" justifyContent="space-between" mt={2}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<Edit />}
+                      onClick={() => handleOpenModal(service)}
+                    >
+                      Edit
+                    </Button>
+
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      startIcon={<Delete />}
+                      onClick={() => handleDelete(service._id)}
+                    >
+                      Delete
+                    </Button>
+                  </Box>
                 </Box>
-              </Box>
-            </Grid>
-          ))}
+              </Grid>
+            );
+          })}
         </Grid>
       )}
 
-      <Modal open={openModal} onClose={handleCloseModal}>
+      {/* --------------------------
+          MODAL FORM
+      -------------------------- */}
+      <Modal open={openModal} onClose={() => !uploading && handleCloseModal()}>
         <Box sx={ModalStyle}>
-          <Typography variant="h6" textAlign="center" gutterBottom>{selectedService ? 'Edit Service' : 'Add Service'}</Typography>
+          <Typography variant="h6" textAlign="center" gutterBottom>
+            {selectedService ? "Edit Service" : "Add Service"}
+          </Typography>
+
           <form onSubmit={handleSubmit}>
             <FormControl fullWidth margin="normal">
               <InputLabel>Service Type</InputLabel>
-              <Select name="serviceType" value={formData.serviceType} onChange={handleChange} required>
-                {['Audio visual', 'Catering', 'Décor', 'Lighting', 'Mobile toilets', 'Photography', 'Rentals', 'Sound system', 'Security', 'Transport', 'Videography'].map((type) => (
-                  <MenuItem key={type} value={type}>{type}</MenuItem>
+              <Select
+                name="serviceType"
+                value={formData.serviceType}
+                onChange={handleChange}
+                required
+              >
+                {SERVICE_TYPES.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <TextField fullWidth label="Provider / Business name" name="name" value={formData.name} onChange={handleChange} margin="normal" required />
-            <TextField fullWidth label="Description / Items included" name="description" value={formData.description} onChange={handleChange} margin="normal" required />
-            <TextField fullWidth label="Country" name="country" value={formData.country} onChange={handleChange} margin="normal" required />
-            <TextField fullWidth label="City/Town" name="city" value={formData.city} onChange={handleChange} margin="normal" required />
+
+            <TextField
+              fullWidth
+              label="Provider / Business name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+
+            <TextField
+              fullWidth
+              label="Description / Items included"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+
+            <TextField
+              fullWidth
+              label="Country"
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+
+            <TextField
+              fullWidth
+              label="City/Town"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+
             <Box mt={2}>
               <Typography variant="subtitle2" gutterBottom>
                 Pick service location (click or drag marker)
@@ -484,67 +759,129 @@ const loadBookings = async (servicesList) => {
                 </Typography>
               )}
             </Box>
-            <TextField fullWidth label="Charges (per hour)" name="charges" type="number" value={formData.charges} onChange={handleChange} margin="normal" required />
-            <TextField fullWidth label="Duration (Hours per day)" name="duration" type="number" value={formData.duration} onChange={handleChange} margin="normal" required />
+
+            <TextField
+              fullWidth
+              label="Charges (per hour)"
+              name="charges"
+              type="number"
+              value={formData.charges}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+
+            <TextField
+              fullWidth
+              label="Duration (Hours per day)"
+              name="duration"
+              type="number"
+              value={formData.duration}
+              onChange={handleChange}
+              margin="normal"
+              required
+            />
+
             <FormControl fullWidth margin="normal">
               <InputLabel>Status</InputLabel>
-              <Select name="bookingStatus" value={formData.bookingStatus} onChange={handleChange}>
+              <Select
+                name="bookingStatus"
+                value={formData.bookingStatus}
+                onChange={handleChange}
+              >
                 <MenuItem value="open">Open</MenuItem>
                 <MenuItem value="closed">Closed</MenuItem>
               </Select>
             </FormControl>
+
+            {/* IMAGE UPLOAD */}
             <Button variant="contained" component="label" sx={{ mt: 2 }}>
-              Upload Images
+              Upload Images (max 5)
+              <input type="file" hidden multiple accept="image/*" onChange={handleImageUpload} />
+            </Button>
+
+            <Box mt={1} display="flex" flexWrap="wrap">
+              {formData.images.map((img, index) => {
+                let src;
+                if (img instanceof File) src = URL.createObjectURL(img);
+                else if (typeof img === "string") src = img;
+                else if (img?.url) src = img.url;
+
+                return (
+                  <PreviewContainer key={`img-${index}`}>
+                    <ImagePreview src={src} alt={`preview-img-${index}`} />
+                    <RemoveButton onClick={() => removeImage(index)}>
+                      <CloseIcon fontSize="small" />
+                    </RemoveButton>
+                  </PreviewContainer>
+                );
+              })}
+            </Box>
+
+            {/* VIDEO UPLOAD */}
+            <Button variant="contained" component="label" sx={{ mt: 2 }}>
+              Upload Videos (max 2)
               <input
                 type="file"
                 hidden
                 multiple
-                accept="image/*"
-                onChange={(e) => {
-                  const selectedFiles = Array.from(e.target.files).slice(0, 10);
-                  const newImages = [...formData.images, ...selectedFiles];
-                  setFormData({ ...formData, images: newImages });
-                }}
+                accept="video/mp4,video/quicktime,video/*"
+                onChange={handleVideoUpload}
               />
             </Button>
 
-            {/* Image Preview Section */}
             <Box mt={1} display="flex" flexWrap="wrap">
-              {formData.images.map((img, index) => {
+              {formData.videos.map((vid, index) => {
                 let src;
-                // Handle different formats
-                if (img instanceof File) src = URL.createObjectURL(img);
-                else if (typeof img === 'string') src = img;
-                else if (img && img.url) src = img.url;
+                if (vid instanceof File) src = URL.createObjectURL(vid);
+                else if (typeof vid === "string") src = vid;
+                else if (vid?.url) src = vid.url;
 
                 return (
-                  <ImagePreviewContainer key={index}>
-                    <ImagePreview src={src} alt={`preview-${index}`} />
-                    <RemoveButton onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        images: prev.images.filter((_, i) => i !== index),
-                      }));
-                    }}>
+                  <PreviewContainer key={`vid-${index}`}>
+                    <VideoPreview src={src} muted controls={false} />
+                    <RemoveButton onClick={() => removeVideo(index)}>
                       <CloseIcon fontSize="small" />
                     </RemoveButton>
-                  </ImagePreviewContainer>
+                  </PreviewContainer>
                 );
               })}
             </Box>
+
             <Stack direction="row" spacing={2} justifyContent="space-between">
-            <Button type="submit" variant="contained" fullWidth sx={{ mt: 3 }}>{loading ? <CircularProgress size={24} /> : selectedService ? 'Update' : 'Create'}</Button>
-            <Button onClick={handleCloseModal} color="primary" fullWidth sx={{ mt: 3 }}>Cancel</Button>
+              <Button type="submit" variant="contained" fullWidth sx={{ mt: 3 }} disabled={loading}>
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : selectedService ? (
+                  "Update"
+                ) : (
+                  "Create"
+                )}
+              </Button>
+
+              <Button
+                onClick={handleCloseModal}
+                color="primary"
+                fullWidth
+                sx={{ mt: 3 }}
+              >
+                Cancel
+              </Button>
             </Stack>
           </form>
         </Box>
       </Modal>
 
-      <Snackbar 
-      open={snackbar.open} 
-      autoHideDuration={4000} 
-      onClose={() => setSnackbar({ ...snackbar, open: false })} 
-      message={snackbar.message} 
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+      />
+      <UploadProgressModal
+        open={uploading}
+        progress={uploadProgress}
+        text={selectedService ? "Updating Service..." : "Creating Service..."}
       />
     </Box>
   );

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 
 import ServiceCard from "./ServiceCard";
-import ServiceDetailsModal from "../ServiceDetailsModal";
+import ListingDetailsModal from "../ListingDetailsModal";
 import ServiceBookingFormModal from "../ServiceBookingFormModal";
 import { fetchActiveServices } from "../services/serviceService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
@@ -39,7 +39,7 @@ const ServiceDetails = () => {
 
         setServices(services.filter(s => s.userSnapshot?._id));
       } catch (err) {
-        console.error("ServiceDetails load error:", err);
+        console.error("Service details load error:", err);
       } finally {
         mounted && setLoading(false);
       }
@@ -76,6 +76,31 @@ const ServiceDetails = () => {
         return acc;
       }, {});
   }, [services, countryFilter, cityFilter]);
+
+  const handleSelectService = (service) => {
+    setSelectedService(service);
+    setBookingOpen(false); // ensure booking modal is closed
+    setDetailsOpen(true);   // open listing modal first
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsOpen(false);
+    setSelectedService(null);
+  };
+
+  const handleProceedToBooking = () => {
+    setDetailsOpen(false);
+
+    // allow Listing modal to unmount first before booking opens
+    setTimeout(() => {
+      setBookingOpen(true);
+    }, 150);
+  };
+
+  const handleCloseBooking = () => {
+    setBookingOpen(false);
+    setSelectedService(null);
+  };
 
   if (loading)
     return (
@@ -139,10 +164,7 @@ const ServiceDetails = () => {
               <Grid item xs={12} sm={6} md={4} key={s._id}>
                 <ServiceCard
                   service={s}
-                  onView={() => {
-                    setSelectedService(s);
-                    setDetailsOpen(true);
-                  }}
+                  onView={() => handleSelectService(s)}
                 />
               </Grid>
             )}
@@ -150,26 +172,21 @@ const ServiceDetails = () => {
         ))
       )}
 
-      {selectedService && (
-        <ServiceDetailsModal
+      {selectedService && detailsOpen && (
+        <ListingDetailsModal
           open={detailsOpen}
-          service={selectedService}
-          onClose={() => setDetailsOpen(false)}
-          onBookService={() => {
-            setDetailsOpen(false);
-            setBookingOpen(true);
-          }}
+          type="service"
+          data={selectedService}
+          onClose={handleCloseDetails}
+          onAction={handleProceedToBooking}
         />
       )}
 
-      {selectedService && (
+      {selectedService && bookingOpen && (
         <ServiceBookingFormModal
           open={bookingOpen}
           service={selectedService}
-          onClose={() => {
-            setBookingOpen(false);
-            setSelectedService(null);
-          }}
+          onClose={handleCloseBooking}
         />
       )}
     </Box>

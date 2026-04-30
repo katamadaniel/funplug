@@ -29,6 +29,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuOpenIcon from "@mui/icons-material/MenuOpen";
 import MenuIcon from "@mui/icons-material/Menu";
+import PolicyIcon from "@mui/icons-material/Policy";
 
 const SIDEBAR_WIDTH = 260;
 const SIDEBAR_COLLAPSED_WIDTH = 80;
@@ -117,6 +118,12 @@ const AdminSidebar = ({ adminProfile }) => {
         label: "Payments",
         path: "/payments",
         icon: <ReceiptIcon fontSize="medium" />,
+        roles: ["SUPER_ADMIN", "ADMIN"],
+      },
+      {
+        label: "Policies",
+        path: "/policies",
+        icon: <PolicyIcon fontSize="medium" />,
         roles: ["SUPER_ADMIN", "ADMIN"],
       },
     ],

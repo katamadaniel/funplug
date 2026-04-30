@@ -4,16 +4,19 @@ const API_URL = process.env.REACT_APP_API_URL;
 const PERFORMANCES_API_URL = `${API_URL}/api/performances`;
 const BOOKINGS_API_URL = `${API_URL}/api/performance_bookings`;
 
-export const createCard = async (formData) => {
+export const createCard = async (data, token, onProgress) => {
   try {
-    const token = localStorage.getItem('token');
-    const config = {
+    const response = await axiosInstance.post(PERFORMANCES_API_URL, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`
-      }
-    };
-    const response = await axiosInstance.post(PERFORMANCES_API_URL, formData, config);
+      },
+    onUploadProgress: (progressEvent) => {
+      if (!progressEvent.total) return;
+      const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      if (onProgress) onProgress(percent);
+    },            
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating card:', error.response ? error.response.data : error.message);
@@ -91,16 +94,19 @@ export const fetchCardBookings = async (cardId) => { // Fetch bookings for a spe
   }
 };
 
-export const updateCard = async (id, formData) => {
+export const updateCard = async (id, data, token, onProgress) => {
   try {
-    const token = localStorage.getItem('token');
-    const config = {
+    const response = await axiosInstance.put(`${PERFORMANCES_API_URL}/${id}`, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`
-      }
-    };
-    const response = await axiosInstance.put(`${PERFORMANCES_API_URL}/${id}`, formData, config);
+      },
+      onUploadProgress: (progressEvent) => {
+        if (!progressEvent.total) return;
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        if (onProgress) onProgress(percent);
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating card:', error.response ? error.response.data : error.message);

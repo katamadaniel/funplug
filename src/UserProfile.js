@@ -40,15 +40,12 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { getAvatarUrl } from "./utils/avatar";
 
-import EventModal from "./EventModal";
+import ListingDetailsModal from "./ListingDetailsModal";
 import TicketPurchase from "./TicketPurchase";
-import VenueDetailsModal from "./VenueDetailsModal";
 import VenueBookingFormModal from "./VenueBookingFormModal";
-import PerformanceDetailsModal from "./PerformanceDetailsModal";
 import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
-import ServiceDetailsModal from "./ServiceDetailsModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
-import { followService } from "./services/followService";
+import { followUser, getFollowerCount } from "./services/followService";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -202,7 +199,7 @@ useEffect(() => {
     e.preventDefault();
 
     try {
-      const res = await followService.follow(user._id, {
+      const res = await followUser(user._id, {
         name: followName,
         email: followEmail,
       });
@@ -790,11 +787,12 @@ useEffect(() => {
 
       {/* Modals */}
       {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          user={user}
+        <ListingDetailsModal
+          open={!!selectedEvent}
+          type="event"
+          data={selectedEvent}
           onClose={() => setSelectedEvent(null)}
-          onBuyTicket={() => setTicketModalOpen(true)}
+          onAction={() => setTicketModalOpen(true)}
         />
       )}
 
@@ -807,11 +805,12 @@ useEffect(() => {
       )}
 
       {isVenueModalOpen && selectedVenue && (
-        <VenueDetailsModal
-          venue={selectedVenue}
-          user={user}
-          onClose={() => setVenueModalOpen(false)}
-          onBookVenue={() => setVenueBookingOpen(true)}
+        <ListingDetailsModal
+          open={!!selectedVenue}
+          type="venue"
+          data={selectedVenue}
+          onClose={() => setSelectedVenue(null)}
+          onAction={() => setVenueBookingOpen(true)}
         />
       )}
 
@@ -824,11 +823,12 @@ useEffect(() => {
       )}
 
       {isPerformanceModalOpen && selectedPerformance && (
-        <PerformanceDetailsModal
-          performance={selectedPerformance}
-          user={user}
-          onClose={() => setPerformanceModalOpen(false)}
-          onBookPerformance={() => setPerformanceBookingOpen(true)}
+        <ListingDetailsModal
+          open={!!selectedPerformance}
+          type="performance"
+          data={selectedPerformance}
+          onClose={() => setSelectedPerformance(null)}
+          onAction={() => setPerformanceBookingOpen(true)}
         />
       )}
 
@@ -841,11 +841,12 @@ useEffect(() => {
       )}
 
       {isServiceModalOpen && selectedService && (
-        <ServiceDetailsModal
-          service={selectedService}
-          user={user}
-          onClose={() => setServiceModalOpen(false)}
-          onBookService={() => setServiceBookingOpen(true)}
+        <ListingDetailsModal
+          open={!!selectedService}
+          type="service"
+          data={selectedService}
+          onClose={() => setSelectedService(null)}
+          onAction={() => setServiceBookingOpen(true)}
         />
       )}
 

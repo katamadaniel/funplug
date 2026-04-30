@@ -4,16 +4,19 @@ const API_URL = process.env.REACT_APP_API_URL;
 const SERVICES_API_URL = `${API_URL}/api/services`;
 const BOOKINGS_API_URL = `${API_URL}/api/service_bookings`;
 
-export const createService = async (formData) => {
+export const createService = async (data, token, onProgress) => {
   try {
-    const token = localStorage.getItem('token');
-    const config = {
+    const response = await axiosInstance.post(SERVICES_API_URL, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`
-      }
-    };
-    const response = await axiosInstance.post(SERVICES_API_URL, formData, config);
+      },
+      onUploadProgress: (progressEvent) => {
+        if (!progressEvent.total) return;
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        if (onProgress) onProgress(percent);
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating venue:', error.response ? error.response.data : error.message);
@@ -91,16 +94,19 @@ export const fetchServiceBookings = async (serviceId) => { // Fetch bookings for
   }
 };
 
-export const updateService = async (id, formData) => {
+export const updateService = async (id, data, token, onProgress) => {
   try {
-    const token = localStorage.getItem('token');
-    const config = {
+    const response = await axiosInstance.put(`${SERVICES_API_URL}/${id}`, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`
-      }
-    };
-    const response = await axiosInstance.put(`${SERVICES_API_URL}/${id}`, formData, config);
+    },
+      onUploadProgress: (progressEvent) => {
+        if (!progressEvent.total) return;
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        if (onProgress) onProgress(percent);
+      },    
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating service:', error.response ? error.response.data : error.message);

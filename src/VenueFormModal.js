@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   Box,
@@ -8,9 +8,10 @@ import {
   MenuItem,
   Stack,
   IconButton,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import CloseIcon from '@mui/icons-material/Close';
+  Divider,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import CloseIcon from "@mui/icons-material/Close";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -19,37 +20,42 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-const ImagePreviewContainer = styled(Box)({
-  position: 'relative',
-  display: 'inline-block',
-  marginRight: '8px',
-  marginBottom: '8px',
+const PreviewContainer = styled(Box)({
+  position: "relative",
+  display: "inline-block",
+  marginRight: "8px",
+  marginBottom: "8px",
 });
 
-const ImagePreview = styled('img')({
-  width: '70px',
-  height: '70px',
-  borderRadius: '8px',
-  objectFit: 'cover',
+const ImagePreview = styled("img")({
+  width: "70px",
+  height: "70px",
+  borderRadius: "8px",
+  objectFit: "cover",
+});
+
+const VideoPreview = styled("video")({
+  width: "90px",
+  height: "70px",
+  borderRadius: "8px",
+  objectFit: "cover",
 });
 
 const RemoveButton = styled(IconButton)({
-  position: 'absolute',
-  top: '-6px',
-  right: '-6px',
-  backgroundColor: 'rgba(0,0,0,0.6)',
-  color: 'white',
-  width: '20px',
-  height: '20px',
+  position: "absolute",
+  top: "-6px",
+  right: "-6px",
+  backgroundColor: "rgba(0,0,0,0.6)",
+  color: "white",
+  width: "20px",
+  height: "20px",
   padding: 0,
-  '&:hover': {
-    backgroundColor: 'rgba(255,0,0,0.7)',
+  "&:hover": {
+    backgroundColor: "rgba(255,0,0,0.7)",
   },
 });
 
@@ -64,6 +70,7 @@ const defaultVenue = {
   duration: "",
   charges: "",
   images: [],
+  videos: [],
   lat: null,
   lng: null,
 };
@@ -83,75 +90,108 @@ const VenueFormModal = ({ open, handleClose, onSubmit, initialVenue }) => {
   const [venue, setVenue] = useState(defaultVenue);
 
   useEffect(() => {
-    setVenue(initialVenue || defaultVenue);
+    setVenue({
+      ...defaultVenue,
+      ...(initialVenue || {}),
+      images: initialVenue?.images || [],
+      videos: initialVenue?.videos || [],
+    });
   }, [initialVenue]);
 
-useEffect(() => {
-  if (!open) return;
+  useEffect(() => {
+    if (!open) return;
 
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setVenue((prev) => ({
-          ...prev,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        }));
-      },
-      () => {
-        console.warn("Geolocation denied — will fallback to city/country");
-      },
-      { enableHighAccuracy: true }
-    );
-  }
-}, [open]);
-
-const geocodeCityCountry = async (city, country) => {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        `${city}, ${country}`
-      )}`
-    );
-    const data = await res.json();
-    if (data?.length) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon),
-      };
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setVenue((prev) => ({
+            ...prev,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          }));
+        },
+        () => {
+          console.warn("Geolocation denied — will fallback to city/country");
+        },
+        { enableHighAccuracy: true }
+      );
     }
-  } catch (err) {
-    console.error("Geocoding failed:", err);
-  }
-  return null;
-};
+  }, [open]);
 
-useEffect(() => {
-  if (!venue.lat && venue.city && venue.country) {
-    geocodeCityCountry(venue.city, venue.country).then((coords) => {
-      if (coords) {
-        setVenue((prev) => ({ ...prev, ...coords }));
+  const geocodeCityCountry = async (city, country) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          `${city}, ${country}`
+        )}`
+      );
+      const data = await res.json();
+
+      if (data?.length) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        };
       }
-    });
-  }
-}, [venue.city, venue.country, venue.lat]);
+    } catch (err) {
+      console.error("Geocoding failed:", err);
+    }
+    return null;
+  };
 
-const handleChange = (e) => {
+  useEffect(() => {
+    if (!venue.lat && venue.city && venue.country) {
+      geocodeCityCountry(venue.city, venue.country).then((coords) => {
+        if (coords) {
+          setVenue((prev) => ({ ...prev, ...coords }));
+        }
+      });
+    }
+  }, [venue.city, venue.country, venue.lat]);
+
+  const handleChange = (e) => {
     setVenue({ ...venue, [e.target.name]: e.target.value });
   };
 
+  /* -----------------------------
+      IMAGES
+  ------------------------------ */
   const handleImageChange = (e) => {
-    const newFiles = Array.from(e.target.files);
+    const newFiles = Array.from(e.target.files || []);
+
     setVenue((prev) => ({
       ...prev,
-      images: [...prev.images, ...newFiles],
+      images: [...prev.images, ...newFiles].slice(0, 5), // max 5
     }));
+
+    e.target.value = "";
   };
 
   const handleRemoveImage = (indexToRemove) => {
     setVenue((prev) => ({
       ...prev,
       images: prev.images.filter((_, index) => index !== indexToRemove),
+    }));
+  };
+
+  /* -----------------------------
+      VIDEOS
+  ------------------------------ */
+  const handleVideoChange = (e) => {
+    const newFiles = Array.from(e.target.files || []);
+
+    setVenue((prev) => ({
+      ...prev,
+      videos: [...prev.videos, ...newFiles].slice(0, 2), // max 2
+    }));
+
+    e.target.value = "";
+  };
+
+  const handleRemoveVideo = (indexToRemove) => {
+    setVenue((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, index) => index !== indexToRemove),
     }));
   };
 
@@ -166,25 +206,25 @@ const handleChange = (e) => {
         component="form"
         onSubmit={handleSubmit}
         sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          bgcolor: 'background.paper',
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          bgcolor: "background.paper",
           boxShadow: 24,
           p: 4,
-          maxHeight: '90vh',
-          overflowY: 'auto',
+          maxHeight: "90vh",
+          overflowY: "auto",
           borderRadius: 2,
-          width: '95%',
+          width: "95%",
           maxWidth: 500,
-          display: 'flex',
-          flexDirection: 'column',
+          display: "flex",
+          flexDirection: "column",
           gap: 2,
         }}
       >
         <Typography variant="h6" textAlign="center">
-          {initialVenue ? 'Edit Venue' : 'Add Venue'}
+          {initialVenue ? "Edit Venue" : "Add Venue"}
         </Typography>
 
         <TextField
@@ -201,9 +241,29 @@ const handleChange = (e) => {
             </MenuItem>
           ))}
         </TextField>
-        <TextField name="name" label="Venue Name" value={venue.name} onChange={handleChange} required />
-        <TextField name="city" label="City" value={venue.city} onChange={handleChange} required />
-        <TextField name="country" label="Country" value={venue.country} onChange={handleChange} required />
+
+        <TextField
+          name="name"
+          label="Venue Name"
+          value={venue.name}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          name="country"
+          label="Country"
+          value={venue.country}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          name="city"
+          label="City"
+          value={venue.city}
+          onChange={handleChange}
+          required
+        />
+
         {venue.lat && venue.lng && (
           <Box mt={2}>
             <Typography fontWeight="bold" mb={1}>
@@ -241,8 +301,21 @@ const handleChange = (e) => {
           </Box>
         )}
 
-        <TextField name="size" label="Size (square feet)" value={venue.size} onChange={handleChange} required />
-        <TextField name="capacity" label="Seating Capacity" type="number" value={venue.capacity} onChange={handleChange} required />
+        <TextField
+          name="size"
+          label="Size (square feet)"
+          value={venue.size}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          name="capacity"
+          label="Seating Capacity"
+          type="number"
+          value={venue.capacity}
+          onChange={handleChange}
+          required
+        />
 
         <TextField
           select
@@ -262,6 +335,7 @@ const handleChange = (e) => {
           value={venue.duration}
           onChange={handleChange}
         />
+
         <TextField
           name="charges"
           label="Charges (per hour)"
@@ -270,36 +344,92 @@ const handleChange = (e) => {
           onChange={handleChange}
         />
 
+        <Divider />
+
+        {/* -----------------------------
+            IMAGE UPLOAD
+        ------------------------------ */}
         <Button variant="outlined" component="label">
-          Upload Images
-          <input type="file" hidden multiple accept="image/*" onChange={handleImageChange} />
+          Upload Images (max 5)
+          <input
+            type="file"
+            hidden
+            multiple
+            accept="image/*"
+            onChange={handleImageChange}
+          />
         </Button>
 
-        {/* ✅ Image Preview Section */}
         <Box mt={1} display="flex" flexWrap="wrap">
           {venue.images.map((img, index) => {
             let src;
 
             if (img instanceof File) {
               src = URL.createObjectURL(img);
-            } else if (typeof img === 'string') {
+            } else if (typeof img === "string") {
               src = img;
-            } else if (img && img.url) {
+            } else if (img?.url) {
               src = img.url;
             }
 
             return (
-              <ImagePreviewContainer key={index}>
+              <PreviewContainer key={`img-${index}`}>
                 <ImagePreview src={src} alt="preview" />
-                <RemoveButton onClick={() => handleRemoveImage(index)} size="small">
+                <RemoveButton
+                  onClick={() => handleRemoveImage(index)}
+                  size="small"
+                >
                   <CloseIcon fontSize="small" />
                 </RemoveButton>
-              </ImagePreviewContainer>
+              </PreviewContainer>
             );
           })}
         </Box>
+
+        {/* -----------------------------
+            VIDEO UPLOAD
+        ------------------------------ */}
+        <Button variant="outlined" component="label">
+          Upload Videos (max 2)
+          <input
+            type="file"
+            hidden
+            multiple
+            accept="video/mp4,video/quicktime,video/*"
+            onChange={handleVideoChange}
+          />
+        </Button>
+
+        <Box mt={1} display="flex" flexWrap="wrap">
+          {venue.videos.map((vid, index) => {
+            let src;
+
+            if (vid instanceof File) {
+              src = URL.createObjectURL(vid);
+            } else if (typeof vid === "string") {
+              src = vid;
+            } else if (vid?.url) {
+              src = vid.url;
+            }
+
+            return (
+              <PreviewContainer key={`vid-${index}`}>
+                <VideoPreview src={src} controls={false} muted />
+                <RemoveButton
+                  onClick={() => handleRemoveVideo(index)}
+                  size="small"
+                >
+                  <CloseIcon fontSize="small" />
+                </RemoveButton>
+              </PreviewContainer>
+            );
+          })}
+        </Box>
+
         <Stack direction="row" spacing={2} justifyContent="space-between">
-          <Button type="submit" variant="contained"> Save </Button>
+          <Button type="submit" variant="contained">
+            Save
+          </Button>
           <Button onClick={handleClose}>Cancel</Button>
         </Stack>
       </Box>

@@ -2,9 +2,9 @@ import React from "react";
 import { useParams } from "react-router-dom";
 
 import CategoryOption from "./CategoryOption";
-import CategoryDetails from "./CategoryDetails";
-import LocationDetails from "./LocationDetails";
-import ArtDetails from "./ArtDetails";
+import EventDetails from "./EventDetails";
+import VenueDetails from "./VenueDetails";
+import PerformanceDetails from "./PerformanceDetails";
 import ServiceDetails from "./ServiceDetails";
 
 export default function CategoryRouter() {
@@ -16,12 +16,12 @@ export default function CategoryRouter() {
   }
 
   if (slug === "events" && category) {
-    return <CategoryDetails />;
+    return <EventDetails />;
   }
 
   // OTHER ROOT CATEGORIES
-  if (slug === "venues") return <LocationDetails />;
-  if (slug === "entertainment") return <ArtDetails />;
+  if (slug === "venues") return <VenueDetails />;
+  if (slug === "entertainment") return <PerformanceDetails />;
   if (slug === "services") return <ServiceDetails />;
 
   return <p>Unknown category</p>;

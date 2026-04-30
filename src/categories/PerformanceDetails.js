@@ -11,12 +11,12 @@ import {
   Chip,
 } from "@mui/material";
 import PerformanceCard from "./PerformanceCard";
-import PerformanceDetailsModal from "../PerformanceDetailsModal";
+import ListingDetailsModal from "../ListingDetailsModal";
 import PerformanceBookingFormModal from "../PerformanceBookingFormModal";
 import { fetchActiveCards } from "../services/performanceService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
 
-const ArtDetails = () => {
+const PerformanceDetails = () => {
   const [performances, setPerformances] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +38,7 @@ useEffect(() => {
 
       setPerformances(performances.filter(p => p.userSnapshot?._id));
     } catch (err) {
-      console.error("ArtDetails load error:", err);
+      console.error("Entertainment details load error:", err);
     } finally {
       mounted && setLoading(false);
     }
@@ -74,6 +74,31 @@ useEffect(() => {
         return acc;
       }, {});
   }, [performances, countryFilter, cityFilter]);
+
+  const handleSelectPerformance = (performance) => {
+    setSelectedPerformance(performance);
+    setBookingOpen(false); // ensure booking modal is closed
+    setDetailsOpen(true);   // open listing modal first
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsOpen(false);
+    setSelectedPerformance(null);
+  };
+
+  const handleProceedToBooking = () => {
+    setDetailsOpen(false);
+
+    // allow Listing modal to unmount first before booking opens
+    setTimeout(() => {
+      setBookingOpen(true);
+    }, 150);
+  };
+
+  const handleCloseBooking = () => {
+    setBookingOpen(false);
+    setSelectedPerformance(null);
+  };
 
   if (loading)
     return (
@@ -139,10 +164,7 @@ useEffect(() => {
               <Grid item xs={12} sm={6} md={4} key={p._id}>
                 <PerformanceCard
                   performance={p}
-                  onView={() => {
-                    setSelectedPerformance(p);
-                    setDetailsOpen(true);
-                  }}
+                  onView={() => handleSelectPerformance(p)}
                 />
               </Grid>
             )}
@@ -150,30 +172,25 @@ useEffect(() => {
         ))
       )}
 
-      {selectedPerformance && (
-        <PerformanceDetailsModal
+      {selectedPerformance && detailsOpen && (
+        <ListingDetailsModal
           open={detailsOpen}
-          performance={selectedPerformance}
-          onClose={() => setDetailsOpen(false)}
-          onBookPerformance={() => {
-            setDetailsOpen(false);
-            setBookingOpen(true);
-          }}
+          type="performance"
+          data={selectedPerformance}
+          onClose={handleCloseDetails}
+          onAction={handleProceedToBooking}
         />
       )}
 
-      {selectedPerformance && (
+      {selectedPerformance && bookingOpen && (
         <PerformanceBookingFormModal
           open={bookingOpen}
           performance={selectedPerformance}
-          onClose={() => {
-            setBookingOpen(false);
-            setSelectedPerformance(null);
-          }}
+          onClose={handleCloseBooking}
         />
       )}
     </Box>
   );
 };
 
-export default ArtDetails;
+export default PerformanceDetails;

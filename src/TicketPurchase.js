@@ -99,20 +99,38 @@ const TicketPurchase = ({ event, onClose }) => {
     const errs = {};
 
     if (!ticketType) errs.ticketType = "Please select a ticket type";
-    if (!quantity || quantity <= 0) errs.quantity = "Enter ticket quantity";
+
+    const max =
+      ticketType === "Regular"
+        ? event.regularTicketsRemaining
+        : ticketType === "VIP"
+        ? event.vipTicketsRemaining
+        : ticketType === "VVIP"
+        ? event.vvipTicketsRemaining
+        : event.freeTicketsRemaining;
+
+    if (!quantity || quantity <= 0) {
+      errs.quantity = "Enter ticket quantity";
+    } else if (quantity > max) {
+      errs.quantity = `Only ${max} ticket(s) remaining`;
+    }
+
     if (!clientName) errs.clientName = "Enter your name";
 
     if (!email) errs.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(email))
-      errs.email = "Enter a valid email";
+    else if (!/\S+@\S+\.\S+/.test(email)) errs.email = "Enter a valid email";
 
     const formatted = formatPhoneNumber(phone);
     if (!phone) errs.phone = "Phone is required";
-    else if (!/^(254\d{9})$/.test(formatted))
-      errs.phone = "Invalid phone number";
+    else if (!/^(254\d{9})$/.test(formatted)) errs.phone = "Invalid phone number";
 
     if (event.ticketType !== "free" && !paymentOption)
       errs.paymentOption = "Choose payment method";
+
+    // block sold out ticket types
+    if (max <= 0) {
+      errs.ticketType = "Selected ticket type is sold out";
+    }
 
     return errs;
   };
@@ -237,11 +255,26 @@ const TicketPurchase = ({ event, onClose }) => {
       ? event.vvipTicketsRemaining
       : event.freeTicketsRemaining;
 
+  const isSelectedSoldOut =
+    ticketType === "Regular"
+      ? event.regularTicketsRemaining <= 0
+      : ticketType === "VIP"
+      ? event.vipTicketsRemaining <= 0
+      : ticketType === "VVIP"
+      ? event.vvipTicketsRemaining <= 0
+      : ticketType === "Free"
+      ? event.freeTicketsRemaining <= 0
+      : true;      
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Buy Tickets — {event.title}</DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "65vh" }}>
+        {isSelectedSoldOut && ticketType && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            The selected ticket type is sold out.
+          </Alert>
+        )}
         {errors.general && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {errors.general}
@@ -274,21 +307,29 @@ const TicketPurchase = ({ event, onClose }) => {
             )}
 
             <MenuItem value="Regular" disabled={event.regularTicketsRemaining <= 0}>
-  Regular — Ksh.{event.regularPrice} {event.regularTicketsRemaining <= 0 ? '(Sold Out)' : ''}
-</MenuItem>
-<MenuItem value="VIP" disabled={event.vipTicketsRemaining <= 0}>
-  VIP — Ksh.{event.vipPrice} {event.vipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
-</MenuItem>
-<MenuItem value="VVIP" disabled={event.vvipTicketsRemaining <= 0}>
-  VVIP — Ksh.{event.vvipPrice} {event.vvipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
-</MenuItem>
+              Regular — Ksh.{event.regularPrice} {event.regularTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+            </MenuItem>
+            <MenuItem value="VIP" disabled={event.vipTicketsRemaining <= 0}>
+              VIP — Ksh.{event.vipPrice} {event.vipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+            </MenuItem>
+            <MenuItem value="VVIP" disabled={event.vvipTicketsRemaining <= 0}>
+              VVIP — Ksh.{event.vvipPrice} {event.vvipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+            </MenuItem>
           </TextField>
 
           <TextField
             label="Quantity"
             type="number"
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+
+              if (!value) return setQuantity("");
+
+              if (value > maxTickets) setQuantity(maxTickets);
+              else if (value < 1) setQuantity(1);
+              else setQuantity(value);
+            }}
             inputProps={{ min: 1, max: maxTickets }}
             error={!!errors.quantity}
             helperText={errors.quantity}
@@ -348,11 +389,13 @@ const TicketPurchase = ({ event, onClose }) => {
         <Button
           variant="contained"
           onClick={handleBuyTicket}
-          disabled={loading ||
-            (event.ticketType !== "free" &&
-              event.regularTicketsRemaining <= 0 &&
-              event.vipTicketsRemaining <= 0 &&
-              event.vvipTicketsRemaining <= 0)
+          disabled={
+            loading ||
+            !ticketType ||
+            isSelectedSoldOut ||
+            !quantity ||
+            quantity <= 0 ||
+            quantity > maxTickets
           }
         >
           {loading ? <CircularProgress size={22} /> : "Buy Ticket"}
