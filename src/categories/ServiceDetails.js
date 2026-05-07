@@ -7,7 +7,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  CircularProgress,
   Chip,
 } from "@mui/material";
 
@@ -16,6 +15,7 @@ import ListingDetailsModal from "../ListingDetailsModal";
 import ServiceBookingFormModal from "../ServiceBookingFormModal";
 import { fetchActiveServices } from "../services/serviceService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
+import ScreenLoader from "../components/ScreenLoader";
 
 const ServiceDetails = () => {
   const [services, setServices] = useState([]);
@@ -104,9 +104,11 @@ const ServiceDetails = () => {
 
   if (loading)
     return (
-      <Box display="flex" justifyContent="center" mt={6}>
-        <CircularProgress />
-      </Box>
+      <ScreenLoader
+        open={true}
+        text="Loading Services"
+        subText="Fetching services by type..."
+      />
     );
 
   return (

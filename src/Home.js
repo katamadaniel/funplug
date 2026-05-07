@@ -6,6 +6,7 @@ import TicketPurchase from "./TicketPurchase";
 import VenueBookingFormModal from "./VenueBookingFormModal";
 import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
+import ScreenLoader from "./components/ScreenLoader";
 
 import {
   useUserLocation,
@@ -27,7 +28,6 @@ import {
   Typography,
   Button,
   IconButton,
-  Skeleton,
   TextField,
   Stack,
   Chip,
@@ -211,13 +211,15 @@ const Home = () => {
 
     events.forEach((e) => {
       push(e.ticketType);
+      push(e.category);
       push(e.city);
-      push(e.category || "Event");
+      push(e.category);
     });
 
     venues.forEach((v) => {
       push(v.country);
-      push(v.city || "Venue");
+      push(v.city);
+      push (v.venueType);
     });
 
     performances.forEach((p) => {
@@ -244,6 +246,7 @@ const Home = () => {
             item.category,
             item.ticketType,
             item.serviceType,
+            item.venueType,
             item.artType,
             item.city,
             item.country,
@@ -259,6 +262,8 @@ const Home = () => {
           const hay = [
             item.title,
             item.name,
+            item.category,
+            item.venueType,
             item.serviceType,
             item.artType,
             item.city,
@@ -381,22 +386,7 @@ const Home = () => {
   };
 
   if (loading) {
-    return (
-      <Grid container spacing={2} sx={{ p: 2 }}>
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
-            <Card>
-              <Skeleton variant="rectangular" height={160} />
-              <CardContent>
-                <Skeleton width="60%" />
-                <Skeleton width="40%" />
-                <Skeleton width="80%" />
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    );
+    return <ScreenLoader open={true} text="Loading Listings" subText="Fetching events, venues, performances, and services..." />;
   }
 
   if (error) {
@@ -496,23 +486,8 @@ const Home = () => {
                       <Typography variant="subtitle1" gutterBottom>
                         {event.title}
                       </Typography>
-
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          mb: 1,
-                          overflow: "hidden",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                        }}
-                      >
-                        {event.description}
-                      </Typography>
-
-                      <Typography variant="caption" color="text.secondary">
-                        Venue: {event.venue}
+                      <Typography variant="body2" color="text.secondary">
+                        {event.category} — {event.city}, {event.country}
                       </Typography>
                     </CardContent>
 
@@ -577,7 +552,7 @@ const Home = () => {
 
                       <Typography variant="subtitle1">{venue.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {venue.city}, {venue.country}
+                        {venue.venueType} — {venue.city}, {venue.country}
                       </Typography>
                     </CardContent>
 
@@ -642,7 +617,7 @@ const Home = () => {
 
                       <Typography variant="subtitle1">{card.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {card.artType} — {card.city}
+                        {card.artType} — {card.city},{card.country}
                       </Typography>
                     </CardContent>
 
@@ -688,7 +663,7 @@ const Home = () => {
                       component="img"
                       height="160"
                       image={service.images?.[0]?.url || "/default-service.jpg"}
-                      alt={service.serviceType}
+                      alt={service.name}
                       loading="lazy"
                     />
                     <CardContent sx={{ flexGrow: 1 }}>
@@ -705,9 +680,9 @@ const Home = () => {
                         />
                       )}
 
-                      <Typography variant="subtitle1">{service.serviceType}</Typography>
+                      <Typography variant="subtitle1">{service.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {service.city}, {service.country}
+                        {service.serviceType} — {service.city}, {service.country}
                       </Typography>
                     </CardContent>
 

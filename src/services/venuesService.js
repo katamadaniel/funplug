@@ -29,6 +29,19 @@ export const fetchActiveVenues = async () => {
   return res.data;
 };
 
+export const fetchVenueById = async (venueId) => {
+  try {
+    const response = await axiosInstance.get(`${VENUES_API_URL}/${venueId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching venue details:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};
+
 export const fetchVenues = async (params = {}) => {
   try {
     const endpoint = `${VENUES_API_URL}/recommended`;

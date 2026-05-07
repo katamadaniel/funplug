@@ -14,15 +14,44 @@ import {
   MenuItem,
   Typography,
   CircularProgress,
-  Divider
+  Divider,
+  Box
 } from "@mui/material";
 import PaymentStatusBanner from "./components/PaymentStatusBanner";
 import usePaymentPolling from "./hooks/usePaymentPolling";
+import { fetchVenueById } from "./services/venuesService";
 
 const API_URL = process.env.REACT_APP_API_URL;
 const socket = io(API_URL, { autoConnect: false });
 
 const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
+  const [venueData, setVenueData] = useState(venue);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+
+  // Fetch full venue details when modal mounts
+  useEffect(() => {
+    if (!venue?._id) return;
+
+    const fetchDetails = async () => {
+      try {
+        setIsLoadingDetails(true);
+        setLoadError(null);
+        const fullVenue = await fetchVenueById(venue._id);
+        if (fullVenue) {
+          setVenueData(fullVenue);
+        }
+      } catch (error) {
+        console.error("Error fetching venue details:", error);
+        setLoadError("Failed to load venue details");
+        setVenueData(venue);
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    };
+
+    fetchDetails();
+  }, [venue?._id, venue]);
   const [form, setForm] = useState({
     clientName: "",
     phone: "",
@@ -35,7 +64,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
   });
 
   const [duration, setDuration] = useState(0);
-  const [total, setTotal] = useState(venue.charges);
+  const [total, setTotal] = useState(venueData.charges);
   const [reservationFee, setReservationFee] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("mpesa");
 
@@ -84,7 +113,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
 
       if (hours > 0) {
         setDuration(hours);
-        const totalCost = hours * venue.charges;
+        const totalCost = hours * venueData.charges;
         setTotal(totalCost);
         setReservationFee(Math.ceil(totalCost * 0.1));
       } else {
@@ -94,7 +123,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
         }));
       }
     }
-  }, [form.from, form.to, venue.charges]);
+  }, [form.from, form.to, venueData.charges]);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -135,7 +164,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
     try {
       const { bookingDate, from, to } = form;
       const params = new URLSearchParams();
-      params.append("venueId", venue._id);
+      params.append("venueId", venueData._id);
       params.append("bookingDate", bookingDate);
       params.append("from", from);
       params.append("to", to);
@@ -174,8 +203,8 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
 
     try{
       const payload = {
-        venueId: venue._id,
-        creatorId: venue.userId,
+        venueId: venueData._id,
+        creatorId: venueData.userId,
         clientName: form.clientName,
         email: form.email,
         phone: formatPhone(form.phone),
@@ -186,8 +215,8 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
         eventDetails: form.eventDetails,
         duration: String(duration),
         totalAmount: total,
-        venueTitle: venue.name,
-        venueType: venue.venueType,
+        venueTitle: venueData.name,
+        venueType: venueData.venueType,
         paymentMethod,
         amount: reservationFee,
       };
@@ -275,9 +304,21 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
       maxWidth="sm"
       scroll="paper"
     >
-      <DialogTitle>Book {venue.name}</DialogTitle>
+      <DialogTitle>Book {venueData.name}</DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "75vh", overflowY: "auto", pb: 2 }}>
+        {isLoadingDetails && (
+          <Box display="flex" justifyContent="center" alignItems="center" py={3}>
+            <CircularProgress size={40} />
+          </Box>
+        )}
+
+        {loadError && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {loadError}
+          </Alert>
+        )}
+
         {errors.general && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {errors.general}
@@ -436,7 +477,7 @@ const VenueBookingFormModal = ({ venue, onClose, onBooked }) => {
         <Button
           variant="contained"
           onClick={handleBookVenue}
-          disabled={loading || venue.bookingStatus === "closed"}
+          disabled={loading || venueData.bookingStatus === "closed"}
         >
           {loading ? <CircularProgress size={22} /> : "Book Venue"}
         </Button>

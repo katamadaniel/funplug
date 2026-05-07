@@ -7,7 +7,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
   Chip,
 } from "@mui/material";
 import VenueCard from "./VenueCard";
@@ -15,6 +14,7 @@ import ListingDetailsModal from "../ListingDetailsModal";
 import VenueBookingFormModal from "../VenueBookingFormModal";
 import { fetchActiveVenues } from "../services/venuesService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
+import ScreenLoader from "../components/ScreenLoader";
 
 const VenueDetails = () => {
   const [venues, setVenues] = useState([]);
@@ -100,9 +100,11 @@ const VenueDetails = () => {
 
 if (loading)
     return (
-      <Box display="flex" justifyContent="center" mt={6}>
-        <CircularProgress />
-      </Box>
+      <ScreenLoader
+        open={true}
+        text="Loading Venues"
+        subText="Fetching venues by type..."
+      />
     );
 
   return (

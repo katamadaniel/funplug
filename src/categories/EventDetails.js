@@ -6,24 +6,28 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
-  CircularProgress,
   Box,
+  Grid,
+  Pagination,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import EventCard from "./EventCard";
 import ListingDetailsModal from "../ListingDetailsModal";
 import TicketPurchase from "../TicketPurchase";
+import ScreenLoader from "../components/ScreenLoader";
 
 const API_URL = process.env.REACT_APP_API_URL;
 const EVENTS_API_URL = `${API_URL}/api/events`;
 const CATEGORY_API_URL = `${EVENTS_API_URL}/category`;
+const ITEMS_PER_PAGE = 8;
 
 const EventDetails = () => {
   const { category } = useParams();
 
   const [groupedEvents, setGroupedEvents] = useState({});
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({});
 
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -72,9 +76,11 @@ const EventDetails = () => {
 
   if (loading) {
     return (
-      <Box sx={{ textAlign: "center", mt: 5 }}>
-        <CircularProgress />
-      </Box>
+      <ScreenLoader
+        open={true}
+        text="Loading Events"
+        subText="Fetching events by category..."
+      />
     );
   }
 
@@ -83,31 +89,59 @@ const EventDetails = () => {
       {Object.keys(groupedEvents).length === 0 ? (
         <Typography>No events found.</Typography>
       ) : (
-        Object.entries(groupedEvents).map(([subCategory, events]) => (
-          <Accordion defaultExpanded key={subCategory} sx={{ mb: 2 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">{subCategory}</Typography>
-            </AccordionSummary>
+        Object.entries(groupedEvents).map(([subCategory, events]) => {
+          const page = pagination[subCategory] || 1;
+          const pageCount = Math.ceil(events.length / ITEMS_PER_PAGE);
+          const paginatedEvents = events.slice(
+            (page - 1) * ITEMS_PER_PAGE,
+            page * ITEMS_PER_PAGE
+          );
 
-            <AccordionDetails>
-              <Box
-                sx={{
-                  display: "grid",
-                  gap: 2,
-                  gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                }}
-              >
-                {events.map((ev) => (
-                  <EventCard
-                    key={ev._id}
-                    event={ev}
-                    onView={() => handleSelectEvent(ev)}
-                  />
-                ))}
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-        ))
+          return (
+            <Accordion defaultExpanded key={subCategory} sx={{ mb: 2 }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="h6">{subCategory} ({events.length})</Typography>
+              </AccordionSummary>
+
+              <AccordionDetails>
+                <Box>
+                  <Grid
+                    container
+                    spacing={2}
+                    sx={{
+                      display: "grid",
+                      gap: 2,
+                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                    }}
+                  >
+                    {paginatedEvents.map((ev) => (
+                      <EventCard
+                        key={ev._id}
+                        event={ev}
+                        onView={() => handleSelectEvent(ev)}
+                      />
+                    ))}
+                  </Grid>
+
+                  {pageCount > 1 && (
+                    <Box display="flex" justifyContent="center" mt={2}>
+                      <Pagination
+                        count={pageCount}
+                        page={page}
+                        onChange={(_, newPage) =>
+                          setPagination({
+                            ...pagination,
+                            [subCategory]: newPage,
+                          })
+                        }
+                      />
+                    </Box>
+                  )}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          );
+        })
       )}
 
       {/* STEP 1: DETAILS MODAL */}

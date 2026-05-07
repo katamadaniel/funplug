@@ -17,18 +17,58 @@ import axios from "axios";
 import io from "socket.io-client";
 import PaymentStatusBanner from "./components/PaymentStatusBanner";
 import usePaymentPolling from "./hooks/usePaymentPolling";
+import { fetchEventById } from "./services/eventService";
 
 const API_URL = process.env.REACT_APP_API_URL;
 const socket = io(API_URL, { autoConnect: false });
 
 const TicketPurchase = ({ event, onClose }) => {
+  const [eventData, setEventData] = useState(event);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+
+  // Fetch full event details when modal mounts
+  useEffect(() => {
+    if (!event?._id) return;
+
+    const fetchDetails = async () => {
+      try {
+        setIsLoadingDetails(true);
+        setLoadError(null);
+        const fullEvent = await fetchEventById(event._id);
+        if (fullEvent) {
+          setEventData(fullEvent);
+        }
+      } catch (error) {
+        console.error("Error fetching event details:", error);
+        setLoadError("Failed to load event details");
+        setEventData(event);
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    };
+
+    fetchDetails();
+  }, [event?._id, event]);
+
   const [ticketType, setTicketType] = useState(() => {
-    if (event.ticketType === "free") return "Free";
-    if (event.regularTicketsRemaining > 0) return "Regular";
-    if (event.vipTicketsRemaining > 0) return "VIP";
-    if (event.vvipTicketsRemaining > 0) return "VVIP";
+    if (eventData.ticketType === "free") return "Free";
+    if (eventData.regularTicketsRemaining > 0) return "Regular";
+    if (eventData.vipTicketsRemaining > 0) return "VIP";
+    if (eventData.vvipTicketsRemaining > 0) return "VVIP";
     return "";
   });
+
+  // Update ticket type when detailed data is loaded
+  useEffect(() => {
+    if (eventData) {
+      if (eventData.ticketType === "free") setTicketType("Free");
+      else if (eventData.regularTicketsRemaining > 0) setTicketType("Regular");
+      else if (eventData.vipTicketsRemaining > 0) setTicketType("VIP");
+      else if (eventData.vvipTicketsRemaining > 0) setTicketType("VVIP");
+      else setTicketType("");
+    }
+  }, [eventData.ticketType, eventData.regularTicketsRemaining, eventData.vipTicketsRemaining, eventData.vvipTicketsRemaining]);
 
   const [quantity, setQuantity] = useState("");
   const [clientName, setClientName] = useState("");
@@ -79,12 +119,12 @@ const TicketPurchase = ({ event, onClose }) => {
     if (!quantity || !ticketType) return setTotalAmount(0);
 
     const price =
-      ticketType === "Regular" ? event.regularPrice :
-      ticketType === "VIP" ? event.vipPrice :
-      ticketType === "VVIP" ? event.vvipPrice : 0;
+      ticketType === "Regular" ? eventData.regularPrice :
+      ticketType === "VIP" ? eventData.vipPrice :
+      ticketType === "VVIP" ? eventData.vvipPrice : 0;
 
     setTotalAmount(price * quantity);
-  }, [ticketType, quantity, event]);
+  }, [ticketType, quantity, eventData]);
 
   const formatPhoneNumber = (input) => {
     const clean = input.replace(/\D/g, "");
@@ -102,12 +142,12 @@ const TicketPurchase = ({ event, onClose }) => {
 
     const max =
       ticketType === "Regular"
-        ? event.regularTicketsRemaining
+        ? eventData.regularTicketsRemaining
         : ticketType === "VIP"
-        ? event.vipTicketsRemaining
+        ? eventData.vipTicketsRemaining
         : ticketType === "VVIP"
-        ? event.vvipTicketsRemaining
-        : event.freeTicketsRemaining;
+        ? eventData.vvipTicketsRemaining
+        : eventData.freeTicketsRemaining;
 
     if (!quantity || quantity <= 0) {
       errs.quantity = "Enter ticket quantity";
@@ -124,7 +164,7 @@ const TicketPurchase = ({ event, onClose }) => {
     if (!phone) errs.phone = "Phone is required";
     else if (!/^(254\d{9})$/.test(formatted)) errs.phone = "Invalid phone number";
 
-    if (event.ticketType !== "free" && !paymentOption)
+    if (eventData.ticketType !== "free" && !paymentOption)
       errs.paymentOption = "Choose payment method";
 
     // block sold out ticket types
@@ -136,6 +176,17 @@ const TicketPurchase = ({ event, onClose }) => {
   };
 
   const handleBuyTicket = async () => {
+    // Ensure event data is fully loaded
+    if (isLoadingDetails) {
+      setErrors({ general: "Please wait while event details are loading..." });
+      return;
+    }
+
+    if (!eventData?._id || !eventData?.userId) {
+      setErrors({ general: "Event data is incomplete. Please refresh and try again." });
+      return;
+    }
+
     const val = validateForm();
     if (Object.keys(val).length > 0) {
       setErrors(val);
@@ -152,22 +203,19 @@ const TicketPurchase = ({ event, onClose }) => {
       const formattedPhone = formatPhoneNumber(phone);
 
       const purchaseData = {
-        ticketType,
-        quantity,
-        clientName,
-        email,
+        ticketType: ticketType.toUpperCase(),
+        quantity: parseInt(quantity),
+        clientName: clientName.trim(),
+        email: email.trim().toLowerCase(),
         phone: formattedPhone,
-        paymentOption:
-          event.ticketType === "free" ? "free" : paymentOption,
-        totalAmount:
-          event.ticketType === "free" ? 0 : totalAmount,
-        eventId: event._id,
-        creatorId: event.userId,
-        eventTitle: event.title,
-        eventVenue: event.venue,
-        eventDate: event.date,
-        from: event.startTime,
-        to: event.endTime,
+        paymentOption: eventData.ticketType === "free" ? "cash" : paymentOption,
+        eventId: eventData._id,
+        creatorId: eventData.userId,
+        eventTitle: eventData.title,
+        eventVenue: eventData.venue,
+        eventDate: eventData.date,
+        from: eventData.startTime,
+        to: eventData.endTime,
       };
 
       const res = await axios.post(
@@ -175,7 +223,7 @@ const TicketPurchase = ({ event, onClose }) => {
         purchaseData
       );
 
-      if (event.ticketType === "free") {
+      if (eventData.ticketType === "free") {
         setPurchaseStatus("success");
         setTimeout(() => onClose(), 4000);
         return;
@@ -248,28 +296,40 @@ const TicketPurchase = ({ event, onClose }) => {
 
   const maxTickets =
     ticketType === "Regular"
-      ? event.regularTicketsRemaining
+      ? eventData.regularTicketsRemaining
       : ticketType === "VIP"
-      ? event.vipTicketsRemaining
+      ? eventData.vipTicketsRemaining
       : ticketType === "VVIP"
-      ? event.vvipTicketsRemaining
-      : event.freeTicketsRemaining;
+      ? eventData.vvipTicketsRemaining
+      : eventData.freeTicketsRemaining;
 
   const isSelectedSoldOut =
     ticketType === "Regular"
-      ? event.regularTicketsRemaining <= 0
+      ? eventData.regularTicketsRemaining <= 0
       : ticketType === "VIP"
-      ? event.vipTicketsRemaining <= 0
+      ? eventData.vipTicketsRemaining <= 0
       : ticketType === "VVIP"
-      ? event.vvipTicketsRemaining <= 0
+      ? eventData.vvipTicketsRemaining <= 0
       : ticketType === "Free"
-      ? event.freeTicketsRemaining <= 0
+      ? eventData.freeTicketsRemaining <= 0
       : true;      
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Buy Tickets — {event.title}</DialogTitle>
+      <DialogTitle>Buy Tickets — {eventData.title}</DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "65vh" }}>
+        {isLoadingDetails && (
+          <Box display="flex" justifyContent="center" alignItems="center" py={3}>
+            <CircularProgress size={40} />
+          </Box>
+        )}
+
+        {loadError && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {loadError}
+          </Alert>
+        )}
+
         {isSelectedSoldOut && ticketType && (
           <Alert severity="warning" sx={{ mb: 2 }}>
             The selected ticket type is sold out.
@@ -302,18 +362,18 @@ const TicketPurchase = ({ event, onClose }) => {
             error={!!errors.ticketType}
             helperText={errors.ticketType}
           >
-            {event.ticketType === "free" && (
+            {eventData.ticketType === "free" && (
               <MenuItem value="Free">Free Ticket</MenuItem>
             )}
 
-            <MenuItem value="Regular" disabled={event.regularTicketsRemaining <= 0}>
-              Regular — Ksh.{event.regularPrice} {event.regularTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+            <MenuItem value="Regular" disabled={eventData.regularTicketsRemaining <= 0}>
+              Regular — Ksh.{eventData.regularPrice} {eventData.regularTicketsRemaining <= 0 ? '(Sold Out)' : ''}
             </MenuItem>
-            <MenuItem value="VIP" disabled={event.vipTicketsRemaining <= 0}>
-              VIP — Ksh.{event.vipPrice} {event.vipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+            <MenuItem value="VIP" disabled={eventData.vipTicketsRemaining <= 0}>
+              VIP — Ksh.{eventData.vipPrice} {eventData.vipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
             </MenuItem>
-            <MenuItem value="VVIP" disabled={event.vvipTicketsRemaining <= 0}>
-              VVIP — Ksh.{event.vvipPrice} {event.vvipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
+            <MenuItem value="VVIP" disabled={eventData.vvipTicketsRemaining <= 0}>
+              VVIP — Ksh.{eventData.vvipPrice} {eventData.vvipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
             </MenuItem>
           </TextField>
 
@@ -359,7 +419,7 @@ const TicketPurchase = ({ event, onClose }) => {
             helperText={errors.phone}
           />
 
-          {event.ticketType !== "free" && (
+          {eventData.ticketType !== "free" && (
             <TextField
               select
               label="Payment Method"
@@ -391,6 +451,7 @@ const TicketPurchase = ({ event, onClose }) => {
           onClick={handleBuyTicket}
           disabled={
             loading ||
+            isLoadingDetails ||
             !ticketType ||
             isSelectedSoldOut ||
             !quantity ||

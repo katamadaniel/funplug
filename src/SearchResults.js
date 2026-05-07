@@ -11,6 +11,7 @@ import {
   Button,
   Switch,
   FormControlLabel,
+  Pagination,
 } from "@mui/material";
 
 import { useUserLocation } from "./contexts/LocationContext";
@@ -20,6 +21,7 @@ import TicketPurchase from "./TicketPurchase";
 import VenueBookingFormModal from "./VenueBookingFormModal";
 import PerformanceBookingFormModal from "./PerformanceBookingFormModal";
 import ServiceBookingFormModal from "./ServiceBookingFormModal";
+import ScreenLoader from "./components/ScreenLoader";
 
 import { getAvatarUrl } from "./utils/avatar";
 
@@ -31,6 +33,8 @@ const FILTER_TAGS = [
   { label: "Entertainment", value: "performance" },
   { label: "Services", value: "service" },
 ];
+
+const ITEMS_PER_PAGE = 8;
 
 const toRad = (v) => (v * Math.PI) / 180;
 
@@ -53,11 +57,22 @@ const isFutureDate = (date) =>
   date ? new Date(date).getTime() > Date.now() : false;
 
 const SearchResults = ({ results, onViewProfile }) => {
-  const { searchQuery, nearMe, setNearMe } = useSearch();
+  const { searchQuery, nearMe, setNearMe, searchLoading } = useSearch();
   const userLocation = useUserLocation();
 
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState(null);
+  const [pagination, setPagination] = useState({});
+
+  if (searchLoading) {
+    return (
+      <ScreenLoader
+        open={true}
+        text="Searching"
+        subText="Finding results across all categories..."
+      />
+    );
+  }
 
   const handleImageError = (e) => {
     e.target.onerror = null;
@@ -146,14 +161,21 @@ const SearchResults = ({ results, onViewProfile }) => {
         const list = grouped[type];
         if (!list.length) return null;
 
+        const page = pagination[type] || 1;
+        const pageCount = Math.ceil(list.length / ITEMS_PER_PAGE);
+        const paginatedList = list.slice(
+          (page - 1) * ITEMS_PER_PAGE,
+          page * ITEMS_PER_PAGE
+        );
+
         return (
           <Box key={type} sx={{ mb: 4 }}>
             <Typography variant="h5" sx={{ mb: 1 }}>
-              {type.charAt(0).toUpperCase() + type.slice(1)}s
+              {type.charAt(0).toUpperCase() + type.slice(1)}s ({list.length})
             </Typography>
 
             <Grid container spacing={2}>
-              {list.map((item) => (
+              {paginatedList.map((item) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={item._id}>
                   <Card
                     sx={{ cursor: "pointer" }}
@@ -212,6 +234,21 @@ const SearchResults = ({ results, onViewProfile }) => {
                 </Grid>
               ))}
             </Grid>
+
+            {pageCount > 1 && (
+              <Box display="flex" justifyContent="center" mt={2}>
+                <Pagination
+                  count={pageCount}
+                  page={page}
+                  onChange={(_, newPage) =>
+                    setPagination({
+                      ...pagination,
+                      [type]: newPage,
+                    })
+                  }
+                />
+              </Box>
+            )}
           </Box>
         );
       })}

@@ -7,7 +7,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  CircularProgress,
   Chip,
 } from "@mui/material";
 import PerformanceCard from "./PerformanceCard";
@@ -15,6 +14,7 @@ import ListingDetailsModal from "../ListingDetailsModal";
 import PerformanceBookingFormModal from "../PerformanceBookingFormModal";
 import { fetchActiveCards } from "../services/performanceService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
+import ScreenLoader from "../components/ScreenLoader";
 
 const PerformanceDetails = () => {
   const [performances, setPerformances] = useState([]);
@@ -102,9 +102,11 @@ useEffect(() => {
 
   if (loading)
     return (
-      <Box display="flex" justifyContent="center" mt={6}>
-        <CircularProgress />
-      </Box>
+      <ScreenLoader
+        open={true}
+        text="Loading Entertainment"
+        subText="Fetching performances by art type..."
+      />
     );
 
   return (

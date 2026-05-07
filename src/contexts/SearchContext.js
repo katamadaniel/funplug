@@ -15,6 +15,7 @@ export const SearchProvider = ({ children }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchError, setSearchError] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [nearMe, setNearMe] = useState(false);
 
   const [user, setUser] = useState(null);
@@ -64,6 +65,7 @@ export const SearchProvider = ({ children }) => {
   const search = async (query = "") => {
     setSearchQuery(query);
     setSearchError(null);
+    setSearchLoading(true);
 
     try {
       let results = [];
@@ -135,6 +137,8 @@ export const SearchProvider = ({ children }) => {
     } catch (error) {
       console.error("Search error:", error);
       setSearchError("Failed to fetch search results");
+    } finally {
+      setSearchLoading(false);
     }
   };
 
@@ -164,6 +168,7 @@ export const SearchProvider = ({ children }) => {
         searchResults,
         searchQuery,
         searchError,
+        searchLoading,
         search,
         nearMe,
         setNearMe,

@@ -14,15 +14,44 @@ import {
   Typography,
   Divider,
   Alert,
-  Stack
+  Stack,
+  Box
 } from "@mui/material";
 import PaymentStatusBanner from "./components/PaymentStatusBanner";
 import usePaymentPolling from "./hooks/usePaymentPolling";
+import { fetchServiceById } from "./services/serviceService";
 
 const API_URL = process.env.REACT_APP_API_URL;
 const socket = io(API_URL, { autoConnect: false });
 
 const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
+  const [serviceData, setServiceData] = useState(service);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+
+  // Fetch full service details when modal mounts
+  useEffect(() => {
+    if (!service?._id) return;
+
+    const fetchDetails = async () => {
+      try {
+        setIsLoadingDetails(true);
+        setLoadError(null);
+        const fullService = await fetchServiceById(service._id);
+        if (fullService) {
+          setServiceData(fullService);
+        }
+      } catch (error) {
+        console.error("Error fetching service details:", error);
+        setLoadError("Failed to load service details");
+        setServiceData(service);
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    };
+
+    fetchDetails();
+  }, [service?._id, service]);
   const [form, setForm] = useState({
     clientName: "",
     phone: "",
@@ -89,10 +118,10 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
       }
     }
 
-    const total = Number(service?.charges || 0);
+    const total = Number(serviceData?.charges || 0);
     setTotal(total);
     setReservationFee(Math.ceil(total * 0.1));
-  }, [form.from, form.to, service?.charges]);
+  }, [form.from, form.to, serviceData?.charges]);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -132,7 +161,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
     try {
       const { bookingDate, from, to } = form;
       const params = new URLSearchParams();
-      params.append("serviceId", service._id);
+      params.append("serviceId", serviceData._id);
       params.append("bookingDate", bookingDate);
       params.append("from", from);
       params.append("to", to);
@@ -175,8 +204,8 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
 
     try {
       const payload = {
-        serviceId: service._id,
-        creatorId: service.userId,
+        serviceId: serviceData._id,
+        creatorId: serviceData.userId,
         clientName: form.clientName,
         email: form.email,
         phone: formatPhone(form.phone),
@@ -187,8 +216,8 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
         quantity: form.quantity,
         eventDetails: form.eventDetails,
         totalAmount: total,
-        serviceType: service.serviceType,
-        serviceTitle: service.name,
+        serviceType: serviceData.serviceType,
+        serviceTitle: serviceData.name,
         paymentMethod,
         amount: reservationFee,
       };
@@ -268,9 +297,21 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
-      <DialogTitle>Book Service — {service.serviceType}</DialogTitle>
+      <DialogTitle>Book Service — {serviceData.serviceType}</DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "75vh", overflowY: "auto", pb: 2 }}>
+        {isLoadingDetails && (
+          <Box display="flex" justifyContent="center" alignItems="center" py={3}>
+            <CircularProgress size={40} />
+          </Box>
+        )}
+
+        {loadError && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {loadError}
+          </Alert>
+        )}
+
         {errors.general && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {errors.general}
@@ -425,7 +466,7 @@ const ServiceBookingFormModal = ({ service, onClose, onBooked }) => {
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant="contained"
-          disabled={loading || service.bookingStatus === "closed"}
+          disabled={loading || serviceData.bookingStatus === "closed"}
           onClick={handleBookService}
         >
           {loading ? <CircularProgress size={22} /> : "Book Service"}

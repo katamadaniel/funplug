@@ -29,6 +29,19 @@ export const fetchActiveCards = async () => {
   return res.data;
 };
 
+export const fetchPerformanceById = async (performanceId) => {
+  try {
+    const response = await axiosInstance.get(`${PERFORMANCES_API_URL}/${performanceId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching performance details:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};
+
 export const fetchCards = async (params = {}) => {
   try {
     const endpoint = `${PERFORMANCES_API_URL}/recommended`;

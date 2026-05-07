@@ -29,6 +29,19 @@ export const fetchActiveEvents = async () => {
   return res.data;
 };
 
+export const fetchEventById = async (eventId) => {
+  try {
+    const response = await axiosInstance.get(`${EVENTS_API_URL}/${eventId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching event details:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};
+
 export const fetchEvents = async (params = {}) => {
   try {
     const endpoint = `${EVENTS_API_URL}/recommended`;

@@ -29,6 +29,19 @@ export const fetchActiveServices = async () => {
   return res.data;
 };
 
+export const fetchServiceById = async (serviceId) => {
+  try {
+    const response = await axiosInstance.get(`${SERVICES_API_URL}/${serviceId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching service details:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};
+
 export const fetchServices = async (params = {}) => {
   try {
     const endpoint = `${SERVICES_API_URL}/recommended`;

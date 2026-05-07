@@ -17,6 +17,7 @@ import {
   Modal,
   Paper,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 
 import { Carousel } from "react-responsive-carousel";
@@ -33,11 +34,11 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 import { followUser } from "./services/followService";
+import { fetchEventById } from "./services/eventService";
+import { fetchVenueById } from "./services/venuesService";
+import { fetchPerformanceById } from "./services/performanceService";
+import { fetchServiceById } from "./services/serviceService";
 
-/**
- * Fix ResizeObserver loop error caused by video resizing inside carousel.
- * This suppresses the console noise while keeping real errors visible.
- */
 const suppressResizeObserverError = () => {
   const originalError = console.error;
 
@@ -59,6 +60,9 @@ const suppressResizeObserverError = () => {
 const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isFollowOpen, setIsFollowOpen] = useState(false);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [detailedData, setDetailedData] = useState(data);
+  const [loadError, setLoadError] = useState(null);
 
   const [followName, setFollowName] = useState("");
   const [followEmail, setFollowEmail] = useState("");
@@ -67,12 +71,18 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
     data?.userSnapshot?.followersCount || 0
   );
 
+  useEffect(() => {
+    if (detailedData?.userSnapshot?.followersCount !== undefined) {
+      setFollowerCount(detailedData.userSnapshot.followersCount);
+    }
+  }, [detailedData?.userSnapshot?.followersCount]);
+
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
 
-  const user = data?.userSnapshot;
-  const creatorId = data?.userSnapshot?._id;
+  const user = detailedData?.userSnapshot;
+  const creatorId = detailedData?.userSnapshot?._id;
 
   useEffect(() => {
     if (!open) return;
@@ -81,6 +91,49 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
     setFullscreenOpen(false);
     setIsFollowOpen(false);
   }, [open]);
+
+  // Fetch full details when modal opens
+  useEffect(() => {
+    if (!open || !data?._id) return;
+
+    const fetchDetails = async () => {
+      try {
+        setIsLoadingDetails(true);
+        setLoadError(null);
+
+        let fullData;
+        switch (type) {
+          case "event":
+            fullData = await fetchEventById(data._id);
+            break;
+          case "venue":
+            fullData = await fetchVenueById(data._id);
+            break;
+          case "performance":
+            fullData = await fetchPerformanceById(data._id);
+            break;
+          case "service":
+            fullData = await fetchServiceById(data._id);
+            break;
+          default:
+            return;
+        }
+
+        if (fullData) {
+          setDetailedData(fullData);
+        }
+      } catch (error) {
+        console.error("Error fetching detailed data:", error);
+        setLoadError("Failed to load full details");
+        // Keep the initial data if fetch fails
+        setDetailedData(data);
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    };
+
+    fetchDetails();
+  }, [open, data?._id, type]);
 
   useEffect(() => {
     const restore = suppressResizeObserverError();
@@ -92,23 +145,23 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
   };
 
   const media = useMemo(() => {
-    if (!data) return [];
+    if (!detailedData) return [];
 
     const normalized = [];
 
     // EVENT SINGLE IMAGE SUPPORT
     if (type === "event") {
-      if (data.image) {
+      if (detailedData.image) {
         normalized.push({
           type: "image",
-          url: typeof data.image === "string" ? data.image : data.image?.url,
+          url: typeof detailedData.image === "string" ? detailedData.image : detailedData.image?.url,
         });
       }
     }
 
     // STANDARD IMAGES ARRAY SUPPORT
-    if (Array.isArray(data.images)) {
-      data.images.forEach((img) => {
+    if (Array.isArray(detailedData.images)) {
+      detailedData.images.forEach((img) => {
         if (!img) return;
         const url = typeof img === "string" ? img : img.url;
         if (url) normalized.push({ type: "image", url });
@@ -116,8 +169,8 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
     }
 
     // OPTIONAL VIDEOS ARRAY SUPPORT
-    if (Array.isArray(data.videos)) {
-      data.videos.forEach((vid) => {
+    if (Array.isArray(detailedData.videos)) {
+      detailedData.videos.forEach((vid) => {
         if (!vid) return;
         const url = typeof vid === "string" ? vid : vid.url;
         if (url) normalized.push({ type: "video", url });
@@ -132,20 +185,20 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
       seen.add(m.url);
       return true;
     });
-  }, [data, type]);
+  }, [detailedData, type]);
 
   const shareUrl = window.location.href;
 
   const shareText = useMemo(() => {
-    if (!data) return "Check this out on FunPlug!";
+    if (!detailedData) return "Check this out on FunPlug!";
 
-    if (type === "event") return `Check out this event: ${data.title} at ${data.venue}!`;
-    if (type === "venue") return `Check out this venue: ${data.name} (${data.venueType})`;
-    if (type === "service") return `Check out this service: ${data.serviceType} by ${data.name}`;
-    if (type === "performance") return `Check out this performer: ${data.name} (${data.artType})`;
+    if (type === "event") return `Check out this event: ${detailedData.title} at ${detailedData.venue}!`;
+    if (type === "venue") return `Check out this venue: ${detailedData.name} (${detailedData.venueType})`;
+    if (type === "service") return `Check out this service: ${detailedData.serviceType} by ${detailedData.name}`;
+    if (type === "performance") return `Check out this performer: ${detailedData.name} (${detailedData.artType})`;
 
     return "Check this out on FunPlug!";
-  }, [type, data]);
+  }, [type, detailedData]);
 
   const whatsappShare = `https://api.whatsapp.com/send?text=${encodeURIComponent(
     shareText
@@ -190,23 +243,23 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
   };
 
   const getTitle = () => {
-    if (!data) return "";
+    if (!detailedData) return "";
 
-    if (type === "event") return data.title;
-    if (type === "venue") return data.venueType;
-    if (type === "service") return data.serviceType;
-    if (type === "performance") return data.artType;
+    if (type === "event") return detailedData.title;
+    if (type === "venue") return detailedData.venueType;
+    if (type === "service") return detailedData.serviceType;
+    if (type === "performance") return detailedData.artType;
 
     return "";
   };
 
   const getSubtitle = () => {
-    if (!data) return "";
+    if (!detailedData) return "";
 
-    if (type === "event") return `${data.city}, ${data.country}`;
-    if (type === "venue") return `${data.city}, ${data.country}`;
-    if (type === "service") return `${data.city}, ${data.country}`;
-    if (type === "performance") return `${data.city}, ${data.country}`;
+    if (type === "event") return `${detailedData.city}, ${detailedData.country}`;
+    if (type === "venue") return `${detailedData.city}, ${detailedData.country}`;
+    if (type === "service") return `${detailedData.city}, ${detailedData.country}`;
+    if (type === "performance") return `${detailedData.city}, ${detailedData.country}`;
 
     return "";
   };
@@ -220,32 +273,32 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
   };
 
   const isActionDisabled = useMemo(() => {
-    if (!data) return true;
+    if (!detailedData) return true;
 
     if (type === "event") {
-      const isRegularSoldOut = data.regularTicketsRemaining <= 0;
-      const isVipSoldOut = data.vipTicketsRemaining <= 0;
-      const isVvipSoldOut = data.vvipTicketsRemaining <= 0;
-      const isFreeSoldOut = data.freeTicketsRemaining <= 0;
+      const isRegularSoldOut = detailedData.regularTicketsRemaining <= 0;
+      const isVipSoldOut = detailedData.vipTicketsRemaining <= 0;
+      const isVvipSoldOut = detailedData.vvipTicketsRemaining <= 0;
+      const isFreeSoldOut = detailedData.freeTicketsRemaining <= 0;
 
       const allPaidOptionsSoldOut =
-        data.ticketType === "paid" &&
-        (!data.regularPrice || isRegularSoldOut) &&
-        (!data.vipPrice || isVipSoldOut) &&
-        (!data.vvipPrice || isVvipSoldOut);
+        detailedData.ticketType === "paid" &&
+        (!detailedData.regularPrice || isRegularSoldOut) &&
+        (!detailedData.vipPrice || isVipSoldOut) &&
+        (!detailedData.vvipPrice || isVvipSoldOut);
 
       return (
-        (data.ticketType === "paid" && allPaidOptionsSoldOut) ||
-        (data.ticketType === "free" && isFreeSoldOut)
+        (detailedData.ticketType === "paid" && allPaidOptionsSoldOut) ||
+        (detailedData.ticketType === "free" && isFreeSoldOut)
       );
     }
 
     if (type === "venue" || type === "service" || type === "performance") {
-      return data.bookingStatus === "closed";
+      return detailedData.bookingStatus === "closed";
     }
 
     return false;
-  }, [data, type]);
+  }, [detailedData, type]);
 
   const openFullscreen = () => {
     setFullscreenIndex(carouselIndex);
@@ -264,7 +317,7 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
     setFullscreenIndex((prev) => (prev - 1 + media.length) % media.length);
   };
 
-  if (!data) return null;
+  if (!detailedData) return null;
 
   return (
     <>
@@ -372,6 +425,20 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
         </DialogTitle>
 
         <DialogContent dividers>
+          {/* LOADING INDICATOR */}
+          {isLoadingDetails && (
+            <Box display="flex" justifyContent="center" alignItems="center" py={3}>
+              <CircularProgress size={40} />
+            </Box>
+          )}
+
+          {/* ERROR MESSAGE */}
+          {loadError && (
+            <Typography color="error" sx={{ mb: 2 }}>
+              {loadError}
+            </Typography>
+          )}
+
           {/* FOLLOW FORM */}
           {isFollowOpen && (
             <Box component="form" onSubmit={handleFollowSubmit} sx={{ mb: 3 }}>
@@ -542,7 +609,7 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
 
           <Divider sx={{ my: 2 }} />
 
-          <ListingDetailsBody type={type} data={data} />
+          <ListingDetailsBody type={type} data={detailedData} />
         </DialogContent>
 
         <DialogActions sx={{ justifyContent: "center" }}>

@@ -14,16 +14,45 @@ import {
   TextField,
   Alert,
   Stack,
-  Divider
+  Divider,
+  Box
 } from "@mui/material";
 
 import usePaymentPolling from "./hooks/usePaymentPolling";
 import PaymentStatusBanner from "./components/PaymentStatusBanner";
+import { fetchPerformanceById } from "./services/performanceService";
 
 const API_URL = process.env.REACT_APP_API_URL;
 const socket = io(API_URL, { autoConnect: false });
 
 const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
+  const [performanceData, setPerformanceData] = useState(performance);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+
+  // Fetch full performance details when modal mounts
+  useEffect(() => {
+    if (!performance?._id) return;
+
+    const fetchDetails = async () => {
+      try {
+        setIsLoadingDetails(true);
+        setLoadError(null);
+        const fullPerformance = await fetchPerformanceById(performance._id);
+        if (fullPerformance) {
+          setPerformanceData(fullPerformance);
+        }
+      } catch (error) {
+        console.error("Error fetching performance details:", error);
+        setLoadError("Failed to load performance details");
+        setPerformanceData(performance);
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    };
+
+    fetchDetails();
+  }, [performance?._id, performance]);
   const [form, setForm] = useState({
     clientName: "",
     phone: "",
@@ -85,7 +114,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
 
       if (hours > 0) {
         setDuration(hours);
-        const totalCost = hours * Number(performance.charges || 0);
+        const totalCost = hours * Number(performanceData.charges || 0);
         setTotal(totalCost);
         setReservationFee(Math.ceil(totalCost * 0.1));
       } else {
@@ -94,7 +123,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
         setReservationFee(0);
       }
     }
-  }, [form.from, form.to, performance.charges]);
+  }, [form.from, form.to, performanceData.charges]);
 
   const today = new Date().toISOString().split("T")[0];
   
@@ -136,7 +165,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
     try {
       const params = new URLSearchParams();
       const { bookingDate, from, to } = form;
-      params.append("cardId", performance._id);
+      params.append("cardId", performanceData._id);
       params.append("bookingDate", bookingDate);
       params.append("from", from);
       params.append("to", to);
@@ -174,8 +203,8 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
 
     try {
       const payload = {
-        cardId: performance._id,
-        creatorId: performance.userId,
+        cardId: performanceData._id,
+        creatorId: performanceData.userId,
         clientName: form.clientName,
         email: form.email,
         phone: formatPhone(form.phone),
@@ -185,8 +214,8 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
         duration: String(duration),
         totalAmount: total,
         eventDetails: form.eventDetails,
-        artType: performance.artType,
-        artTitle: performance.name,
+        artType: performanceData.artType,
+        artTitle: performanceData.name,
         paymentMethod,
         amount: reservationFee,
       };
@@ -279,10 +308,22 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
       scroll="paper"
     >
       <DialogTitle>
-        Book {performance.name} for {performance.artType} Performance
+        Book {performanceData.name} for {performanceData.artType} Performance
       </DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "75vh", overflowY: "auto", pb: 2 }}>
+          {isLoadingDetails && (
+            <Box display="flex" justifyContent="center" alignItems="center" py={3}>
+              <CircularProgress size={40} />
+            </Box>
+          )}
+
+          {loadError && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              {loadError}
+            </Alert>
+          )}
+
           {errors.general && (
             <Alert severity="error">{errors.general}</Alert>
           )}
@@ -424,7 +465,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
         <Button
           variant="contained"
           onClick={handleBookPerformance}
-          disabled={loading || performance.bookingStatus === "closed"}
+          disabled={loading || performanceData.bookingStatus === "closed"}
         >
           {loading ? <CircularProgress size={22}/> : "Book Now"}
         </Button>
