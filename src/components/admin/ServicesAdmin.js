@@ -13,23 +13,30 @@ import {
   TextField,
   Button,
   Modal,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  CircularProgress,
 } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { fetchAdminProfile } from '../../services/adminService';
-import { getAllUsers, getUserById } from '../../services/userService';
-import { getAllServices, updateServiceStatus, getBookingsByServiceId,} from '../../services/serviceService';
+import { getAllServices, updateServiceStatus, getBookingsByServiceId, deleteService } from '../../services/serviceService';
 import  { exportBookingsToCSV } from './adminHelpers';
 
 const ServicesAdmin = () => {
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
-  const [usersMap, setUsersMap] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBookings, setSelectedBookings] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [bookingSearch, setBookingSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
   const navigate = useNavigate();
 
@@ -51,25 +58,14 @@ const ServicesAdmin = () => {
   }, []);
 
 const initialize = async () => {
+    setLoading(true);
     try {
       await fetchAdminProfile();
-      await fetchUsers();
       await fetchServices();
     } catch (err) {
       console.error('Admin initialization failed:', err);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const users = await getAllUsers();
-      const map = {};
-      users.forEach((user) => {
-        map[user._id] = user.username;
-      });
-      setUsersMap(map);
-    } catch (err) {
-      console.error('Failed to fetch users:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,13 +75,7 @@ const initialize = async () => {
 
       const enrichedServices = await Promise.all(
         servicesData.map(async (service) => {
-          let username = 'Unknown User';
-
-          try {
-            const user = await getUserById(service.userId);
-            username = user.username;
-          } catch {/* ignore */}
-
+          const username = service.userSnapshot?.username || 'Unknown User';
           const bookings = await getBookingsByServiceId(service._id);
           const successBookings = bookings.filter(
             (b) => b.paymentStatus === 'Success'
@@ -119,7 +109,7 @@ const initialize = async () => {
     const filtered = services.filter(
       (service) =>
         service.serviceType?.toLowerCase().includes(query) ||
-        usersMap[service.userId]?.toLowerCase().includes(query)
+        service.userSnapshot?.username?.toLowerCase().includes(query)
     );
 
     setFilteredServices(filtered);
@@ -148,6 +138,26 @@ const initialize = async () => {
     }
   };
 
+  const handleDeleteClick = (serviceId, serviceName) => {
+    setDeleteConfirm({ open: true, id: serviceId, name: serviceName });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteService(deleteConfirm.id);
+      setServices(services.filter(s => s._id !== deleteConfirm.id));
+      setFilteredServices(filteredServices.filter(s => s._id !== deleteConfirm.id));
+      setDeleteConfirm({ open: false, id: null, name: '' });
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      alert('Failed to delete service');
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, id: null, name: '' });
+  };
+
   const filteredBookings = useMemo(() => {
     const q = bookingSearch.toLowerCase();
     return selectedBookings.filter(
@@ -171,7 +181,15 @@ const initialize = async () => {
     [filteredBookings]
   );
 
-return (
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
     <div>
       <Typography variant="h4">Manage Services</Typography>
 
@@ -218,7 +236,7 @@ return (
             <TableBody>
               {filteredServices.map((service) => (
                 <TableRow key={service._id}>
-                  <TableCell>{usersMap[service.userId] || 'Unknown'}</TableCell>
+                  <TableCell>{service.userSnapshot?.username || 'Unknown User'}</TableCell>
                   <TableCell>{service.name}</TableCell>
                   <TableCell>{service.serviceType}</TableCell>
                   <TableCell>{service.country}</TableCell>
@@ -239,6 +257,13 @@ return (
                       onClick={() => handleToggleStatus(service._id, service.status)}
                     >
                       {service.status === 'Active' ? 'Suspend' : 'Approve'}
+                    </Button>
+                    <Button
+                      startIcon={<DeleteIcon />}
+                      color="error"
+                      onClick={() => handleDeleteClick(service._id, service.name)}
+                    >
+                      Delete
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -323,6 +348,25 @@ return (
           </TableContainer>
         </Box>
       </Modal>
+
+      {/* ================= DELETE CONFIRMATION DIALOG ================= */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={handleCancelDelete}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the service <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

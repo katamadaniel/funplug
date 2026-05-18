@@ -119,19 +119,23 @@ export const NotificationProvider = ({ children, userId, token }) => {
   const markAllAsSeen = async (type) => {
     const endpoint = SOURCES[type].list;
 
-    await axiosInstance.put(`${endpoint}/user/${userId}/seen`);
+    try {
+      await axiosInstance.put(`${endpoint}/user/${userId}/seen`);
 
-    setNotifications((prev) =>
-      prev.map((n) => (n.type === type ? { ...n, seen: true } : n))
-    );
+      setNotifications((prev) => {
+        const unseenTypeCount = prev.filter(
+          (n) => n.type === type && !n.seen
+        ).length;
 
-    setUnseenCount((prev) =>
-      Math.max(
-        prev -
-          notifications.filter((n) => n.type === type && !n.seen).length,
-        0
-      )
-    );
+        setUnseenCount((count) => Math.max(count - unseenTypeCount, 0));
+
+        return prev.map((n) =>
+          n.type === type ? { ...n, seen: true } : n
+        );
+      });
+    } catch (err) {
+      console.error('Failed to mark all notifications as seen:', err);
+    }
   };
 
   return (

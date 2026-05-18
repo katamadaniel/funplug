@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { decodeToken } from '../utils/decodeToken';
+import { sanitizeAxiosError } from '../utils/errorHandler';
 
 const axiosInstance = axios.create({
   // Automatically include credentials with requests
@@ -63,7 +64,7 @@ axiosInstance.interceptors.response.use(
       }
       // Handle 403 Forbidden
       else if (status === 403) {
-        console.warn('Access forbidden:', error.response.data);
+        console.warn('Access forbidden');
       }
       // Handle 429 Too Many Requests
       else if (status === 429) {
@@ -71,7 +72,7 @@ axiosInstance.interceptors.response.use(
       }
     }
     
-    return Promise.reject(error);
+    return Promise.reject(sanitizeAxiosError(error));
   }
 );
 

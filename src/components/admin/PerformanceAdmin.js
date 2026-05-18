@@ -13,23 +13,30 @@ import {
   TextField,
   Button,
   Modal,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  CircularProgress,
 } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { fetchAdminProfile } from '../../services/adminService';
-import { getAllUsers, getUserById } from '../../services/userService';
-import { getAllCards, updatePerformanceStatus, getBookingsByCardId,} from '../../services/performanceService';
+import { getAllCards, updatePerformanceStatus, getBookingsByCardId, deleteCard } from '../../services/performanceService';
 import  { exportBookingsToCSV } from './adminHelpers';
 
 const PerformanceAdmin = () => {
   const [cards, setCards] = useState([]);
   const [filteredCards, setFilteredCards] = useState([]);
-  const [usersMap, setUsersMap] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBookings, setSelectedBookings] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [bookingSearch, setBookingSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
   const navigate = useNavigate();
 
@@ -51,25 +58,14 @@ const PerformanceAdmin = () => {
 }, []);
 
 const initialize = async () => {
+    setLoading(true);
     try {
       await fetchAdminProfile();
-      await fetchUsers();
       await fetchCards();
     } catch (err) {
       console.error('Admin initialization failed:', err);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const users = await getAllUsers();
-      const map = {};
-      users.forEach((user) => {
-        map[user._id] = user.username;
-      });
-      setUsersMap(map);
-    } catch (err) {
-      console.error('Failed to fetch users:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,13 +75,7 @@ const initialize = async () => {
 
       const enrichedCards = await Promise.all(
         cardsData.map(async (card) => {
-          let username = 'Unknown User';
-
-          try {
-            const user = await getUserById(card.userId);
-            username = user.username;
-          } catch {/* ignore */}
-
+          const username = card.userSnapshot?.username || 'Unknown User';
           const bookings = await getBookingsByCardId(card._id);
           const successBookings = bookings.filter(
             (b) => b.paymentStatus === 'Success'
@@ -114,12 +104,11 @@ const initialize = async () => {
     const filtered = cards.filter(
       (card) =>
         card.artType?.toLowerCase().includes(query) ||
-        usersMap[card.userId]?.toLowerCase().includes(query)
-    );
-
+          card.userSnapshot?.username?.toLowerCase().includes(query)
+      );
     setFilteredCards(filtered);
   };
-
+  
   const handleViewReport = async (cardId) => {
     try {
       const bookings = await getBookingsByCardId(cardId);
@@ -141,6 +130,26 @@ const initialize = async () => {
     } catch (err) {
       console.error('Status update failed', err);
     }
+  };
+
+  const handleDeleteClick = (cardId, cardName) => {
+    setDeleteConfirm({ open: true, id: cardId, name: cardName });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteCard(deleteConfirm.id);
+      setCards(cards.filter(c => c._id !== deleteConfirm.id));
+      setFilteredCards(filteredCards.filter(c => c._id !== deleteConfirm.id));
+      setDeleteConfirm({ open: false, id: null, name: '' });
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      alert('Failed to delete card');
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, id: null, name: '' });
   };
 
   const filteredBookings = useMemo(() => {
@@ -165,6 +174,14 @@ const initialize = async () => {
     ),
     [filteredBookings]
   );
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <div>
@@ -209,7 +226,7 @@ const initialize = async () => {
             <TableBody>
               {filteredCards.map((card) => (
                 <TableRow key={card._id}>
-                  <TableCell>{usersMap[card.userId] || 'Unknown'}</TableCell>
+                  <TableCell>{card.userSnapshot?.username || 'Unknown User'}</TableCell>
                   <TableCell>{card.name}</TableCell>
                   <TableCell>{card.artType}</TableCell>
                   <TableCell>{card.country}</TableCell>
@@ -231,6 +248,13 @@ const initialize = async () => {
                       onClick={() => handleToggleStatus(card._id, card.status)}
                     >
                       {card.status === 'Active' ? 'Suspend' : 'Approve'}
+                    </Button>
+                    <Button
+                      startIcon={<DeleteIcon />}
+                      color="error"
+                      onClick={() => handleDeleteClick(card._id, card.name)}
+                    >
+                      Delete
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -315,6 +339,26 @@ const initialize = async () => {
           </TableContainer>
         </Box>
       </Modal>
+
+      {/* ================= DELETE CONFIRMATION DIALOG ================= */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={handleCancelDelete}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the performance <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </div>
   );
 };

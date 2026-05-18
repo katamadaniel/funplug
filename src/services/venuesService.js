@@ -161,14 +161,6 @@ export const getAllVenues = async () => {
   }
 };
 
-export const deleteVenueById = async (venueId) => {
-  const token = localStorage.getItem('adminToken');
-  const config = { headers: { Authorization: `Bearer ${token}` } };
-  const response = await axiosInstance.delete(
-    `${VENUES_API_URL}/${venueId}`, config);
-  return response.data;
-};
-
 export const getBookingsByVenueId = async (venueId) => {
   try{
   const token = localStorage.getItem('adminToken');

@@ -16,17 +16,24 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-import { getAllUsers } from '../../services/userService';
 import {
   fetchAllEvents,
   getAllTicketSales,
   purchaseByEventId,
   updateEventStatus,
+  deleteEvent,
 } from '../../services/eventService';
 import { fetchAdminProfile } from '../../services/adminService';
 import { exportBookingsToCSV } from './adminHelpers';
@@ -35,20 +42,24 @@ const EventsAdmin = () => {
   const navigate = useNavigate();
 
   const [events, setEvents] = useState([]);
-  const [usersMap, setUsersMap] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredEvents, setFilteredEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [openModal, setOpenModal] = useState(false);
   const [selectedEventPurchases, setSelectedEventPurchases] = useState([]);
   const [purchaseSearch, setPurchaseSearch] = useState('');
 
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
-    if (!token) navigate('/admin');
-    else initialize();
+    if (!token) {
+      navigate('/admin');
+    } else {
+      initialize();
+    }
   }, [navigate]);
 
   useEffect(() => {
@@ -57,16 +68,13 @@ const EventsAdmin = () => {
   }, []);
 
   const initialize = async () => {
-    await fetchAdminProfile();
-    await fetchUsers();
-    await fetchEventsWithSales();
-  };
-
-  const fetchUsers = async () => {
-    const users = await getAllUsers();
-    const map = {};
-    users.forEach(u => (map[u._id] = u.username));
-    setUsersMap(map);
+    setLoading(true);
+    try {
+      await fetchAdminProfile();
+      await fetchEventsWithSales();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchEventsWithSales = async () => {
@@ -94,7 +102,7 @@ const EventsAdmin = () => {
       events.filter(
         e =>
           e.title.toLowerCase().includes(q) ||
-          usersMap[e.userId]?.toLowerCase().includes(q)
+          e.userSnapshot?.username?.toLowerCase().includes(q)
       )
     );
   };
@@ -106,6 +114,26 @@ const EventsAdmin = () => {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     );
     setOpenModal(true);
+  };
+
+  const handleDeleteClick = (eventId, eventName) => {
+    setDeleteConfirm({ open: true, id: eventId, name: eventName });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteEvent(deleteConfirm.id);
+      setEvents(events.filter(e => e._id !== deleteConfirm.id));
+      setFilteredEvents(filteredEvents.filter(e => e._id !== deleteConfirm.id));
+      setDeleteConfirm({ open: false, id: null, name: '' });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event');
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, id: null, name: '' });
   };
 
   const filteredPurchases = useMemo(() => {
@@ -131,6 +159,14 @@ const EventsAdmin = () => {
     [filteredPurchases]
   );
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   const renderEventTable = eventsList => (
     <Table size="small">
       <TableHead>
@@ -138,6 +174,12 @@ const EventsAdmin = () => {
           <TableCell>User</TableCell>
           <TableCell>Title</TableCell>
           <TableCell>Date</TableCell>
+          <TableCell>Regular Price</TableCell>
+          <TableCell>VIP Price</TableCell>
+          <TableCell>VVIP Price</TableCell>
+          <TableCell>Regular Tickets Sold</TableCell>
+          <TableCell>VIP Tickets Sold</TableCell>
+          <TableCell>VVIP Tickets Sold</TableCell>          
           <TableCell>Total Revenue</TableCell>
           <TableCell>Actions</TableCell>
         </TableRow>
@@ -145,9 +187,15 @@ const EventsAdmin = () => {
       <TableBody>
         {eventsList.map(event => (
           <TableRow key={event._id}>
-            <TableCell>{usersMap[event.userId] || 'Unknown'}</TableCell>
+          <TableCell>{event.userSnapshot?.username || 'Unknown User'}</TableCell>
             <TableCell>{event.title}</TableCell>
             <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+            <TableCell>Ksh.{event.regularPrice ? event.regularPrice.toFixed(2) : 'N/A'}</TableCell>
+            <TableCell>Ksh.{event.vipPrice ? event.vipPrice.toFixed(2) : 'N/A'}</TableCell>
+            <TableCell>Ksh.{event.vvipPrice ? event.vvipPrice.toFixed(2) : 'N/A'}</TableCell>
+            <TableCell>{event.regularTicketsSold || 0}</TableCell>
+            <TableCell>{event.vipTicketsSold || 0}</TableCell>
+            <TableCell>{event.vvipTicketsSold || 0}</TableCell>
             <TableCell>Ksh. {event.totalRevenue.toFixed(2)}</TableCell>
             <TableCell>
               <Button
@@ -167,6 +215,13 @@ const EventsAdmin = () => {
                 }
               >
                 {event.status === 'Active' ? 'Suspend' : 'Approve'}
+              </Button>
+              <Button
+                startIcon={<DeleteIcon />}
+                color="error"
+                onClick={() => handleDeleteClick(event._id, event.title)}
+              >
+                Delete
               </Button>
             </TableCell>
           </TableRow>
@@ -222,6 +277,25 @@ const EventsAdmin = () => {
           </TableContainer>
         </AccordionDetails>
       </Accordion>
+
+      {/* ================= DELETE CONFIRMATION DIALOG ================= */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={handleCancelDelete}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the event <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* ================= PURCHASE MODAL ================= */}
       <Modal open={openModal} onClose={() => setOpenModal(false)}>

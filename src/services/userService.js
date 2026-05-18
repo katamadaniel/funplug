@@ -199,13 +199,25 @@ export const resetUserPassword = async (userId, newPassword) => {
 };
 
 export const getAllUsers = async () => {
-  const response = await axiosInstance.get(`${USERS_API_URL}`);
-  return response.data;
+  try {
+    const response = await axiosInstance.get(`${USERS_API_URL}/users`);
+    return response.data;
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error fetching all users:', parsedError);
+    throw parsedError;
+  }
 };
 
 export const getUserById = async (userId) => {
-  const response = await axiosInstance.get(`${USERS_API_URL}/${userId}`);
-  return response.data;
+  try {
+    const response = await axiosInstance.get(`${USERS_API_URL}/${userId}`);
+    return response.data;
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error fetching user:', parsedError);
+    throw parsedError;
+  }
 };
 
 export const fetchRecentUsers = async () => {

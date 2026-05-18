@@ -1,4 +1,5 @@
 import axiosInstance from '../services/axiosInstance';
+import { sanitizeAxiosError } from '../utils/errorHandler';
 
 const api = axiosInstance.create({
   baseURL: process.env.REACT_APP_API_URL,
@@ -18,7 +19,7 @@ api.interceptors.response.use(
     const config = error.config;
 
     if (!config) {
-      return Promise.reject(error);
+      return Promise.reject(sanitizeAxiosError(error));
     }
 
     // Retry on network / timeout
@@ -37,7 +38,7 @@ api.interceptors.response.use(
       return api(config);
     }
 
-    return Promise.reject(error);
+    return Promise.reject(sanitizeAxiosError(error));
   }
 );
 

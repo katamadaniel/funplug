@@ -35,6 +35,11 @@ import {
   Snackbar,
   Stack,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -139,6 +144,7 @@ const Services = ({ token }) => {
     message: "",
     severity: "success",
   });
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
   const [formData, setFormData] = useState({
     serviceType: "",
@@ -353,16 +359,19 @@ const Services = ({ token }) => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this service?")) return;
+  const handleDeleteClick = (serviceId, serviceName) => {
+    setDeleteConfirm({ open: true, id: serviceId, name: serviceName });
+  };
 
+  const handleConfirmDelete = async () => {
     try {
-      await deleteService(id);
+      await deleteService(deleteConfirm.id);
       setSnackbar({
         open: true,
         message: "Service deleted successfully",
         severity: "success",
       });
+      setDeleteConfirm({ open: false, id: null, name: '' });
       loadMyServices();
     } catch (error) {
       setSnackbar({
@@ -372,6 +381,10 @@ const Services = ({ token }) => {
       });
       console.error(error);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, id: null, name: '' });
   };
 
   const filteredBookingsByService = {};
@@ -662,7 +675,7 @@ const Services = ({ token }) => {
                       variant="outlined"
                       color="error"
                       startIcon={<Delete />}
-                      onClick={() => handleDelete(service._id)}
+                      onClick={() => handleDeleteClick(service._id, service.name)}
                     >
                       Delete
                     </Button>
@@ -883,6 +896,25 @@ const Services = ({ token }) => {
         progress={uploadProgress}
         text={selectedService ? "Updating Service..." : "Creating Service..."}
       />
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={handleCancelDelete}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the service <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

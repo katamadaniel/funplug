@@ -160,14 +160,6 @@ export const getAllCards = async () => {
     }
   };
 
-export const deleteCardById = async (cardId) => {
-  const token = localStorage.getItem('adminToken');
-  const config = { headers: { Authorization: `Bearer ${token}` } };
-  const response = await axiosInstance.delete(
-    `${PERFORMANCES_API_URL}/${cardId}`, config);
-  return response.data;
-};
-
 export const getBookingsByCardId = async (cardId) => {
   try{
     const token = localStorage.getItem('adminToken');

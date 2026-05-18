@@ -35,6 +35,11 @@ import {
   Snackbar,
   Stack,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -138,6 +143,7 @@ const Performance = ({ token }) => {
     message: "",
     severity: "success",
   });
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
   const [formData, setFormData] = useState({
     artType: "",
@@ -339,17 +345,24 @@ const Performance = ({ token }) => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this card?")) return;
+  const handleDeleteClick = (cardId, cardName) => {
+    setDeleteConfirm({ open: true, id: cardId, name: cardName });
+  };
 
+  const handleConfirmDelete = async () => {
     try {
-      await deleteCard(id);
+      await deleteCard(deleteConfirm.id);
       setSnackbar({ open: true, message: "Card deleted successfully", severity: "success" });
+      setDeleteConfirm({ open: false, id: null, name: '' });
       loadMyCards();
     } catch (error) {
       setSnackbar({ open: true, message: "Error deleting card", severity: "error" });
       console.error(error);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, id: null, name: '' });
   };
 
   const filteredBookingsByCard = {};
@@ -630,7 +643,7 @@ const Performance = ({ token }) => {
                       variant="outlined"
                       color="error"
                       startIcon={<Delete />}
-                      onClick={() => handleDelete(card._id)}
+                      onClick={() => handleDeleteClick(card._id, card.name)}
                     >
                       Delete
                     </Button>
@@ -826,6 +839,25 @@ const Performance = ({ token }) => {
         progress={uploadProgress}
         text={selectedCard ? "Updating Rate Card..." : "Creating Rate Card..."}
       />
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={handleCancelDelete}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the performance <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

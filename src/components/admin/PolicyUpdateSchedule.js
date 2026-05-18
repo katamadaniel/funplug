@@ -127,9 +127,9 @@ export default function PolicyUpdateSchedule({ onSuccess }) {
   };
 
   const docTypeLabels = {
-    'privacy-policy': '🔒 Privacy Policy',
-    'terms-of-service': '⚖️ Terms of Service',
-    'user-agreement': '👥 User Agreement',
+    'privacy-policy': 'Privacy Policy',
+    'terms-of-service': 'Terms of Service',
+    'user-agreement': 'User Agreement',
   };
 
   const getStatusColor = (status) => {

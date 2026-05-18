@@ -206,3 +206,119 @@ export const deleteAdminTask = async (taskId) => {
   const res = await axiosInstance.delete(`${TASKS_API_URL}/${taskId}`);
   return res.data;
 };
+
+/* ================== EMAIL TEMPLATES ================== */
+
+/**
+ * Fetch all email templates
+ */
+export const fetchEmailTemplates = async (params = {}) => {
+  try {
+    const response = await axiosInstance.get(`${EMAIL_API_URL}/templates`, { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to fetch templates');
+  }
+};
+
+/**
+ * Get a single email template by ID
+ */
+export const fetchEmailTemplateById = async (templateId) => {
+  try {
+    const response = await axiosInstance.get(`${EMAIL_API_URL}/templates/${templateId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to fetch template');
+  }
+};
+
+/**
+ * Create a new email template
+ */
+export const createEmailTemplate = async (templateData) => {
+  try {
+    const response = await axiosInstance.post(`${EMAIL_API_URL}/templates`, templateData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to create template');
+  }
+};
+
+/**
+ * Update an email template
+ */
+export const updateEmailTemplate = async (templateId, templateData) => {
+  try {
+    const response = await axiosInstance.put(`${EMAIL_API_URL}/templates/${templateId}`, templateData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to update template');
+  }
+};
+
+/**
+ * Delete an email template
+ */
+export const deleteEmailTemplate = async (templateId) => {
+  try {
+    const response = await axiosInstance.delete(`${EMAIL_API_URL}/templates/${templateId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to delete template');
+  }
+};
+
+/* ================== EMAIL COMPOSITION ================== */
+
+/**
+ * Compose and send custom email to recipients
+ */
+export const composeEmail = async (emailData) => {
+  try {
+    const response = await axiosInstance.post(`${EMAIL_API_URL}/compose`, emailData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to compose email');
+  }
+};
+
+/**
+ * Send signup invitation emails to non-registered users
+ */
+export const sendSignupInvitations = async (invitationData) => {
+  try {
+    const response = await axiosInstance.post(`${EMAIL_API_URL}/invite-signup`, invitationData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to send signup invitations');
+  }
+};
+
+/* ================== USER MANAGEMENT FOR EMAIL ================== */
+
+/**
+ * Search users by email, name, or phone
+ */
+export const searchUsers = async (query, limit = 10) => {
+  try {
+    const response = await axiosInstance.get(`${ADMIN_API_URL}/users/search`, {
+      params: { query, limit },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to search users');
+  }
+};
+
+/**
+ * Get all user emails for bulk sending
+ */
+export const getAllUserEmails = async () => {
+  try {
+    const response = await axiosInstance.get(`${ADMIN_API_URL}/users/emails`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to fetch user emails');
+  }
+};

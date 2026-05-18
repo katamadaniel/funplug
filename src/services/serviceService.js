@@ -156,14 +156,6 @@ export const getAllServices = async () => {
   }
 };
 
-export const deleteServiceById = async (serviceId) => {
-  const token = localStorage.getItem('adminToken');
-  const response = await axiosInstance.delete(`${SERVICES_API_URL}/${serviceId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
-
 export const getBookingsByServiceId = async (serviceId) => {
   try{
   const token = localStorage.getItem('adminToken');

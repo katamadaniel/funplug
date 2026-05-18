@@ -13,6 +13,7 @@ import {
   Divider,
   Stack,
   IconButton,
+  Paper,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
@@ -60,6 +61,33 @@ const Notifications = () => {
   const unseenByType = (type) =>
     grouped[type]?.filter((n) => !n.seen).length || 0;
 
+  const formatDetailKey = (key) =>
+    key
+      .replace(/([A-Z])/g, " $1")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+  const formatDetailValue = (key, value) => {
+    if (value === null || value === undefined || value === "") {
+      return "—";
+    }
+
+    const lowerKey = key.toLowerCase();
+    if (lowerKey.includes("date") || lowerKey.includes("createdat")) {
+      return format(new Date(value), "EEEE, MMM d, yyyy");
+    }
+
+    if (lowerKey.includes("amount") || lowerKey === "total") {
+      return `Ksh. ${Number(value).toFixed(2)}`;
+    }
+
+    if (lowerKey === "duration") {
+      return typeof value === "number" ? `${value} hrs` : String(value);
+    }
+
+    return String(value);
+  };
+
   const openDetails = (n) => {
     setSelected(n);
     if (!n.seen) markAsSeen(n);
@@ -80,39 +108,46 @@ const Notifications = () => {
       </Typography>
 
       {/* CATEGORY TABS */}
-      <Tabs
-        value={activeTab}
-        onChange={(_, v) => setActiveTab(v)}
-        variant="scrollable"
-        scrollButtons="auto"
-        sx={{ mb: 3 }}
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        alignItems="center"
+        justifyContent="space-between"
+        mb={2}
       >
-      <Box display="flex" justifyContent="flex-end" mb={1}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, v) => setActiveTab(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ flex: 1 }}
+        >
+          {Object.entries(CATEGORY_CONFIG).map(([key, cfg]) => (
+            <Tab
+              key={key}
+              value={key}
+              icon={
+                <Badge
+                  badgeContent={unseenByType(key)}
+                  color="error"
+                  invisible={unseenByType(key) === 0}
+                >
+                  {cfg.icon}
+                </Badge>
+              }
+              label={cfg.label}
+            />
+          ))}
+        </Tabs>
+
         <Chip
           label="Mark all as read"
           clickable
           onClick={() => markAllAsSeen(activeTab)}
           disabled={unseenByType(activeTab) === 0}
+          sx={{ mt: { xs: 1, sm: 0 }, ml: { sm: 2 } }}
         />
       </Box>
-       
-        {Object.entries(CATEGORY_CONFIG).map(([key, cfg]) => (
-          <Tab
-            key={key}
-            value={key}
-            icon={
-              <Badge
-                badgeContent={unseenByType(key)}
-                color="error"
-                invisible={unseenByType(key) === 0}
-              >
-                {cfg.icon}
-              </Badge>
-            }
-            label={cfg.label}
-          />
-        ))}
-      </Tabs>
 
       {/* NOTIFICATION LIST */}
       <List>
@@ -184,13 +219,25 @@ const Notifications = () => {
             <Divider sx={{ my: 2 }} />
 
             {/* TYPE-SPECIFIC DETAILS */}
-            <Stack spacing={1}>
-              {Object.entries(selected.details || {}).map(([k, v]) => (
-                <Typography key={k}>
-                  <strong>{k.replace(/([A-Z])/g, " $1")}:</strong> {String(v)}
-                </Typography>
-              ))}
-            </Stack>
+            <Paper variant="outlined" sx={{ p: 2, bgcolor: "background.paper" }}>
+              <Stack spacing={1}>
+                {Object.entries(selected.details || {}).map(([k, v]) => (
+                  <Box
+                    key={k}
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                  >
+                    <Typography color="text.secondary" sx={{ mr: 1, fontWeight: 600 }}>
+                      {formatDetailKey(k)}:
+                    </Typography>
+                    <Typography sx={{ textAlign: "right", wordBreak: "break-word" }}>
+                      {formatDetailValue(k, v)}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Paper>
           </>
         )}
       </Drawer>

@@ -5,6 +5,7 @@ import {
   Drawer,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   Divider,
   useMediaQuery,
@@ -57,7 +58,7 @@ const Menu = ({ isAuthenticated }) => {
 
   return (
     <>
-      {/* TOP ACTION BAR */}
+      {/* TOP ACTION BAR (MENU) */}
       <Box
         sx={{
           position: "fixed",
@@ -68,23 +69,31 @@ const Menu = ({ isAuthenticated }) => {
           borderRadius: 3,
           boxShadow: 3,
           px: 1.5,
-          py: 1,         
+          py: 1,
         }}
       >
-        <Stack
-          direction={isMobile ? "column" : "row"}
-          spacing={1}
-          alignItems="center"
-        >
-          <Tooltip title="Menu">
-            <IconButton onClick={() => setOpen(true)}>
-              <MenuIcon />
-            </IconButton>
-          </Tooltip>
+        <Tooltip title="Menu">
+          <IconButton onClick={() => setOpen(true)}>
+            <MenuIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
-          {/* ALWAYS VISIBLE SEARCH */}
-          <SearchBar compact={isMobile} />
-        </Stack>
+      {/* TOP ACTION BAR (SEARCH) */}
+      <Box
+        sx={{
+          position: "fixed",
+          top: 80,
+          right: 16,
+          zIndex: 1200,
+          bgcolor: "background.paper",
+          borderRadius: 3,
+          boxShadow: 3,
+          px: 1.5,
+          py: 1,
+        }}
+      >
+        <SearchBar />
       </Box>
 
       {/* DRAWER */}
@@ -101,25 +110,16 @@ const Menu = ({ isAuthenticated }) => {
       >
         <List>
           {(isAuthenticated ? authLinks : guestLinks).map((item) => (
-            <ListItem
-              button
-              key={item.label}
-              onClick={() => handleNavigate(item.path)}
-            >
-              {item.icon}
-              <ListItemText sx={{ ml: 2 }} primary={item.label} />
+            <ListItem key={item.label} disablePadding>
+              <ListItemButton onClick={() => handleNavigate(item.path)}>
+                {item.icon}
+                <ListItemText sx={{ ml: 2 }} primary={item.label} />
+              </ListItemButton>
             </ListItem>
           ))}
         </List>
 
         <Divider sx={{ my: 2 }} />
-
-        {/* MOBILE SEARCH INSIDE DRAWER (OPTIONAL DUPLICATE) */}
-        {isMobile && (
-          <Box px={2}>
-            <SearchBar fullWidth />
-          </Box>
-        )}
       </Drawer>
     </>
   );

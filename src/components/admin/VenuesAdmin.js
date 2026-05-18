@@ -13,22 +13,29 @@ import {
   TextField,
   Button,
   Modal,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { fetchAdminProfile } from '../../services/adminService';
-import { getAllUsers, getUserById } from '../../services/userService';
-import { getAllVenues, updateVenueStatus, getBookingsByVenueId } from '../../services/venuesService';
+import { getAllVenues, updateVenueStatus, getBookingsByVenueId, deleteVenue } from '../../services/venuesService';
 import  { exportBookingsToCSV } from './adminHelpers';
 
 const VenuesAdmin = () => {
   const [venues, setVenues] = useState([]);
-  const [usersMap, setUsersMap] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredVenues, setFilteredVenues] = useState([]);
   const [selectedBookings, setSelectedBookings] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [bookingSearch, setBookingSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
   const navigate = useNavigate();
 
@@ -50,25 +57,14 @@ const VenuesAdmin = () => {
   }, []);
 
 const initialize = async () => {
+    setLoading(true);
     try {
       await fetchAdminProfile();
-      await fetchUsers();
       await fetchVenues();
     } catch (error) {
       console.error('Admin initialization failed:', error);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const users = await getAllUsers();
-      const mapping = {};
-      users.forEach((user) => {
-        mapping[user._id] = user.username;
-      });
-      setUsersMap(mapping);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,12 +74,7 @@ const fetchVenues = async () => {
 
     const enrichedVenues = await Promise.all(
       venuesData.map(async (venue) => {
-        let username = 'Unknown User';
-        try {
-          const user = await getUserById(venue.userId);
-          username = user.username;
-        } catch {/* ignore */}
-
+        const username = venue.userSnapshot?.username || 'Unknown User';
         const allBookings = await getBookingsByVenueId(venue._id);
         const successBookings = allBookings.filter(
           (b) => b.paymentStatus === 'Success'
@@ -110,7 +101,7 @@ const fetchVenues = async () => {
     const query = searchQuery.toLowerCase();
     const filtered = venues.filter(
       (venue) =>
-        (usersMap[venue.userId] && usersMap[venue.userId].toLowerCase().includes(query)) ||
+        venue.userSnapshot?.username?.toLowerCase().includes(query) ||
         venue.name.toLowerCase().includes(query)
     );
     setFilteredVenues(filtered);
@@ -139,6 +130,26 @@ const fetchVenues = async () => {
     }
   };
 
+  const handleDeleteClick = (venueId, venueName) => {
+    setDeleteConfirm({ open: true, id: venueId, name: venueName });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteVenue(deleteConfirm.id);
+      setVenues(venues.filter(v => v._id !== deleteConfirm.id));
+      setFilteredVenues(filteredVenues.filter(v => v._id !== deleteConfirm.id));
+      setDeleteConfirm({ open: false, id: null, name: '' });
+    } catch (error) {
+      console.error('Error deleting venue:', error);
+      alert('Failed to delete venue');
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, id: null, name: '' });
+  };
+
   const filteredBookings = useMemo(() => {
     const q = bookingSearch.toLowerCase();
     return selectedBookings.filter(
@@ -162,7 +173,15 @@ const fetchVenues = async () => {
     [filteredBookings]
   );
 
-return (
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
     <div>
       <Typography variant="h4">Manage Venues</Typography>
 
@@ -211,7 +230,7 @@ return (
             <TableBody>
               {filteredVenues.map((venue) => (
                 <TableRow key={venue._id}>
-                  <TableCell>{usersMap[venue.userId] || 'Unknown User'}</TableCell>
+                  <TableCell>{venue.userSnapshot?.username || 'Unknown User'}</TableCell>
                   <TableCell>{venue.name}</TableCell>
                   <TableCell>{venue.venueType}</TableCell>
                   <TableCell>{venue.country}</TableCell>
@@ -234,6 +253,13 @@ return (
                       onClick={() => handleToggleStatus(venue._id, venue.status)}
                     >
                       {venue.status === 'Active' ? 'Suspend' : 'Approve'}
+                    </Button>
+                    <Button
+                      startIcon={<DeleteIcon />}
+                      color="error"
+                      onClick={() => handleDeleteClick(venue._id, venue.name)}
+                    >
+                      Delete
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -318,6 +344,26 @@ return (
           </TableContainer>
         </Box>
       </Modal>
+
+      {/* ================= DELETE CONFIRMATION DIALOG ================= */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={handleCancelDelete}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the venue <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </div>
   );
 };

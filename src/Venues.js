@@ -22,6 +22,11 @@ import {
   Snackbar,
   Grid,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -57,6 +62,7 @@ const Venues = ({ token }) => {
     message: "",
     severity: "success",
   });
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
   // Load venues
   const loadVenues = useCallback(async () => {
@@ -194,25 +200,32 @@ const Venues = ({ token }) => {
     setModalOpen(false);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this venue?")) {
-      try {
-        await deleteVenue(id, token);
-        setSnackbar({
-          open: true,
-          message: "Venue deleted successfully",
-          severity: "success",
-        });
-        loadVenues();
-      } catch (error) {
-        console.error(error);
-        setSnackbar({
-          open: true,
-          message: "Error deleting venue",
-          severity: "error",
-        });
-      }
+  const handleDeleteClick = (venueId, venueName) => {
+    setDeleteConfirm({ open: true, id: venueId, name: venueName });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteVenue(deleteConfirm.id, token);
+      setSnackbar({
+        open: true,
+        message: "Venue deleted successfully",
+        severity: "success",
+      });
+      setDeleteConfirm({ open: false, id: null, name: '' });
+      loadVenues();
+    } catch (error) {
+      console.error(error);
+      setSnackbar({
+        open: true,
+        message: "Error deleting venue",
+        severity: "error",
+      });
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, id: null, name: '' });
   };
 
   const filteredBookingsByVenue = {};
@@ -395,7 +408,7 @@ const Venues = ({ token }) => {
                         variant="outlined"
                         color="error"
                         startIcon={<Delete />}
-                        onClick={() => handleDelete(venue._id)}
+                        onClick={() => handleDeleteClick(venue._id, venue.name)}
                       >
                         Delete
                       </Button>
@@ -465,18 +478,46 @@ const Venues = ({ token }) => {
                       </Typography>
                     </Paper>
 
-                    <Button
-                      variant="outlined"
-                      sx={{ mb: 2 }}
-                      onClick={() =>
+                    <Box
+                      component="span"
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
                         exportBookingsToCSV(
                           venueBookings,
                           "venue-bookings.csv"
-                        )
-                      }
+                        );
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.stopPropagation();
+                          exportBookingsToCSV(
+                            venueBookings,
+                            "venue-bookings.csv"
+                          );
+                        }
+                      }}
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        px: 2,
+                        py: 1,
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'primary.main',
+                        color: 'primary.main',
+                        cursor: 'pointer',
+                        mb: 2,
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
+                        outline: 'none',
+                      }}
                     >
                       Export
-                    </Button>
+                    </Box>
                   </Grid>
                 </AccordionSummary>
 
@@ -570,6 +611,25 @@ const Venues = ({ token }) => {
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         message={snackbar.message}
       />
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={handleCancelDelete}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the venue <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../services/axiosInstance';
 
 export const ServicesContext = createContext();
 
@@ -16,7 +16,14 @@ export const ServicesProvider = ({ children }) => {
   const SERVICE_BOOKINGS_API_URL = `${API_URL}/api/service_bookings`;
 
 useEffect(() => {
+  const adminToken = localStorage.getItem('adminToken');
   const fetchServiceStats = async () => {
+    // Only fetch if admin is logged in
+    if (!adminToken) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const [
@@ -25,10 +32,10 @@ useEffect(() => {
         totalBookingAmountRes,
         serviceTypeMonthlyRes,
       ] = await Promise.all([
-        axios.get(`${SERVICE_BOOKINGS_API_URL}/total-bookings?paymentStatus=Success`),
-        axios.get(`${SERVICE_BOOKINGS_API_URL}/most-booked-services?paymentStatus=Success`),
-        axios.get(`${SERVICE_BOOKINGS_API_URL}/total-booking-amount?paymentStatus=Success`),
-        axios.get(`${SERVICE_BOOKINGS_API_URL}/stats/service-types-monthly?paymentStatus=Success`),
+        axiosInstance.get(`${SERVICE_BOOKINGS_API_URL}/total-bookings?paymentStatus=Success`),
+        axiosInstance.get(`${SERVICE_BOOKINGS_API_URL}/most-booked-services?paymentStatus=Success`),
+        axiosInstance.get(`${SERVICE_BOOKINGS_API_URL}/total-booking-amount?paymentStatus=Success`),
+        axiosInstance.get(`${SERVICE_BOOKINGS_API_URL}/stats/service-types-monthly?paymentStatus=Success`),
       ]);
 
       setTotalBookings(totalBookingsRes.data.totalBookings);
@@ -45,7 +52,7 @@ useEffect(() => {
   };
 
   fetchServiceStats();
-}, []);
+}, [localStorage.getItem('adminToken')]);
 
   return (
     <ServicesContext.Provider

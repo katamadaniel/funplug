@@ -171,14 +171,6 @@ export const getAllTicketSales = async () => {
   }
 };
 
-export const deleteEventById = async (eventId) => {
-  const token = localStorage.getItem('adminToken');
-  const config = { headers: { Authorization: `Bearer ${token}` } };
-  const response = await axiosInstance.delete(
-    `${EVENTS_API_URL}/${eventId}`, config);
-  return response.data;
-};
-
 export const purchaseByEventId = async (eventId) => {
   try{
   const token = localStorage.getItem('adminToken');

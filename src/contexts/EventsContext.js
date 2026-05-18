@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../services/axiosInstance';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const EVENTS_API_URL = `${API_URL}/api/events`;
@@ -13,11 +13,18 @@ export const EventsProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
     const fetchEventStats = async () => {
       try {
+        // Only fetch if admin is logged in
+        if (!adminToken) {
+          setLoading(false);
+          return;
+        }
+
         const [topEventsRes, eventCategoryRes] = await Promise.all([
-          axios.get(`${EVENTS_API_URL}/highest-selling?paymentStatus=Success`),
-          axios.get(`${EVENTS_API_URL}/stats/by-event-category?paymentStatus=Success`),
+          axiosInstance.get(`${EVENTS_API_URL}/highest-selling?paymentStatus=Success`),
+          axiosInstance.get(`${EVENTS_API_URL}/stats/by-event-category?paymentStatus=Success`),
         ]);
 
         setHighestSellingEvents(topEventsRes.data);
@@ -31,7 +38,7 @@ export const EventsProvider = ({ children }) => {
     };
 
     fetchEventStats();
-  }, []);
+  }, [localStorage.getItem('adminToken')]);
 
   return (
     <EventsContext.Provider

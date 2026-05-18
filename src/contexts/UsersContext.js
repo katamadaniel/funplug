@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../services/axiosInstance';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const USERS_API_URL = `${API_URL}/api/users`;
@@ -28,10 +28,23 @@ export const UsersProvider = ({ children }) => {
   });
 
   useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
     let mounted = true;
 
     const fetchAll = async () => {
       try {
+        // Only fetch if admin is logged in
+        if (!adminToken) {
+          if (mounted) {
+            setState(s => ({
+              ...s,
+              loading: false,
+              error: null,
+            }));
+          }
+          return;
+        }
+
         setState(s => ({ ...s, loading: true, error: null }));
 
         const [
@@ -44,14 +57,14 @@ export const UsersProvider = ({ children }) => {
           monthlyTrend,
           highestSelling,
         ] = await Promise.all([
-          axios.get(`${USERS_API_URL}/total`),
-          axios.get(`${USERS_API_URL}/active/daily`),
-          axios.get(`${USERS_API_URL}/active/weekly`),
-          axios.get(`${USERS_API_URL}/active/monthly`),
-          axios.get(`${USERS_API_URL}/active/daily-trend`),
-          axios.get(`${USERS_API_URL}/active/weekly-trend`),
-          axios.get(`${USERS_API_URL}/active/monthly-trend`),
-          axios.get(`${USERS_API_URL}/highest-selling`),
+          axiosInstance.get(`${USERS_API_URL}/total`),
+          axiosInstance.get(`${USERS_API_URL}/active/daily`),
+          axiosInstance.get(`${USERS_API_URL}/active/weekly`),
+          axiosInstance.get(`${USERS_API_URL}/active/monthly`),
+          axiosInstance.get(`${USERS_API_URL}/active/daily-trend`),
+          axiosInstance.get(`${USERS_API_URL}/active/weekly-trend`),
+          axiosInstance.get(`${USERS_API_URL}/active/monthly-trend`),
+          axiosInstance.get(`${USERS_API_URL}/highest-selling`),
         ]);
 
         if (!mounted) return;
@@ -85,7 +98,7 @@ export const UsersProvider = ({ children }) => {
 
     fetchAll();
     return () => { mounted = false; };
-  }, []);
+  }, [localStorage.getItem('adminToken')]);
 
   return (
     <UsersContext.Provider value={state}>

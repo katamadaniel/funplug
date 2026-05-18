@@ -15,7 +15,8 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Box, CircularProgress, Typography, Button, Collapse,
   TextField, Accordion, AccordionSummary, AccordionDetails,
-  IconButton, Card, CardContent, CardMedia, Snackbar, Grid
+  IconButton, Card, CardContent, CardMedia, Snackbar, Grid,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 
 import {
@@ -54,6 +55,7 @@ const Events = ({ token }) => {
   const [purchases, setPurchases] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -164,17 +166,24 @@ const Events = ({ token }) => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) return;
+  const handleDeleteClick = (eventId, eventName) => {
+    setDeleteConfirm({ open: true, id: eventId, name: eventName });
+  };
 
+  const handleConfirmDelete = async () => {
     try {
-      await deleteEvent(id, token);
+      await deleteEvent(deleteConfirm.id, token);
       setSnackbar({ open: true, message: 'Event deleted successfully', severity: 'success' });
+      setDeleteConfirm({ open: false, id: null, name: '' });
       fetchEvents();
     } catch (error) {
       setSnackbar({ open: true, message: 'Error deleting event', severity: 'error' });
       console.error(error);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, id: null, name: '' });
   };
 
   const closeModal = () => {
@@ -382,7 +391,7 @@ const Events = ({ token }) => {
                       <TableCell>{totalRevenue.toFixed(2)}</TableCell>
                       <TableCell>
                         <Button size="small" onClick={() => handleEditClick(event)}>Edit</Button>
-                        <Button size="small" color="error" onClick={() => handleDelete(event._id)}>Delete</Button>
+                        <Button size="small" color="error" onClick={() => handleDeleteClick(event._id, event.title)}>Delete</Button>
                       </TableCell>
                     </TableRow>
                   );
@@ -435,7 +444,7 @@ const Events = ({ token }) => {
 
                   <Box sx={{ mt:2, display:'flex', justifyContent:'space-between' }}>
                     <Button variant="contained" startIcon={<Edit />} onClick={() => handleEditClick(event)}>Edit</Button>
-                    <Button variant="outlined" color="error" startIcon={<Delete />} onClick={() => handleDelete(event._id)}>Delete</Button>
+                    <Button variant="outlined" color="error" startIcon={<Delete />} onClick={() => handleDeleteClick(event._id, event.title)}>Delete</Button>
                   </Box>
                 </CardContent>
                   <Typography><strong>Created on:</strong> <i>{format(new Date(event.createdAt), 'PPP')}</i></Typography>
@@ -463,8 +472,27 @@ const Events = ({ token }) => {
         autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         message={snackbar.message}
-      />      
-      </Box>
+      />
+      
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={handleCancelDelete}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the event <strong>"{deleteConfirm.name}"</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

@@ -1,7 +1,46 @@
 /**
  * Error handler utility for API responses
- * Converts backend validation errors to a format the frontend can easily use
+ * Converts backend validation errors to a format the frontend can safely use
  */
+
+const sanitizeResponseData = (data) => {
+  if (!data || typeof data !== 'object') {
+    return data ? { message: String(data) } : {};
+  }
+
+  const safeData = {};
+
+  if (typeof data.message === 'string') {
+    safeData.message = data.message;
+  }
+
+  if (Array.isArray(data.errors)) {
+    safeData.errors = data.errors.map((err) => ({
+      field: err.field || 'unknown',
+      message: err.message || 'Invalid request',
+    }));
+  }
+
+  return safeData;
+};
+
+export const sanitizeAxiosError = (error) => {
+  const safeError = new Error(error?.message || 'Request failed.');
+
+  safeError.name = error?.name || 'AxiosError';
+  safeError.status = error?.response?.status;
+  safeError.code = error?.code;
+  safeError.isAxiosError = !!error?.isAxiosError;
+
+  if (error?.response) {
+    safeError.response = {
+      status: error.response.status,
+      data: sanitizeResponseData(error.response.data),
+    };
+  }
+
+  return safeError;
+};
 
 /**
  * Parse validation errors from API response
@@ -15,10 +54,10 @@ export const parseApiError = (error) => {
 
   if (error.response) {
     const status = error.response.status;
-    const data = error.response.data;
+    const data = error.response.data || {};
 
     // Handle validation errors (400 status with errors array)
-    if (status === 400 && data.errors && Array.isArray(data.errors)) {
+    if (status === 400 && Array.isArray(data.errors)) {
       isValidationError = true;
       data.errors.forEach((err) => {
         fieldErrors[err.field] = err.message;

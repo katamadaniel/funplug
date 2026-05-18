@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../services/axiosInstance';
 
 const API_URL = process.env.REACT_APP_API_URL;
 const TICKET_PURCHASES_API_URL = `${API_URL}/api/ticket_purchases`;
@@ -27,10 +27,19 @@ export const TicketsProvider = ({ children }) => {
   });
 
   useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
     let mounted = true;
 
     const fetchTicketsData = async () => {
       try {
+        // Only fetch if admin is logged in
+        if (!adminToken) {
+          if (mounted) {
+            setState(s => ({ ...s, loading: false, error: null }));
+          }
+          return;
+        }
+
         setState(s => ({ ...s, loading: true, error: null }));
 
         const [
@@ -43,15 +52,15 @@ export const TicketsProvider = ({ children }) => {
           revenueDaily,
           revenueYearly,
         ] = await Promise.all([
-          axios.get(`${TICKET_PURCHASES_API_URL}/total/weekly?paymentStatus=Success`),
-          axios.get(`${TICKET_PURCHASES_API_URL}/total/monthly?paymentStatus=Success`),
-          axios.get(`${TICKET_PURCHASES_API_URL}/total/daily?paymentStatus=Success`),
-          axios.get(`${TICKET_PURCHASES_API_URL}/trend/yearly?paymentStatus=Success`),
+          axiosInstance.get(`${TICKET_PURCHASES_API_URL}/total/weekly?paymentStatus=Success`),
+          axiosInstance.get(`${TICKET_PURCHASES_API_URL}/total/monthly?paymentStatus=Success`),
+          axiosInstance.get(`${TICKET_PURCHASES_API_URL}/total/daily?paymentStatus=Success`),
+          axiosInstance.get(`${TICKET_PURCHASES_API_URL}/trend/yearly?paymentStatus=Success`),
 
-          axios.get(`${TICKET_PURCHASES_API_URL}/revenue/weekly?paymentStatus=Success`),
-          axios.get(`${TICKET_PURCHASES_API_URL}/revenue/monthly?paymentStatus=Success`),
-          axios.get(`${TICKET_PURCHASES_API_URL}/revenue/daily?paymentStatus=Success`),
-          axios.get(`${TICKET_PURCHASES_API_URL}/revenue/trend/yearly?paymentStatus=Success`),
+          axiosInstance.get(`${TICKET_PURCHASES_API_URL}/revenue/weekly?paymentStatus=Success`),
+          axiosInstance.get(`${TICKET_PURCHASES_API_URL}/revenue/monthly?paymentStatus=Success`),
+          axiosInstance.get(`${TICKET_PURCHASES_API_URL}/revenue/daily?paymentStatus=Success`),
+          axiosInstance.get(`${TICKET_PURCHASES_API_URL}/revenue/trend/yearly?paymentStatus=Success`),
         ]);
 
         if (!mounted) return;
@@ -84,7 +93,7 @@ export const TicketsProvider = ({ children }) => {
 
     fetchTicketsData();
     return () => { mounted = false; };
-  }, []);
+  }, [localStorage.getItem('adminToken')]);
 
   return (
     <TicketsContext.Provider value={state}>

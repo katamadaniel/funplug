@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Grid, Paper, Typography } from '@mui/material';
+import { Box, CircularProgress, Container, Grid, Paper, Typography } from '@mui/material';
 import UserStats from './UserStats';
 import TicketStats from './TicketStats';
 import EventStats from './EventStats';
@@ -10,13 +10,26 @@ import ServiceStats from './ServiceStats';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     if (!token) {
       navigate('/admin');
+    } else {
+      setLoading(false);
     }
   }, [navigate]);
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ marginTop: '2rem' }}>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ marginTop: '2rem' }}>
