@@ -17,18 +17,52 @@ import axios from "axios";
 import io from "socket.io-client";
 import PaymentStatusBanner from "./components/PaymentStatusBanner";
 import usePaymentPolling from "./hooks/usePaymentPolling";
+import { fetchEventById } from "./services/eventService";
 
 const API_URL = process.env.REACT_APP_API_URL;
 const socket = io(API_URL, { autoConnect: false });
 
 const TicketPurchase = ({ event, onClose }) => {
-  const [ticketType, setTicketType] = useState(() => {
-    if (event.ticketType === "free") return "Free";
-    if (event.regularTicketsRemaining > 0) return "Regular";
-    if (event.vipTicketsRemaining > 0) return "VIP";
-    if (event.vvipTicketsRemaining > 0) return "VVIP";
-    return "";
-  });
+  const [eventData, setEventData] = useState(event);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+
+  // Fetch full event details when modal mounts
+  useEffect(() => {
+    if (!event?._id) return;
+
+    const fetchDetails = async () => {
+      try {
+        setIsLoadingDetails(true);
+        setLoadError(null);
+        const fullEvent = await fetchEventById(event._id);
+        if (fullEvent) {
+          setEventData(fullEvent);
+        }
+      } catch (error) {
+        console.error("Error fetching event details:", error);
+        setLoadError("Failed to load event details");
+        setEventData(event);
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    };
+
+    fetchDetails();
+  }, [event?._id, event]);
+
+  const [selectedPackageId, setSelectedPackageId] = useState("");
+
+  useEffect(() => {
+    if (!eventData) return;
+    if (eventData.ticketType === "free") {
+      setSelectedPackageId("");
+    } else if (Array.isArray(eventData.ticketPackages) && eventData.ticketPackages.length > 0) {
+      setSelectedPackageId(eventData.ticketPackages[0]._id || "");
+    } else {
+      setSelectedPackageId("");
+    }
+  }, [eventData]);
 
   const [quantity, setQuantity] = useState("");
   const [clientName, setClientName] = useState("");
@@ -73,18 +107,18 @@ const TicketPurchase = ({ event, onClose }) => {
 
   useEffect(() => {
     setQuantity("");
-  }, [ticketType]);
+  }, [selectedPackageId, eventData?.ticketType]);
 
   useEffect(() => {
-    if (!quantity || !ticketType) return setTotalAmount(0);
+    if (!quantity) {
+      setTotalAmount(0);
+      return;
+    }
 
-    const price =
-      ticketType === "Regular" ? event.regularPrice :
-      ticketType === "VIP" ? event.vipPrice :
-      ticketType === "VVIP" ? event.vvipPrice : 0;
-
+    const selectedPackage = eventData.ticketPackages?.find((pkg) => pkg._id === selectedPackageId);
+    const price = selectedPackage ? selectedPackage.price : 0;
     setTotalAmount(price * quantity);
-  }, [ticketType, quantity, event]);
+  }, [quantity, eventData, selectedPackageId]);
 
   const formatPhoneNumber = (input) => {
     const clean = input.replace(/\D/g, "");
@@ -97,22 +131,38 @@ const TicketPurchase = ({ event, onClose }) => {
 
   const validateForm = () => {
     const errs = {};
+    const selectedPackage = eventData.ticketPackages?.find((pkg) => pkg._id === selectedPackageId);
 
-    if (!ticketType) errs.ticketType = "Please select a ticket type";
+    if (eventData.ticketType === "free") {
+      if (!quantity || quantity <= 0) {
+        errs.quantity = "Enter ticket quantity";
+      } else if (quantity > eventData.freeTicketsRemaining) {
+        errs.quantity = `Only ${eventData.freeTicketsRemaining} ticket(s) remaining`;
+      }
+    } else {
+      if (!selectedPackageId) {
+        errs.ticketType = "Please select a ticket package.";
+      } else if (!selectedPackage) {
+        errs.ticketType = "Please select a valid ticket package.";
+      }
 
-    const max =
-      ticketType === "Regular"
-        ? event.regularTicketsRemaining
-        : ticketType === "VIP"
-        ? event.vipTicketsRemaining
-        : ticketType === "VVIP"
-        ? event.vvipTicketsRemaining
-        : event.freeTicketsRemaining;
+      const remainingPackageSeats = selectedPackage?.slots != null ? selectedPackage.slots - (selectedPackage.ticketsSold || 0) : Infinity;
+      const minQuantity = selectedPackage?.minQuantity || 1;
+      const maxQuantity = selectedPackage?.maxPerUser || remainingPackageSeats;
 
-    if (!quantity || quantity <= 0) {
-      errs.quantity = "Enter ticket quantity";
-    } else if (quantity > max) {
-      errs.quantity = `Only ${max} ticket(s) remaining`;
+      if (!quantity || quantity <= 0) {
+        errs.quantity = "Enter ticket quantity";
+      } else if (quantity < minQuantity) {
+        errs.quantity = `Minimum quantity for this package is ${minQuantity}`;
+      } else if (quantity > maxQuantity) {
+        errs.quantity = selectedPackage?.slots != null
+          ? `Only ${remainingPackageSeats} ticket(s) remaining for this package`
+          : `Maximum quantity per user is ${selectedPackage?.maxPerUser || remainingPackageSeats}`;
+      }
+
+      if (selectedPackage && selectedPackage.slots != null && remainingPackageSeats <= 0) {
+        errs.ticketType = "Selected package is sold out.";
+      }
     }
 
     if (!clientName) errs.clientName = "Enter your name";
@@ -124,18 +174,26 @@ const TicketPurchase = ({ event, onClose }) => {
     if (!phone) errs.phone = "Phone is required";
     else if (!/^(254\d{9})$/.test(formatted)) errs.phone = "Invalid phone number";
 
-    if (event.ticketType !== "free" && !paymentOption)
+    const totalAmountIsPositive = totalAmount > 0;
+    if (totalAmountIsPositive && !paymentOption) {
       errs.paymentOption = "Choose payment method";
-
-    // block sold out ticket types
-    if (max <= 0) {
-      errs.ticketType = "Selected ticket type is sold out";
     }
 
     return errs;
   };
 
   const handleBuyTicket = async () => {
+    // Ensure event data is fully loaded
+    if (isLoadingDetails) {
+      setErrors({ general: "Please wait while event details are loading..." });
+      return;
+    }
+
+    if (!eventData?._id || !eventData?.userId) {
+      setErrors({ general: "Event data is incomplete. Please refresh and try again." });
+      return;
+    }
+
     const val = validateForm();
     if (Object.keys(val).length > 0) {
       setErrors(val);
@@ -151,23 +209,22 @@ const TicketPurchase = ({ event, onClose }) => {
     try {
       const formattedPhone = formatPhoneNumber(phone);
 
+      const selectedPackage = eventData.ticketPackages?.find((pkg) => pkg._id === selectedPackageId);
       const purchaseData = {
-        ticketType,
-        quantity,
-        clientName,
-        email,
+        ticketType: eventData.ticketType === "free" ? "Free" : selectedPackage?.name || "",
+        quantity: parseInt(quantity),
+        clientName: clientName.trim(),
+        email: email.trim().toLowerCase(),
         phone: formattedPhone,
-        paymentOption:
-          event.ticketType === "free" ? "free" : paymentOption,
-        totalAmount:
-          event.ticketType === "free" ? 0 : totalAmount,
-        eventId: event._id,
-        creatorId: event.userId,
-        eventTitle: event.title,
-        eventVenue: event.venue,
-        eventDate: event.date,
-        from: event.startTime,
-        to: event.endTime,
+        paymentOption: totalAmount > 0 ? paymentOption : null,
+        eventId: eventData._id,
+        creatorId: eventData.userId,
+        eventTitle: eventData.title,
+        eventVenue: eventData.venue,
+        eventDate: eventData.date,
+        from: eventData.startTime,
+        to: eventData.endTime,
+        ticketPackageId: selectedPackage ? selectedPackageId : null,
       };
 
       const res = await axios.post(
@@ -175,7 +232,7 @@ const TicketPurchase = ({ event, onClose }) => {
         purchaseData
       );
 
-      if (event.ticketType === "free") {
+      if (eventData.ticketType === "free") {
         setPurchaseStatus("success");
         setTimeout(() => onClose(), 4000);
         return;
@@ -246,33 +303,42 @@ const TicketPurchase = ({ event, onClose }) => {
     setLoading(false);
   };
 
-  const maxTickets =
-    ticketType === "Regular"
-      ? event.regularTicketsRemaining
-      : ticketType === "VIP"
-      ? event.vipTicketsRemaining
-      : ticketType === "VVIP"
-      ? event.vvipTicketsRemaining
-      : event.freeTicketsRemaining;
+  const selectedPackage = eventData.ticketPackages?.find((pkg) => pkg._id === selectedPackageId);
+  const maxTickets = selectedPackage
+    ? selectedPackage.slots != null
+      ? selectedPackage.slots - (selectedPackage.ticketsSold || 0)
+      : Infinity
+    : eventData.ticketType === "free"
+    ? eventData.freeTicketsRemaining
+    : 0;
 
-  const isSelectedSoldOut =
-    ticketType === "Regular"
-      ? event.regularTicketsRemaining <= 0
-      : ticketType === "VIP"
-      ? event.vipTicketsRemaining <= 0
-      : ticketType === "VVIP"
-      ? event.vvipTicketsRemaining <= 0
-      : ticketType === "Free"
-      ? event.freeTicketsRemaining <= 0
-      : true;      
+  const isSelectedSoldOut = selectedPackage
+    ? selectedPackage.slots != null
+      ? selectedPackage.slots - (selectedPackage.ticketsSold || 0) <= 0
+      : false
+    : eventData.ticketType === "free"
+    ? eventData.freeTicketsRemaining <= 0
+    : true;      
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Buy Tickets — {event.title}</DialogTitle>
+      <DialogTitle>Buy Tickets — {eventData.title}</DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "65vh" }}>
-        {isSelectedSoldOut && ticketType && (
+        {isLoadingDetails && (
+          <Box display="flex" justifyContent="center" alignItems="center" py={3}>
+            <CircularProgress size={40} />
+          </Box>
+        )}
+
+        {loadError && (
           <Alert severity="warning" sx={{ mb: 2 }}>
-            The selected ticket type is sold out.
+            {loadError}
+          </Alert>
+        )}
+
+        {isSelectedSoldOut && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            The selected ticket package is sold out.
           </Alert>
         )}
         {errors.general && (
@@ -294,28 +360,30 @@ const TicketPurchase = ({ event, onClose }) => {
         />
 
         <Stack spacing={2} mt={2}>
-          <TextField
-            select
-            label="Ticket Type"
-            value={ticketType}
-            onChange={(e) => setTicketType(e.target.value)}
-            error={!!errors.ticketType}
-            helperText={errors.ticketType}
-          >
-            {event.ticketType === "free" && (
-              <MenuItem value="Free">Free Ticket</MenuItem>
-            )}
-
-            <MenuItem value="Regular" disabled={event.regularTicketsRemaining <= 0}>
-              Regular — Ksh.{event.regularPrice} {event.regularTicketsRemaining <= 0 ? '(Sold Out)' : ''}
-            </MenuItem>
-            <MenuItem value="VIP" disabled={event.vipTicketsRemaining <= 0}>
-              VIP — Ksh.{event.vipPrice} {event.vipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
-            </MenuItem>
-            <MenuItem value="VVIP" disabled={event.vvipTicketsRemaining <= 0}>
-              VVIP — Ksh.{event.vvipPrice} {event.vvipTicketsRemaining <= 0 ? '(Sold Out)' : ''}
-            </MenuItem>
-          </TextField>
+          {eventData.ticketType !== "free" && (
+            eventData.ticketPackages?.length > 0 ? (
+              <TextField
+                select
+                label="Ticket Package"
+                value={selectedPackageId}
+                onChange={(e) => setSelectedPackageId(e.target.value)}
+                error={!!errors.ticketType}
+                helperText={errors.ticketType}
+              >
+                <MenuItem value="">Select a package</MenuItem>
+                {eventData.ticketPackages.map((pkg) => {
+                  const remaining = pkg.slots != null ? pkg.slots - (pkg.ticketsSold || 0) : Infinity;
+                  return (
+                    <MenuItem key={pkg._id} value={pkg._id} disabled={pkg.slots != null && remaining <= 0}>
+                      {pkg.name} — Ksh.{pkg.price} {pkg.slots != null ? `(${remaining} left)` : ''}
+                    </MenuItem>
+                  );
+                })}
+              </TextField>
+            ) : (
+              <Alert severity="warning">This paid event has no ticket packages available.</Alert>
+            )
+          )}
 
           <TextField
             label="Quantity"
@@ -326,13 +394,16 @@ const TicketPurchase = ({ event, onClose }) => {
 
               if (!value) return setQuantity("");
 
-              if (value > maxTickets) setQuantity(maxTickets);
-              else if (value < 1) setQuantity(1);
+              const minAllowed = selectedPackage?.minQuantity || 1;
+              const maxAllowed = selectedPackage?.maxPerUser || maxTickets;
+
+              if (value > maxAllowed) setQuantity(maxAllowed);
+              else if (value < minAllowed) setQuantity(minAllowed);
               else setQuantity(value);
             }}
-            inputProps={{ min: 1, max: maxTickets }}
+            inputProps={{ min: selectedPackage?.minQuantity || 1, max: selectedPackage?.maxPerUser || maxTickets }}
             error={!!errors.quantity}
-            helperText={errors.quantity}
+            helperText={errors.quantity || (selectedPackage?.minQuantity ? `Min ${selectedPackage.minQuantity}` : '')}
           />
 
           <TextField
@@ -359,7 +430,7 @@ const TicketPurchase = ({ event, onClose }) => {
             helperText={errors.phone}
           />
 
-          {event.ticketType !== "free" && (
+          {eventData.ticketType !== "free" && (
             <TextField
               select
               label="Payment Method"
@@ -384,18 +455,20 @@ const TicketPurchase = ({ event, onClose }) => {
       </DialogContent>
 
       <DialogActions>
-      <Stack direction="row" spacing={2} p={1}  justifyContent= "space-between" width="100%">
+        <Stack direction="row" spacing={2} p={1}  justifyContent= "space-between" width="100%">
         <Button onClick={onClose}> Cancel </Button>
         <Button
           variant="contained"
           onClick={handleBuyTicket}
           disabled={
             loading ||
-            !ticketType ||
+            isLoadingDetails ||
+            (eventData.ticketType !== "free" && !selectedPackageId) ||
             isSelectedSoldOut ||
             !quantity ||
             quantity <= 0 ||
-            quantity > maxTickets
+            quantity > (selectedPackage?.maxPerUser || maxTickets) ||
+            (selectedPackage?.minQuantity && quantity < selectedPackage.minQuantity)
           }
         >
           {loading ? <CircularProgress size={22} /> : "Buy Ticket"}

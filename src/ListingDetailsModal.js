@@ -276,21 +276,18 @@ const ListingDetailsModal = ({ open, type, data, onClose, onAction }) => {
     if (!detailedData) return true;
 
     if (type === "event") {
-      const isRegularSoldOut = detailedData.regularTicketsRemaining <= 0;
-      const isVipSoldOut = detailedData.vipTicketsRemaining <= 0;
-      const isVvipSoldOut = detailedData.vvipTicketsRemaining <= 0;
-      const isFreeSoldOut = detailedData.freeTicketsRemaining <= 0;
+      if (detailedData.ticketType === "free") {
+        return detailedData.freeTicketsRemaining <= 0;
+      }
 
-      const allPaidOptionsSoldOut =
-        detailedData.ticketType === "paid" &&
-        (!detailedData.regularPrice || isRegularSoldOut) &&
-        (!detailedData.vipPrice || isVipSoldOut) &&
-        (!detailedData.vvipPrice || isVvipSoldOut);
+      const hasAvailablePackage = Array.isArray(detailedData.ticketPackages)
+        && detailedData.ticketPackages.some((pkg) => {
+          if (!pkg.active) return false;
+          if (pkg.slots == null) return true;
+          return pkg.slots - (pkg.ticketsSold || 0) > 0;
+        });
 
-      return (
-        (detailedData.ticketType === "paid" && allPaidOptionsSoldOut) ||
-        (detailedData.ticketType === "free" && isFreeSoldOut)
-      );
+      return !hasAvailablePackage;
     }
 
     if (type === "venue" || type === "service" || type === "performance") {
@@ -751,10 +748,9 @@ const ListingDetailsBody = ({ type, data }) => {
 ----------------------------- */
 
 const EventDetailsBody = ({ event }) => {
-  const isRegularSoldOut = event.regularTicketsRemaining <= 0;
-  const isVipSoldOut = event.vipTicketsRemaining <= 0;
-  const isVvipSoldOut = event.vvipTicketsRemaining <= 0;
   const isFreeSoldOut = event.freeTicketsRemaining <= 0;
+  const hasAvailablePackage = Array.isArray(event.ticketPackages)
+    && event.ticketPackages.some((pkg) => pkg.active && (pkg.slots == null || pkg.slots - (pkg.ticketsSold || 0) > 0));
 
   return (
     <Box>
@@ -762,17 +758,32 @@ const EventDetailsBody = ({ event }) => {
         <strong>Venue:</strong> {event.venue}
       </Typography>
 
-      <Typography>
-        <strong>Date:</strong> {new Date(event.date).toLocaleDateString()}
-      </Typography>
+      {event.eventDates && event.eventDates.length > 0 ? (
+        <>
+          <Typography>
+            <strong>Schedule:</strong>
+          </Typography>
+          {event.eventDates.map((ed, idx) => (
+            <Typography key={idx} sx={{ ml: 1 }}>
+              - {new Date(ed.date).toLocaleDateString()} • {ed.startTime} - {ed.endTime}
+            </Typography>
+          ))}
+        </>
+      ) : (
+        <>
+          <Typography>
+            <strong>Date:</strong> {new Date(event.date).toLocaleDateString()}
+          </Typography>
 
-      <Typography>
-        <strong>Starts:</strong> {event.startTime}
-      </Typography>
+          <Typography>
+            <strong>Starts:</strong> {event.startTime}
+          </Typography>
 
-      <Typography>
-        <strong>Ends:</strong> {event.endTime}
-      </Typography>
+          <Typography>
+            <strong>Ends:</strong> {event.endTime}
+          </Typography>
+        </>
+      )}
 
       <Typography sx={{ mt: 2 }}>
         <strong>Description:</strong> {event.description}
@@ -786,30 +797,38 @@ const EventDetailsBody = ({ event }) => {
 
       <Box sx={{ mt: 1 }}>
         {event.ticketType === "paid" && (
-          <Stack spacing={1}>
-            {event.regularPrice && (
-              <TicketRow label="Regular" soldOut={isRegularSoldOut} price={event.regularPrice} />
+          <Box>
+            {Array.isArray(event.ticketPackages) && event.ticketPackages.length > 0 ? (
+              <Stack spacing={1}>
+                {event.ticketPackages.map((pkg, i) => {
+                  const remaining = pkg.slots != null ? pkg.slots - (pkg.ticketsSold || 0) : null;
+                  const soldOut = remaining !== null ? remaining <= 0 : false;
+                  return (
+                    <TicketRow
+                      key={i}
+                      label={`${pkg.name}${pkg.type ? ` (${pkg.type})` : ''}`}
+                      soldOut={soldOut}
+                      price={pkg.price}
+                      meta={remaining !== null ? `${remaining} left` : pkg.description || ''}
+                    />
+                  );
+                })}
+              </Stack>
+            ) : (
+              <Typography color="text.secondary">No ticket packages are available for this paid event.</Typography>
             )}
-
-            {event.vipPrice && (
-              <TicketRow label="VIP" soldOut={isVipSoldOut} price={event.vipPrice} />
-            )}
-
-            {event.vvipPrice && (
-              <TicketRow label="VVIP" soldOut={isVvipSoldOut} price={event.vvipPrice} />
-            )}
-          </Stack>
+          </Box>
         )}
 
         {event.ticketType === "free" && (
-          <TicketRow label="Free Ticket" soldOut={isFreeSoldOut} price={"Free"} />
+          <TicketRow label="Free Ticket" soldOut={isFreeSoldOut} price="Free" />
         )}
       </Box>
     </Box>
   );
 };
 
-const TicketRow = ({ label, soldOut, price }) => (
+const TicketRow = ({ label, soldOut, price, meta }) => (
   <Stack
     direction="row"
     justifyContent="space-between"
@@ -819,7 +838,14 @@ const TicketRow = ({ label, soldOut, price }) => (
       bgcolor: "grey.100",
     }}
   >
-    <Typography>{label}</Typography>
+    <Box>
+      <Typography>{label}</Typography>
+      {meta && (
+        <Typography variant="caption" color="text.secondary">
+          {meta}
+        </Typography>
+      )}
+    </Box>
 
     <Typography
       sx={{

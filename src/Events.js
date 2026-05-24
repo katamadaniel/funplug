@@ -35,17 +35,14 @@ const Events = ({ token }) => {
     description: '',
     city: '',
     country: '',
+    venue: '',
     date: '',
+    eventDates: [],
     startTime: '',
     endTime: '',
-    regularPrice: '',
-    vipPrice: '',
-    vvipPrice: '',
     ticketType: 'paid',
     freeSlots: '',
-    regularSlots: '',
-    vipSlots:'',
-    vvipSlots:'',
+    ticketPackages: [],
   });
 
   const [editingEventId, setEditingEventId] = useState(null);
@@ -100,16 +97,15 @@ const Events = ({ token }) => {
 
   const handleFormSubmit = async (data) => {
     if (data.ticketType === 'free') {
-      data.regularPrice = '0';
-      data.regularSlots = '0';
-      data.vipPrice = '0';
-      data.vipSlots = '0';
-      data.vvipPrice = '0';
-      data.vvipSlots = '0';
+      delete data.ticketPackages;
     }
 
     const formData = new FormData();
     for (const key in data) {
+      if ((key === 'ticketPackages' || key === 'eventDates') && data[key]) {
+        formData.append(key, JSON.stringify(data[key]));
+        continue;
+      }
       formData.append(key, key === 'image' && data[key]?.length > 0 ? data[key][0] : data[key]);
     }
 
@@ -150,16 +146,14 @@ const Events = ({ token }) => {
       description: event.description,
       city: event.city,
       country: event.country,
+      venue: event.venue,
       date: format(new Date(event.date), 'yyyy-MM-dd'),
+      eventDates: event.eventDates || [],
       startTime: event.startTime,
       endTime: event.endTime,
-      regularPrice: event.regularPrice,
-      vipPrice: event.vipPrice,
-      vvipPrice: event.vvipPrice,
       ticketType: event.ticketType || 'paid',
-      regularSlots: event.regularSlots,
-      vipSlots: event.vipSlots,
-      vvipSlots: event.vvipSlots,
+      freeSlots: event.freeSlots || '',
+      ticketPackages: event.ticketPackages || [],
     });
 
     setEditingEventId(event._id);
@@ -196,16 +190,14 @@ const Events = ({ token }) => {
       description: '',
       city: '',
       country: '',
+      venue: '',
       date: '',
+      eventDates: [],
       startTime: '',
       endTime: '',
-      regularPrice: '',
-      vipPrice: '',
-      vvipPrice: '',
       ticketType: 'paid',
-      regularSlots: '',
-      vipSlots:'',
-      vvipSlots:'',
+      freeSlots: '',
+      ticketPackages: [],
     });
   };
 
@@ -434,12 +426,16 @@ const Events = ({ token }) => {
 
                   {event.ticketType === 'free' ? (
                     <Typography><strong>Price:</strong> Free</Typography>
+                  ) : Array.isArray(event.ticketPackages) && event.ticketPackages.length > 0 ? (
+                    <Box>
+                      {event.ticketPackages.map((pkg) => (
+                        <Typography key={pkg._id || pkg.name}>
+                          {pkg.name}: Ksh. {pkg.price}
+                        </Typography>
+                      ))}
+                    </Box>
                   ) : (
-                    <>
-                      {event.regularPrice > 0 && <Typography>Regular: {event.regularPrice}</Typography>}
-                      {event.vipPrice > 0 && <Typography>VIP: {event.vipPrice}</Typography>}
-                      {event.vvipPrice > 0 && <Typography>VVIP: {event.vvipPrice}</Typography>}
-                    </>
+                    <Typography color="text.secondary">No ticket packages available</Typography>
                   )}
 
                   <Box sx={{ mt:2, display:'flex', justifyContent:'space-between' }}>

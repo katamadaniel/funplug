@@ -85,9 +85,7 @@ const EventsAdmin = () => {
       const sales = salesData.find(s => s.eventId === event._id) || {};
       return {
         ...event,
-        regularTicketsSold: sales.regularTicketsSold || 0,
-        vipTicketsSold: sales.vipTicketsSold || 0,
-        vvipTicketsSold: sales.vvipTicketsSold || 0,
+        totalTicketsSold: sales.totalTicketsSold || 0,
         totalRevenue: sales.totalRevenue || 0,
       };
     });
@@ -174,12 +172,8 @@ const EventsAdmin = () => {
           <TableCell>User</TableCell>
           <TableCell>Title</TableCell>
           <TableCell>Date</TableCell>
-          <TableCell>Regular Price</TableCell>
-          <TableCell>VIP Price</TableCell>
-          <TableCell>VVIP Price</TableCell>
-          <TableCell>Regular Tickets Sold</TableCell>
-          <TableCell>VIP Tickets Sold</TableCell>
-          <TableCell>VVIP Tickets Sold</TableCell>          
+          <TableCell>Packages</TableCell>
+          <TableCell>Tickets Sold</TableCell>
           <TableCell>Total Revenue</TableCell>
           <TableCell>Actions</TableCell>
         </TableRow>
@@ -187,16 +181,12 @@ const EventsAdmin = () => {
       <TableBody>
         {eventsList.map(event => (
           <TableRow key={event._id}>
-          <TableCell>{event.userSnapshot?.username || 'Unknown User'}</TableCell>
+            <TableCell>{event.userSnapshot?.username || 'Unknown User'}</TableCell>
             <TableCell>{event.title}</TableCell>
             <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
-            <TableCell>Ksh.{event.regularPrice ? event.regularPrice.toFixed(2) : 'N/A'}</TableCell>
-            <TableCell>Ksh.{event.vipPrice ? event.vipPrice.toFixed(2) : 'N/A'}</TableCell>
-            <TableCell>Ksh.{event.vvipPrice ? event.vvipPrice.toFixed(2) : 'N/A'}</TableCell>
-            <TableCell>{event.regularTicketsSold || 0}</TableCell>
-            <TableCell>{event.vipTicketsSold || 0}</TableCell>
-            <TableCell>{event.vvipTicketsSold || 0}</TableCell>
-            <TableCell>Ksh. {event.totalRevenue.toFixed(2)}</TableCell>
+            <TableCell>{event.ticketType === 'free' ? 'Free event' : `${event.ticketPackages?.length || 0}`}</TableCell>
+            <TableCell>{event.totalTicketsSold || 0}</TableCell>
+            <TableCell>Ksh. {event.totalRevenue?.toFixed(2) || '0.00'}</TableCell>
             <TableCell>
               <Button
                 startIcon={<VisibilityIcon />}

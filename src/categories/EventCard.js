@@ -12,7 +12,10 @@ const EventCard = ({ event, onView }) => (
       <Typography variant="h6">{event.title}</Typography>
       <Typography variant="body2">{event.venue}</Typography>
       <Typography variant="body2">
-        {new Date(event.date).toLocaleDateString()} • {event.startTime}
+        {event.eventDates?.length > 0
+          ? `${new Date(event.eventDates[0].date).toLocaleDateString()} • ${event.eventDates[0].startTime}`
+          : `${new Date(event.date).toLocaleDateString()} • ${event.startTime}`}
+        {event.eventDates?.length > 1 ? ` (+${event.eventDates.length - 1} more)` : ''}
       </Typography>
     </CardContent>
       <Stack direction="row" spacing={1} sx={{ p: 1 }}>

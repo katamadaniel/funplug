@@ -183,31 +183,27 @@ const shadeColor = (hex, percent) => {
               <TableHead>
                 <TableRow>
                   <TableCell>Event Title</TableCell>
-                  <TableCell align="right">Regular</TableCell>
-                  <TableCell align="right">VIP</TableCell>
-                  <TableCell align="right">VVIP</TableCell>
+                  <TableCell align="right">Tickets Sold</TableCell>
                   <TableCell align="right">Revenue (KES)</TableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
-                {highestSellingEvents.map(event => (
-                  <TableRow key={event.eventId}>
-                    <TableCell>{event.title}</TableCell>
-                    <TableCell align="right">
-                      {event.totalRegularTickets}
-                    </TableCell>
-                    <TableCell align="right">
-                      {event.totalVipTickets}
-                    </TableCell>
-                    <TableCell align="right">
-                      {event.totalVvipTickets}
-                    </TableCell>
-                    <TableCell align="right">
-                      {event.totalRevenue?.toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {highestSellingEvents.map(event => {
+                  const ticketsSold = event.totalTicketsSold ??
+                    ((event.totalRegularTickets || 0) + (event.totalVipTickets || 0) + (event.totalVvipTickets || 0));
+                  return (
+                    <TableRow key={event.eventId}>
+                      <TableCell>{event.title}</TableCell>
+                      <TableCell align="right">
+                        {ticketsSold}
+                      </TableCell>
+                      <TableCell align="right">
+                        {event.totalRevenue?.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>

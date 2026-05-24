@@ -18,6 +18,7 @@ import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-lea
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useForm, Controller } from "react-hook-form";
+import EventAgreementDialog from "./EventAgreementDialog";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -84,11 +85,13 @@ const EventFormModal = ({
   });
 
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [ticketOptions, setTicketOptions] = useState({
-    regular: !!formData?.regularPrice,
-    vip: !!formData?.vipPrice,
-    vvip: !!formData?.vvipPrice,
-  });
+  const [packageError, setPackageError] = useState("");
+  
+  // Agreement dialog state
+  const [showAgreementDialog, setShowAgreementDialog] = useState(false);
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
+  const [agreementData, setAgreementData] = useState(null);
+  const [pendingFormData, setPendingFormData] = useState(null);
   
   const cityValue = watch("city");
   const countryValue = watch("country");
@@ -100,6 +103,22 @@ const EventFormModal = ({
   });
 
   const [imagePreview, setImagePreview] = useState(null);
+  // Ticket packages state
+  const [packages, setPackages] = useState(formData?.ticketPackages || []);
+  const [newPackage, setNewPackage] = useState({
+    name: '',
+    type: 'general',
+    price: '',
+    slots: '',
+    startDate: '',
+    endDate: '',
+    minQuantity: '',
+    maxPerUser: '',
+    description: '',
+  });
+  const [eventDates, setEventDates] = useState(formData?.eventDates || []);
+  const [newEventDate, setNewEventDate] = useState({ date: '', startTime: '', endTime: '' });
+  const [eventDateError, setEventDateError] = useState('');
 
  const RecenterMap = ({ lat, lng }) => {
   const map = useMap();
@@ -160,11 +179,8 @@ useEffect(() => {
 
 useEffect(() => {
     if (ticketTypeValue === "free") {
-      setTicketOptions({
-        regular: false,
-        vip: false,
-        vvip: false,
-      });
+      setPackages([]);
+      setPackageError("");
 
       setValue("regularPrice", undefined);
       setValue("vipPrice", undefined);
@@ -172,6 +188,8 @@ useEffect(() => {
       setValue("regularSlots", undefined);
       setValue("vipSlots", undefined);
       setValue("vvipSlots", undefined);
+    } else {
+      setPackageError("");
     }
   }, [ticketTypeValue, setValue]);
 
@@ -193,12 +211,10 @@ useEffect(() => {
       setImagePreview(formData.image);
     }
 
-    // Ticket options prefill if editing
-    setTicketOptions({
-      regular: !!formData?.regularPrice,
-      vip: !!formData?.vipPrice,
-      vvip: !!formData?.vvipPrice,
-    });
+    // Prefill packages when editing
+    setPackages(formData?.ticketPackages || []);
+    setEventDates(formData?.eventDates || []);
+    setPackageError("");
   }, [formData, reset]);
 
   const handleCategoryChange = (e) => {
@@ -216,12 +232,6 @@ useEffect(() => {
     setValue("image", file);
   };
 
-  const toggleTicket = (type) => {
-    setTicketOptions((prev) => {
-      const updated = { ...prev, [type]: !prev[type] };
-      return updated;
-    });
-  };
 
   const submitForm = (data) => {
     if (data.ticketType === "free") {
@@ -231,9 +241,102 @@ useEffect(() => {
       delete data.regularSlots;
       delete data.vipSlots;
       delete data.vvipSlots;
+      delete data.ticketPackages;
+    } else {
+      if (!packages.length) {
+        setPackageError("Please add at least one ticket package for paid events.");
+        return;
+      }
+      data.ticketPackages = packages;
     }
 
-    onSubmit(data);
+    if (eventDates && eventDates.length) data.eventDates = eventDates;
+
+    setPackageError("");
+
+    // For new events (not editing), show agreement dialog
+    if (!editingEventId) {
+      setPendingFormData(data);
+      setShowAgreementDialog(true);
+    } else {
+      onSubmit(data);
+    }
+  };
+
+  const handleAddPackage = () => {
+    if (!newPackage.name || !newPackage.price) return;
+    setPackages((p) => [...p, { ...newPackage, price: Number(newPackage.price), slots: newPackage.slots ? Number(newPackage.slots) : undefined, minQuantity: newPackage.minQuantity ? Number(newPackage.minQuantity) : undefined, maxPerUser: newPackage.maxPerUser ? Number(newPackage.maxPerUser) : undefined }]);
+    setNewPackage({ name: '', type: 'general', price: '', slots: '', startDate: '', endDate: '', minQuantity: '', maxPerUser: '', description: '' });
+  };
+
+  const handleRemovePackage = (index) => {
+    setPackages((p) => p.filter((_, i) => i !== index));
+  };
+
+  const timeToMinutes = (time) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+    return hours * 60 + minutes;
+  };
+
+  const handleAddEventDate = () => {
+    setEventDateError("");
+
+    if (!newEventDate.date || !newEventDate.startTime || !newEventDate.endTime) {
+      setEventDateError("Please provide date, start time, and end time for the event date.");
+      return;
+    }
+
+    const startMinutes = timeToMinutes(newEventDate.startTime);
+    const endMinutes = timeToMinutes(newEventDate.endTime);
+    if (startMinutes === null || endMinutes === null) {
+      setEventDateError("Please enter a valid start and end time.");
+      return;
+    }
+    if (startMinutes >= endMinutes) {
+      setEventDateError("Event start time must be before end time.");
+      return;
+    }
+
+    const newDate = new Date(newEventDate.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (newDate < today) {
+      setEventDateError("Event date cannot be in the past.");
+      return;
+    }
+
+    const conflictingEntry = eventDates.some((entry) => {
+      if (entry.date !== newEventDate.date) return false;
+      const existingStart = timeToMinutes(entry.startTime);
+      const existingEnd = timeToMinutes(entry.endTime);
+      return startMinutes < existingEnd && existingStart < endMinutes;
+    });
+
+    if (conflictingEntry) {
+      setEventDateError("This event date conflicts with an existing schedule entry.");
+      return;
+    }
+
+    setEventDates((prev) => [...prev, { ...newEventDate }]);
+    setNewEventDate({ date: '', startTime: '', endTime: '' });
+  };
+
+  const handleRemoveEventDate = (index) => {
+    setEventDates((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAgreementAccept = (agreementInfo) => {
+    if (pendingFormData) {
+      const finalData = {
+        ...pendingFormData,
+        ...agreementInfo,
+      };
+      setAgreementAccepted(true);
+      setShowAgreementDialog(false);
+      setPendingFormData(null);
+      onSubmit(finalData);
+    }
   };
 
  const geocodeLocation = async (city, country) => {
@@ -269,16 +372,23 @@ const LocationPicker = ({ setCoords }) => {
 };
 
 return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      fullWidth
-      maxWidth="md"
-      scroll="paper"
-    >
-      <DialogTitle>
-        {editingEventId ? "Edit Event" : "Create Event"}
-      </DialogTitle>
+    <>
+      <EventAgreementDialog
+        isOpen={showAgreementDialog}
+        onClose={() => setShowAgreementDialog(false)}
+        onAccept={handleAgreementAccept}
+      />
+    
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        fullWidth
+        maxWidth="md"
+        scroll="paper"
+      >
+        <DialogTitle>
+          {editingEventId ? "Edit Event" : "Create Event"}
+        </DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "75vh" }}>
         <form id="event-form" onSubmit={handleSubmit(submitForm)}>
@@ -490,109 +600,67 @@ return (
               />
             </Grid>
 
-            {/* Ticket Options */}
-            {ticketTypeValue === "paid" && (
-              <Grid item xs={12}>
-                <Typography fontWeight="bold">Ticket Options</Typography>
+            {/* Multiple dates */}
+            <Grid item xs={12}>
+              <Typography variant="h6" sx={{ mt: 2 }}>Event Schedule</Typography>
+              {eventDates.length > 0 && (
+                <Box sx={{ mt: 1, mb: 2 }}>
+                  {eventDates.map((entry, idx) => (
+                    <Stack key={idx} direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography fontWeight={600}>{new Date(entry.date).toLocaleDateString()}</Typography>
+                        <Typography variant="body2">{entry.startTime} - {entry.endTime}</Typography>
+                      </Box>
+                      <Button color="error" onClick={() => handleRemoveEventDate(idx)}>Remove</Button>
+                    </Stack>
+                  ))}
+                </Box>
+              )}
 
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={ticketOptions.regular}
-                      onChange={() => toggleTicket("regular")}
-                    />
-                  }
-                  label="Regular"
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={ticketOptions.vip}
-                      onChange={() => toggleTicket("vip")}
-                    />
-                  }
-                  label="VIP"
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={ticketOptions.vvip}
-                      onChange={() => toggleTicket("vvip")}
-                    />
-                  }
-                  label="VVIP"
-                />
+              <Grid container spacing={1} sx={{ mt: 1, mb: 1 }}>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    type="date"
+                    fullWidth
+                    label="Date"
+                    InputLabelProps={{ shrink: true }}
+                    value={newEventDate.date}
+                    onChange={(e) => setNewEventDate((prev) => ({ ...prev, date: e.target.value }))}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    type="time"
+                    fullWidth
+                    label="Start Time"
+                    value={newEventDate.startTime}
+                    onChange={(e) => setNewEventDate((prev) => ({ ...prev, startTime: e.target.value }))}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    type="time"
+                    fullWidth
+                    label="End Time"
+                    value={newEventDate.endTime}
+                    onChange={(e) => setNewEventDate((prev) => ({ ...prev, endTime: e.target.value }))}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                {eventDateError && (
+                  <Grid item xs={12}>
+                    <Typography color="error" variant="body2">{eventDateError}</Typography>
+                  </Grid>
+                )}
+                <Grid item xs={12} sm={4}>
+                  <Button onClick={handleAddEventDate} variant="outlined" sx={{ height: '100%' }}>
+                    Add Event Date
+                  </Button>
+                </Grid>
               </Grid>
-            )}
+            </Grid>
 
-            {/* Regular Inputs */}
-            {ticketOptions.regular && (
-              <>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="number"
-                    fullWidth
-                    label="Regular Price"
-                    {...register("regularPrice", { required: true })}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="number"
-                    fullWidth
-                    label="Regular Slots"
-                    {...register("regularSlots", { required: true })}
-                  />
-                </Grid>
-              </>
-            )}
-
-            {/* VIP */}
-            {ticketOptions.vip && (
-              <>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="number"
-                    fullWidth
-                    label="VIP Price"
-                    {...register("vipPrice", { required: true })}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="number"
-                    fullWidth
-                    label="VIP Slots"
-                    {...register("vipSlots", { required: true })}
-                  />
-                </Grid>
-              </>
-            )}
-
-            {/* VVIP */}
-            {ticketOptions.vvip && (
-              <>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="number"
-                    fullWidth
-                    label="VVIP Price"
-                    {...register("vvipPrice", { required: true })}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="number"
-                    fullWidth
-                    label="VVIP Slots"
-                    {...register("vvipSlots", { required: true })}
-                  />
-                </Grid>
-              </>
-            )}
 
             {/* Free event slots */}
             {ticketTypeValue === "free" && (
@@ -605,6 +673,73 @@ return (
                 />
               </Grid>
             )}
+
+            {/* Ticket Packages */}
+            {ticketTypeValue === "paid" && (
+              <Grid item xs={12}>
+                <Typography variant="h6" sx={{ mt: 2 }}>Ticket Packages</Typography>
+            {packageError && (
+              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                {packageError}
+              </Typography>
+            )}
+
+                {packages.length > 0 && (
+                <Box sx={{ mt: 1, mb: 2 }}>
+                  {packages.map((pkg, idx) => (
+                    <Stack key={idx} direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography fontWeight={600}>{pkg.name} <Typography component="span" sx={{ fontWeight: 400 }}>({pkg.type})</Typography></Typography>
+                        <Typography variant="body2">{pkg.description}</Typography>
+                        <Typography variant="caption">Price: Ksh. {pkg.price} • Slots: {pkg.slots ?? '∞'}</Typography>
+                      </Box>
+                      <Button color="error" onClick={() => handleRemovePackage(idx)}>Remove</Button>
+                    </Stack>
+                  ))}
+                </Box>
+              )}
+
+              <Grid container spacing={1} sx={{ mt: 1 }}>
+                <Grid item xs={12} sm={4}>
+                  <TextField fullWidth label="Name" value={newPackage.name} onChange={(e) => setNewPackage(n => ({ ...n, name: e.target.value }))} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField select fullWidth label="Type" value={newPackage.type} onChange={(e) => setNewPackage(n => ({ ...n, type: e.target.value }))}>
+                    <MenuItem value="general">General</MenuItem>
+                    <MenuItem value="early-bird">Early Bird</MenuItem>
+                    <MenuItem value="advance">Advance</MenuItem>
+                    <MenuItem value="group">Group</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField type="number" fullWidth label="Price" value={newPackage.price} onChange={(e) => setNewPackage(n => ({ ...n, price: e.target.value }))} />
+                </Grid>
+
+                <Grid item xs={12} sm={4}>
+                  <TextField type="number" fullWidth label="Slots" value={newPackage.slots} onChange={(e) => setNewPackage(n => ({ ...n, slots: e.target.value }))} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField type="date" fullWidth label="Start Date" InputLabelProps={{ shrink: true }} value={newPackage.startDate} onChange={(e) => setNewPackage(n => ({ ...n, startDate: e.target.value }))} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField type="date" fullWidth label="End Date" InputLabelProps={{ shrink: true }} value={newPackage.endDate} onChange={(e) => setNewPackage(n => ({ ...n, endDate: e.target.value }))} />
+                </Grid>
+
+                <Grid item xs={12} sm={4}>
+                  <TextField type="number" fullWidth label="Min Quantity" value={newPackage.minQuantity} onChange={(e) => setNewPackage(n => ({ ...n, minQuantity: e.target.value }))} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField type="number" fullWidth label="Max Per User" value={newPackage.maxPerUser} onChange={(e) => setNewPackage(n => ({ ...n, maxPerUser: e.target.value }))} />
+                </Grid>
+                <Grid item xs={12} sm={8}>
+                  <TextField fullWidth label="Description" value={newPackage.description} onChange={(e) => setNewPackage(n => ({ ...n, description: e.target.value }))} />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Button onClick={handleAddPackage} variant="outlined" sx={{ height: '100%' }}>Add Package</Button>
+                </Grid>
+              </Grid>
+            </Grid>
+          )}
           </Grid>
         </form>
       </DialogContent>
@@ -617,7 +752,8 @@ return (
         <Button onClick={onClose}> Cancel </Button>
         </Stack>
       </DialogActions>
-    </Dialog>
+      </Dialog>
+    </>
   );
 };
 
