@@ -61,11 +61,22 @@ const Notifications = () => {
   const unseenByType = (type) =>
     grouped[type]?.filter((n) => !n.seen).length || 0;
 
-  const formatDetailKey = (key) =>
-    key
+  const formatDetailKey = (key) => {
+    // Custom display names for booking-related keys
+    const keyMap = {
+      bookingType: "Booking Type",
+      startDate: "Start Date",
+      endDate: "End Date",
+      bookingDate: "Booking Date",
+      from: "From",
+      to: "To",
+    };
+    if (keyMap[key]) return keyMap[key];
+    return key
       .replace(/([A-Z])/g, " $1")
       .replace(/_/g, " ")
       .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
 
   const formatDetailValue = (key, value) => {
     if (value === null || value === undefined || value === "") {
@@ -82,7 +93,34 @@ const Notifications = () => {
     }
 
     if (lowerKey === "duration") {
-      return typeof value === "number" ? `${value} hrs` : String(value);
+      if (typeof value === "number") {
+        if (value % 24 === 0 && value >= 24) {
+          return `${value / 24} day(s) (${value} hrs)`;
+        }
+        if (value > 24) {
+          const days = Math.floor(value / 24);
+          const hrs = value % 24;
+          return `${days} day(s) ${hrs} hr(s) (${value} hrs)`;
+        }
+        return `${value} hrs`;
+      }
+      return String(value);
+    }
+
+    if (lowerKey === "startdate") {
+      return format(new Date(value), "EEEE, MMM d, yyyy");
+    }
+
+    if (lowerKey === "enddate") {
+      return format(new Date(value), "EEEE, MMM d, yyyy");
+    }
+
+    if (lowerKey === "from" || lowerKey === "to") {
+      return String(value);
+    }
+
+    if (lowerKey === "bookingtype") {
+      return value === "multiple" ? "Multiple Days" : "Single Day";
     }
 
     return String(value);

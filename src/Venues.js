@@ -548,12 +548,22 @@ const Venues = ({ token }) => {
                               <TableCell>{b.phone}</TableCell>
                               <TableCell>{b.email}</TableCell>
                               <TableCell>
-                                {new Date(b.bookingDate).toLocaleDateString()}
+                                {b.bookingType === "multiple"
+                                  ? `${new Date(b.startDate).toLocaleDateString()} - ${new Date(
+                                      b.endDate
+                                    ).toLocaleDateString()}`
+                                  : new Date(b.bookingDate).toLocaleDateString()}
                               </TableCell>
-                              <TableCell>{b.from}</TableCell>
-                              <TableCell>{b.to}</TableCell>
-                              <TableCell>{b.duration}</TableCell>
-                              <TableCell>{b.totalAmount.toFixed(2)}</TableCell>
+                              <TableCell>{b.bookingType === "multiple" ? "All day" : b.from}</TableCell>
+                              <TableCell>{b.bookingType === "multiple" ? "All day" : b.to}</TableCell>
+                              <TableCell>
+                                {typeof b.duration === "number"
+                                  ? b.bookingType === "multiple"
+                                    ? `${b.duration / 24} day(s) (${b.duration} hrs)`
+                                    : `${b.duration} hrs`
+                                  : String(b.duration)}
+                              </TableCell>
+                              <TableCell>Ksh. {Number(b.totalAmount).toFixed(2)}</TableCell>
                               <TableCell>
                                 <IconButton
                                   color="primary"

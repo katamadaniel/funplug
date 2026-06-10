@@ -31,8 +31,10 @@ const formatDate = (value) => {
 
 const buildExportRows = (bookings) => {
   const sample = bookings[0] || {};
-  const isTicketExport =
-    sample.ticketType || sample.quantity !== undefined || sample.purchaseDate;
+  // Determine ticket exports only when clearly ticket-related fields exist.
+  // Some booking objects may include a `quantity` field for other reasons,
+  // so require `ticketType` or `purchaseDate` to avoid misclassification.
+  const isTicketExport = Boolean(sample.ticketType || sample.purchaseDate);
 
   const rows = bookings.map((booking) => {
     const clientName = booking.clientName || booking.customerName || booking.name || '';
@@ -51,14 +53,44 @@ const buildExportRows = (bookings) => {
       };
     }
 
+    // Format booking display values to match multi-day logic
+    const isMultiple = booking.bookingType === 'multiple';
+    const bookingDate = isMultiple
+      ? `${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}`
+      : formatDate(booking.bookingDate);
+
+    const fromVal = isMultiple ? 'All day' : booking.from || '';
+    const toVal = isMultiple ? 'All day' : booking.to || '';
+
+    let durationVal = '';
+    if (booking.duration != null) {
+      const d = Number(booking.duration);
+      if (!Number.isNaN(d)) {
+        if (isMultiple) {
+          // duration is stored as hours; convert to days
+          const days = d / 24;
+          durationVal = Number.isInteger(days)
+            ? `${days} day(s) (${d} hrs)`
+            : `${days.toFixed(2)} day(s) (${d} hrs)`;
+        } else {
+          durationVal = `${d} hrs`;
+        }
+      } else {
+        durationVal = String(booking.duration);
+      }
+    }
+
     return {
       'Client Name': clientName,
       Email: email,
       Phone: phone,
-      'Booking Date': formatDate(booking.bookingDate),
-      From: booking.from || '',
-      To: booking.to || '',
-      Duration: booking.duration || '',
+      'Booking Type': booking.bookingType || 'single',
+      'Start Date': formatDate(booking.startDate),
+      'End Date': formatDate(booking.endDate),
+      'Booking Date': bookingDate,
+      From: fromVal,
+      To: toVal,
+      Duration: durationVal,
       'Total Amount': booking.totalAmount != null ? booking.totalAmount.toFixed(2) : '',
     };
   });
@@ -77,6 +109,9 @@ const buildExportRows = (bookings) => {
         'Client Name',
         'Email',
         'Phone',
+        'Booking Type',
+        'Start Date',
+        'End Date',
         'Booking Date',
         'From',
         'To',

@@ -23,43 +23,76 @@ const SOURCES = {
     list: `${API_URL}/api/venue_bookings`,
     label: (b) => `Venue booked: ${b.venueTitle}`,
     date: (b) => b.createdAt,
-    details: (b) => ({
-      name: b.clientName,
-      phone: b.phone,
-      email: b.email,
-      date: b.bookingDate,
-      duration: b.duration,
-      total: b.totalAmount,
-      eventDetails: b.eventDetails,
-    }),
+    details: (b) => {
+      const details = {
+        name: b.clientName,
+        phone: b.phone,
+        email: b.email,
+        bookingType: b.bookingType || 'single',
+        duration: b.duration,
+        total: b.totalAmount,
+        eventDetails: b.eventDetails,
+      };
+      if (b.bookingType === 'multiple') {
+        details.startDate = b.startDate;
+        details.endDate = b.endDate;
+      } else {
+        details.bookingDate = b.bookingDate;
+        details.from = b.from;
+        details.to = b.to;
+      }
+      return details;
+    },
   },
   performanceBooking: {
     list: `${API_URL}/api/performance_bookings`,
     label: (b) => `Performance booked: ${b.artType}`,
     date: (b) => b.createdAt,
-    details: (b) => ({
-      name: b.clientName,
-      phone: b.phone,
-      email: b.email,
-      date: b.bookingDate,
-      duration: b.duration,
-      total: b.totalAmount,
-      eventDetails: b.eventDetails,
-    }),
+    details: (b) => {
+      const details = {
+        name: b.clientName,
+        phone: b.phone,
+        email: b.email,
+        bookingType: b.bookingType || 'single',
+        duration: b.duration,
+        total: b.totalAmount,
+        eventDetails: b.eventDetails,
+      };
+      if (b.bookingType === 'multiple') {
+        details.startDate = b.startDate;
+        details.endDate = b.endDate;
+      } else {
+        details.bookingDate = b.bookingDate;
+        details.from = b.from;
+        details.to = b.to;
+      }
+      return details;
+    },
   },
   serviceBooking: {
     list: `${API_URL}/api/service_bookings`,
     label: (b) => `Service booked: ${b.serviceType}`,
     date: (b) => b.createdAt,
-    details: (b) => ({
-      name: b.clientName,
-      phone: b.phone,
-      email: b.email,
-      date: b.bookingDate,
-      duration: b.duration,
-      total: b.totalAmount,
-      eventDetails: b.eventDetails,
-    }),
+    details: (b) => {
+      const details = {
+        name: b.clientName,
+        phone: b.phone,
+        email: b.email,
+        bookingType: b.bookingType || 'single',
+        duration: b.duration,
+        total: b.totalAmount,
+        eventDetails: b.eventDetails,
+      };
+      if (b.bookingType === 'multiple') {
+        details.startDate = b.startDate;
+        details.endDate = b.endDate;
+      } else {
+        details.bookingDate = b.bookingDate;
+        details.from = b.from;
+        details.to = b.to;
+      }
+      return details;
+    },
   },
 };
 

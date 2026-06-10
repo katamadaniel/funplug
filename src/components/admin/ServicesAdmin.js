@@ -326,23 +326,47 @@ const initialize = async () => {
                     <TableCell>Client Name</TableCell>
                     <TableCell>Phone</TableCell>
                     <TableCell>Email</TableCell>
+                    <TableCell>Booking Type</TableCell>
                     <TableCell>Booking Date</TableCell>
-                    <TableCell>Duration (hours)</TableCell>
+                    <TableCell>From</TableCell>
+                    <TableCell>To</TableCell>
+                    <TableCell>Duration</TableCell>
                     <TableCell>Total Paid (Ksh.)</TableCell>
                 </TableRow>
                 </TableHead>
                 <TableBody>
-                {filteredBookings.map((booking, index) => (
+                {filteredBookings.map((booking, index) => {
+                    const isMultiple = booking.bookingType === 'multiple';
+                    const bookingDate = isMultiple
+                      ? `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(
+                          booking.endDate
+                        ).toLocaleDateString()}`
+                      : new Date(booking.bookingDate).toLocaleDateString();
+                    const duration = (() => {
+                      const d = Number(booking.duration);
+                      if (!Number.isNaN(d)) {
+                        return isMultiple
+                          ? `${d / 24} day(s) (${d} hrs)`
+                          : `${d} hrs`;
+                      }
+                      return booking.duration || '';
+                    })();
+
+                    return (
                     <TableRow key={booking._id}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{booking.clientName}</TableCell>
                     <TableCell>{booking.phone}</TableCell>
                     <TableCell>{booking.email}</TableCell>
-                    <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{booking.duration}</TableCell>
+                    <TableCell>{booking.bookingType || 'single'}</TableCell>
+                    <TableCell>{bookingDate}</TableCell>
+                    <TableCell>{isMultiple ? 'All day' : booking.from || ''}</TableCell>
+                    <TableCell>{isMultiple ? 'All day' : booking.to || ''}</TableCell>
+                    <TableCell>{duration}</TableCell>
                     <TableCell>{booking.totalAmount.toFixed(2)}</TableCell>
                     </TableRow>
-                ))}
+                );
+                })}
                 </TableBody>
             </Table>
           </TableContainer>

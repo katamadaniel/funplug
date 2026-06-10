@@ -53,11 +53,13 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
 
     fetchDetails();
   }, [performance?._id, performance]);
+  const [bookingType, setBookingType] = useState("single"); // "single" or "multiple"
   const [form, setForm] = useState({
     clientName: "",
     phone: "",
     email: "",
     bookingDate: "",
+    endDate: "",
     from: "",
     to: "",
     eventDetails: "",
@@ -106,24 +108,49 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
   }, [lastBookingId, onClose, onBooked]);
 
   useEffect(() => {
-    const { from, to } = form;
-    if (from && to) {
-      const start = new Date(`1970-01-01T${from}`);
-      const end = new Date(`1970-01-01T${to}`);
-      const hours = (end - start) / (1000 * 60 * 60);
+    if (bookingType === "single") {
+      const { from, to } = form;
+      if (from && to) {
+        const start = new Date(`1970-01-01T${from}`);
+        const end = new Date(`1970-01-01T${to}`);
+        const hours = (end - start) / (1000 * 60 * 60);
 
-      if (hours > 0) {
-        setDuration(hours);
-        const totalCost = hours * Number(performanceData.charges || 0);
-        setTotal(totalCost);
-        setReservationFee(Math.ceil(totalCost * 0.1));
-      } else {
-        setDuration(0);
-        setTotal(0);
-        setReservationFee(0);
+        if (hours > 0) {
+          setDuration(hours);
+          const totalCost = hours * Number(performanceData.charges || 0);
+          setTotal(totalCost);
+          setReservationFee(Math.ceil(totalCost * 0.1));
+        } else {
+          setDuration(0);
+          setTotal(0);
+          setReservationFee(0);
+        }
+      }
+    } else if (bookingType === "multiple") {
+      const { bookingDate, endDate } = form;
+      if (bookingDate && endDate) {
+        const start = new Date(bookingDate);
+        const end = new Date(endDate);
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; // +1 for inclusive count
+
+        if (days > 0 && days <= 5) {
+          setDuration(days);
+          const hours = days * 24; // convert days to hours since charges are hourly
+          const totalCost = hours * Number(performanceData.charges || 0);
+          setTotal(totalCost);
+          setReservationFee(Math.ceil(totalCost * 0.1));
+        } else if (days > 5) {
+          setDuration(days);
+          setTotal(0);
+          setReservationFee(0);
+        } else {
+          setDuration(0);
+          setTotal(0);
+          setReservationFee(0);
+        }
       }
     }
-  }, [form.from, form.to, performanceData.charges]);
+  }, [form.from, form.to, form.bookingDate, form.endDate, performanceData.charges, bookingType]);
 
   const today = new Date().toISOString().split("T")[0];
   
@@ -147,10 +174,23 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
     else if (!/\S+@\S+\.\S+/.test(form.email))
       errs.email = "Invalid email address";
 
-    if (!form.bookingDate) errs.bookingDate = "Select a date";
-    if (!form.from) errs.from = "Select start time";
-    if (!form.to) errs.to = "Select end time";
-    if (duration <= 0) errs.duration = "Invalid duration";
+    if (bookingType === "single") {
+      if (!form.bookingDate) errs.bookingDate = "Select a date";
+      if (!form.from) errs.from = "Select start time";
+      if (!form.to) errs.to = "Select end time";
+      if (duration <= 0) errs.duration = "Invalid duration";
+    } else if (bookingType === "multiple") {
+      if (!form.bookingDate) errs.bookingDate = "Select start date";
+      if (!form.endDate) errs.endDate = "Select end date";
+      if (form.bookingDate && form.endDate) {
+        const start = new Date(form.bookingDate);
+        const end = new Date(form.endDate);
+        if (start > end) errs.endDate = "End date must be after start date";
+      }
+      const days = Math.ceil((new Date(form.endDate) - new Date(form.bookingDate)) / (1000 * 60 * 60 * 24)) + 1;
+      if (days > 5) errs.duration = "Booking limited to 5 days maximum";
+      if (days <= 0) errs.duration = "Invalid date range";
+    }
 
     return errs;
   };
@@ -164,11 +204,19 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
   const checkAvailability = async () => {
     try {
       const params = new URLSearchParams();
-      const { bookingDate, from, to } = form;
       params.append("cardId", performanceData._id);
-      params.append("bookingDate", bookingDate);
-      params.append("from", from);
-      params.append("to", to);
+      params.append("bookingType", bookingType);
+      
+      if (bookingType === "single") {
+        const { bookingDate, from, to } = form;
+        params.append("bookingDate", bookingDate);
+        params.append("from", from);
+        params.append("to", to);
+      } else {
+        const { bookingDate, endDate } = form;
+        params.append("startDate", bookingDate);
+        params.append("endDate", endDate);
+      }
 
       const res = await axios.get(
         `${API_URL}/api/performance_bookings/check?${params.toString()}`
@@ -177,8 +225,9 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
     } catch (err) {
       console.error("Availability check failed", err);
       return {
-         available: false, 
-         reason: err?.response?.data?.message || "Availability check failed" };
+        available: false,
+        reason: err?.response?.data?.message || "Availability check failed"
+      };
     }
   };
 
@@ -208,9 +257,7 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
         clientName: form.clientName,
         email: form.email,
         phone: formatPhone(form.phone),
-        bookingDate: form.bookingDate,
-        from: form.from,
-        to: form.to,
+        bookingType,
         duration: String(duration),
         totalAmount: total,
         eventDetails: form.eventDetails,
@@ -219,6 +266,15 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
         paymentMethod,
         amount: reservationFee,
       };
+      
+      if (bookingType === "single") {
+        payload.bookingDate = form.bookingDate;
+        payload.from = form.from;
+        payload.to = form.to;
+      } else {
+        payload.startDate = form.bookingDate;
+        payload.endDate = form.endDate;
+      }
 
       const response = await axios.post( `${API_URL}/api/performance_bookings`, payload );
       const { booking, checkoutRequestId } = response.data;
@@ -343,6 +399,27 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
           <Grid container spacing={2}  mt={1}>
             <Grid item xs={12}>
               <TextField
+                select
+                label="Booking Type"
+                fullWidth
+                value={bookingType}
+                onChange={(e) => {
+                  setBookingType(e.target.value);
+                  setForm(prev => ({
+                    ...prev,
+                    from: "",
+                    to: "",
+                    endDate: ""
+                  }));
+                }}
+              >
+                <MenuItem value="single">Single Day Booking</MenuItem>
+                <MenuItem value="multiple">Multiple Days (Max 5 Days)</MenuItem>
+              </TextField>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
                 fullWidth
                 label="Name"
                 value={form.clientName}
@@ -374,45 +451,103 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
               />
             </Grid>
 
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                type="date"
-                label="Booking Date"
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ min: today }}
-                value={form.bookingDate}
-                onChange={handleInputChange("bookingDate")}
-                error={Boolean(errors.bookingDate)}
-                helperText={errors.bookingDate}
-              />
-            </Grid>
+            {bookingType === "single" ? (
+              <>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="Booking Date"
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ min: today }}
+                    value={form.bookingDate}
+                    onChange={handleInputChange("bookingDate")}
+                    error={Boolean(errors.bookingDate)}
+                    helperText={errors.bookingDate}
+                  />
+                </Grid>
 
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                type="time"
-                label="From"
-                InputLabelProps={{ shrink: true }}
-                value={form.from}
-                onChange={handleInputChange("from")}
-                error={Boolean(errors.from)}
-                helperText={errors.from}
-              />
-            </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    type="time"
+                    label="From"
+                    InputLabelProps={{ shrink: true }}
+                    value={form.from}
+                    onChange={handleInputChange("from")}
+                    error={Boolean(errors.from)}
+                    helperText={errors.from}
+                  />
+                </Grid>
 
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                type="time"
-                label="To"
-                InputLabelProps={{ shrink: true }}
-                value={form.to}
-                onChange={handleInputChange("to")}
-                error={Boolean(errors.to)}
-                helperText={errors.to}
-              />
-            </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    type="time"
+                    label="To"
+                    InputLabelProps={{ shrink: true }}
+                    value={form.to}
+                    onChange={handleInputChange("to")}
+                    error={Boolean(errors.to)}
+                    helperText={errors.to}
+                  />
+                </Grid>
+
+                <Grid item xs={4}>
+                  <TextField
+                    fullWidth
+                    label="Duration (hrs)"
+                    value={duration}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+              </>
+            ) : (
+              <>
+                <Grid item xs={6}>
+                  <TextField
+                    label="Start Date"
+                    type="date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ min: today }}
+                    value={form.bookingDate}
+                    onChange={handleInputChange("bookingDate")}
+                    error={Boolean(errors.bookingDate)}
+                    helperText={errors.bookingDate}
+                  />
+                </Grid>
+                
+                <Grid item xs={6}>
+                  <TextField
+                    label="End Date"
+                    type="date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ min: form.bookingDate || today }}
+                    value={form.endDate}
+                    onChange={handleInputChange("endDate")}
+                    error={Boolean(errors.endDate)}
+                    helperText={errors.endDate}
+                  />
+                </Grid>
+                
+                <Grid item xs={4}>
+                  <TextField
+                    fullWidth
+                    label="Duration (days)"
+                    value={duration}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+                
+                {duration > 5 && (
+                  <Grid item xs={12}>
+                    <Alert severity="error">{errors.duration}</Alert>
+                  </Grid>
+                )}
+              </>
+            )}
 
             <Grid item xs={12}>
               <TextField
@@ -422,15 +557,6 @@ const PerformanceBookingFormModal = ({ performance, onClose, onBooked }) => {
                 minRows={3}
                 value={form.eventDetails}
                 onChange={handleInputChange("eventDetails")}
-              />
-            </Grid>
-
-            <Grid item xs={4}>
-              <TextField
-                fullWidth
-                label="Duration (hrs)"
-                value={duration}
-                InputProps={{ readOnly: true }}
               />
             </Grid>
 
