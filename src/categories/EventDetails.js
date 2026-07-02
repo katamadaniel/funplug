@@ -16,6 +16,7 @@ import EventCard from "./EventCard";
 import ListingDetailsModal from "../ListingDetailsModal";
 import TicketPurchase from "../TicketPurchase";
 import ScreenLoader from "../components/ScreenLoader";
+import usePageMeta from "../hooks/usePageMeta";
 
 const API_URL = process.env.REACT_APP_API_URL;
 const EVENTS_API_URL = `${API_URL}/api/events`;
@@ -24,6 +25,17 @@ const ITEMS_PER_PAGE = 8;
 
 const EventDetails = () => {
   const { category } = useParams();
+
+  usePageMeta({
+    title: category ? `${category} Events | FunPlug` : 'Events | FunPlug',
+    description: category
+      ? `Discover ${category} events available for booking on FunPlug.`
+      : 'Discover and book events across categories with FunPlug.',
+    keywords: category
+      ? `${category} events, event booking, FunPlug`
+      : 'events, event booking, FunPlug',
+    url: typeof window !== 'undefined' ? window.location.href : '',
+  });
 
   const [groupedEvents, setGroupedEvents] = useState({});
   const [loading, setLoading] = useState(true);

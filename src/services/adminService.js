@@ -70,6 +70,27 @@ export const createAdmin = async (adminData) => {
   return response.data;
 };
 
+export const fetchWithdrawalRequestsAdmin = async (status = 'pending') => {
+  try {
+    const response = await axiosInstance.get(`${API_URL}/api/wallet/admin/withdrawals`, {
+      params: { status },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Failed to fetch withdrawal requests');
+  }
+};
+
+export const approveWithdrawalRequest = async (withdrawalId, payload) => {
+  const response = await axiosInstance.put(`${API_URL}/api/wallet/admin/withdrawals/${withdrawalId}/approve`, payload);
+  return response.data;
+};
+
+export const rejectWithdrawalRequest = async (withdrawalId, payload) => {
+  const response = await axiosInstance.put(`${API_URL}/api/wallet/admin/withdrawals/${withdrawalId}/reject`, payload);
+  return response.data;
+};
+
 export const deleteAdminById = async (adminId) => {
   const response = await axiosInstance.delete(`${ADMIN_API_URL}/${adminId}`);
   return response.data;

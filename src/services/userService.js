@@ -209,6 +209,53 @@ export const getAllUsers = async () => {
   }
 };
 
+const WALLET_API_URL = `${API_URL}/api/wallet`;
+
+export const fetchWalletOverview = async () => {
+  try {
+    const response = await axiosInstance.get(WALLET_API_URL);
+    return response.data;
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error fetching wallet overview:', parsedError);
+    throw parsedError;
+  }
+};
+
+export const fetchWalletTransactions = async () => {
+  try {
+    const response = await axiosInstance.get(`${WALLET_API_URL}/transactions`);
+    return response.data;
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error fetching wallet transactions:', parsedError);
+    throw parsedError;
+  }
+};
+
+export const fetchWithdrawalRequests = async (status) => {
+  try {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    const response = await axiosInstance.get(`${WALLET_API_URL}/withdrawals${query}`);
+    return response.data;
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error fetching withdrawal requests:', parsedError);
+    throw parsedError;
+  }
+};
+
+export const requestWithdrawal = async (withdrawalData) => {
+  try {
+    const response = await axiosInstance.post(`${WALLET_API_URL}/withdrawals`, withdrawalData);
+    return response.data;
+  } catch (error) {
+    const parsedError = parseApiError(error);
+    console.error('Error requesting withdrawal:', parsedError);
+    throw parsedError;
+  }
+};
+
 export const getUserById = async (userId) => {
   try {
     const response = await axiosInstance.get(`${USERS_API_URL}/${userId}`);

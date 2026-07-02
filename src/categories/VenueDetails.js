@@ -15,9 +15,17 @@ import VenueBookingFormModal from "../VenueBookingFormModal";
 import { fetchActiveVenues } from "../services/venuesService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
 import ScreenLoader from "../components/ScreenLoader";
+import usePageMeta from "../hooks/usePageMeta";
 
 const VenueDetails = () => {
   const [venues, setVenues] = useState([]);
+
+  usePageMeta({
+    title: 'Venue Booking | FunPlug',
+    description: 'Find and book event venues across Kenya with FunPlug — venues for weddings, parties, conferences and more.',
+    keywords: 'event venues, venue booking, FunPlug venue marketplace',
+    url: typeof window !== 'undefined' ? window.location.href : '',
+  });
   const [loading, setLoading] = useState(true);
 
   const [countryFilter, setCountryFilter] = useState("");

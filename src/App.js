@@ -59,6 +59,7 @@ import ServicesAdmin from './components/admin/ServicesAdmin';
 import AdminNotifications from './components/admin/AdminNotifications';
 import AdminEmails from './components/admin/AdminEmails';
 import AdminPayments from './components/admin/AdminPayments';
+import AdminWithdrawals from './components/admin/AdminWithdrawals';
 import AdminSettings from './components/admin/AdminSettings';
 import PolicyManagement from './components/admin/PolicyManagement';
 import PolicyVersionControl from './components/admin/PolicyVersionControl';
@@ -201,6 +202,7 @@ function App() {
                                   <Route path="notifications" element={<AdminNotifications />} />
                                   <Route path="emails" element={<AdminEmails />} />
                                   <Route path="payments" element={<AdminPayments />} />
+                                  <Route path="withdrawals" element={<AdminWithdrawals />} />
                                   <Route path="settings" element={<AdminSettings />} />
                                   <Route path="policies" element={<PolicyManagement />} />
                                   <Route path="policies/versions" element={<PolicyVersionControl />} />

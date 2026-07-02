@@ -15,9 +15,17 @@ import PerformanceBookingFormModal from "../PerformanceBookingFormModal";
 import { fetchActiveCards } from "../services/performanceService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
 import ScreenLoader from "../components/ScreenLoader";
+import usePageMeta from "../hooks/usePageMeta";
 
 const PerformanceDetails = () => {
   const [performances, setPerformances] = useState([]);
+
+  usePageMeta({
+    title: 'Entertainment & Performers | FunPlug',
+    description: 'Browse and book entertainment, performers, and talent for your next event on FunPlug.',
+    keywords: 'performers, entertainment booking, event talent, FunPlug',
+    url: typeof window !== 'undefined' ? window.location.href : '',
+  });
   const [loading, setLoading] = useState(true);
 
   const [countryFilter, setCountryFilter] = useState("");

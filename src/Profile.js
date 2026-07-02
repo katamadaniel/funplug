@@ -5,6 +5,7 @@ import {
   TableContainer,Table, TableBody, TableCell, TableHead, TableRow, IconButton,
   Stack, Rating, Chip, Divider, Paper
 } from "@mui/material";
+import usePageMeta from "./hooks/usePageMeta";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import LanguageIcon from "@mui/icons-material/Language";
 import InstagramIcon from "@mui/icons-material/Instagram";
@@ -13,7 +14,7 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 
-import { fetchProfile, updateProfile, logoutUser } from "./services/userService";
+import { fetchProfile, updateProfile, logoutUser, fetchWalletOverview, requestWithdrawal } from "./services/userService";
 import { getAvatarUrl } from "./utils/avatar";
 import {
   getFollowerAnalytics,
@@ -39,6 +40,15 @@ const Profile = ({ token }) => {
   const [activeTab, setActiveTab] = useState("about");
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [walletOverview, setWalletOverview] = useState(null);
+  const [commissionRate, setCommissionRate] = useState(0);
+  const [withdrawalRequests, setWithdrawalRequests] = useState([]);
+  const [withdrawalAmount, setWithdrawalAmount] = useState("");
+  const [withdrawalMethod, setWithdrawalMethod] = useState("mpesa");
+  const [payoutDetails, setPayoutDetails] = useState("");
+  const [userNote, setUserNote] = useState("");
+  const [withdrawalStatusMessage, setWithdrawalStatusMessage] = useState("");
+  const [walletLoading, setWalletLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [followers, setFollowers] = useState([]);
@@ -67,6 +77,15 @@ const Profile = ({ token }) => {
     linkedin: "",
   });
 
+  usePageMeta({
+    title: user ? `${user.username} | FunPlug Profile` : 'Your FunPlug Profile',
+    description: user
+      ? `View ${user.username}'s FunPlug creator profile, event services, and booking options.`
+      : 'Access your FunPlug creator profile, manage ticket sales, and request withdrawals.',
+    keywords: 'FunPlug profile, event creator, ticket sales, withdrawal requests',
+    url: typeof window !== 'undefined' ? `${window.location.origin}/profile` : '',
+  });
+
   /** ---------------- LOAD PROFILE ---------------- */
   useEffect(() => {
     const loadProfile = async () => {
@@ -76,7 +95,11 @@ const Profile = ({ token }) => {
           ...profile,
           followers: profile.followersCount || 0,
           profileViews: profile.stats?.profileViews || 0,
-          });
+        });
+
+        if (activeTab === "wallet") {
+          await loadWallet();
+        }
 
         setFormData({
           username: profile.username || "",
@@ -164,7 +187,61 @@ const Profile = ({ token }) => {
     }
   };
 
-    const fetchUserReviews = async () => {
+  const loadWallet = async () => {
+    if (!user?._id) return;
+    try {
+      setWalletLoading(true);
+      const walletData = await fetchWalletOverview();
+      setWalletOverview(walletData.wallet || { balance: 0, currency: 'KES' });
+      setCommissionRate(walletData.commissionRate ?? 0);
+      setWithdrawalRequests(walletData.withdrawalRequests || []);
+      setUserNote('');
+    } catch (err) {
+      console.error('Error loading wallet data:', err);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  const handleRequestWithdrawal = async () => {
+    setWithdrawalStatusMessage('Submitting withdrawal...');
+
+    const amountValue = Number(withdrawalAmount);
+    if (!amountValue || amountValue <= 0) {
+      setWithdrawalStatusMessage('Enter a valid amount');
+      return;
+    }
+
+    if (!walletOverview || amountValue > walletOverview.balance) {
+      setWithdrawalStatusMessage('Insufficient wallet balance');
+      return;
+    }
+
+    try {
+      const request = await requestWithdrawal({
+        amount: amountValue,
+        method: withdrawalMethod,
+        payoutDetails,
+        userNote,
+      });
+
+      setWithdrawalStatusMessage('Withdrawal request submitted successfully.');
+      setWithdrawalAmount('');
+      setWithdrawalMethod('mpesa');
+      setPayoutDetails('');
+      setUserNote('');
+      setWalletOverview((prev) => ({
+        ...prev,
+        balance: prev.balance - amountValue,
+      }));
+      setWithdrawalRequests((prev) => [request, ...prev]);
+    } catch (err) {
+      console.error('Withdrawal request failed:', err);
+      setWithdrawalStatusMessage(err?.message || 'Withdrawal request failed');
+    }
+  };
+
+  const fetchUserReviews = async () => {
     try {
       setReviewsLoading(true);
       const res = await axios.get(`${API_URL}/api/reviews/user/${user._id}`);
@@ -430,6 +507,15 @@ const Profile = ({ token }) => {
         >
           Followers
         </Button>
+        <Button
+          variant={activeTab === "wallet" ? "contained" : "text"}
+          onClick={() => {
+            setActiveTab("wallet");
+            loadWallet();
+          }}
+        >
+          Wallet
+        </Button>
       </Stack>
 
       {/* LINKS */}
@@ -584,6 +670,145 @@ const Profile = ({ token }) => {
           )}
         </Box>
       )}
+      {activeTab === "wallet" && (
+        <Box mt={3}>
+          <Typography variant="h5" fontWeight={700} gutterBottom>
+            Wallet Balance
+          </Typography>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 1 }}>
+                {walletLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress />
+                  </Box>
+                ) : (
+                  <Box>
+                    <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1.05 }}>
+                      {walletOverview?.currency || "KES"} {walletOverview?.balance?.toFixed(2) ?? "0.00"}
+                    </Typography>
+                    <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
+                      Available wallet balance
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                      Platform fee: {commissionRate * 100}% commission is already deducted from ticket earnings.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      This is the net amount available for withdrawal.
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 1 }}>
+                <Typography variant="h6" fontWeight={700} gutterBottom>
+                  Request Withdrawal
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Amount"
+                      value={withdrawalAmount}
+                      onChange={(e) => setWithdrawalAmount(e.target.value)}
+                      fullWidth
+                      type="number"
+                      inputProps={{ min: 0, step: 1 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Method"
+                      value={withdrawalMethod}
+                      onChange={(e) => setWithdrawalMethod(e.target.value)}
+                      fullWidth
+                      helperText="e.g. mpesa"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Payout details"
+                      value={payoutDetails}
+                      onChange={(e) => setPayoutDetails(e.target.value)}
+                      fullWidth
+                      helperText="Phone number or account info"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Optional note"
+                      value={userNote}
+                      onChange={(e) => setUserNote(e.target.value)}
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      helperText="Add a note for the admin if needed"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={handleRequestWithdrawal}
+                      fullWidth
+                    >
+                      Submit withdrawal request
+                    </Button>
+                    {withdrawalStatusMessage && (
+                      <Typography mt={2} color="text.secondary" sx={{ minHeight: 24 }}>
+                        {withdrawalStatusMessage}
+                      </Typography>
+                    )}
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          <Box mt={4}>
+            <Typography variant="h6" fontWeight={700} gutterBottom>
+              Recent withdrawal requests
+            </Typography>
+            {walletLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : withdrawalRequests.length === 0 ? (
+              <Typography color="text.secondary">
+                No withdrawal requests yet.
+              </Typography>
+            ) : (
+              <TableContainer component={Paper} sx={{ mt: 2, borderRadius: 3, boxShadow: 1 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Method</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Requested</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {withdrawalRequests.map((request) => (
+                      <TableRow key={request._id} hover>
+                        <TableCell>
+                          {request.currency || "KES"} {request.amount?.toFixed(2)}
+                        </TableCell>
+                        <TableCell>{request.method}</TableCell>
+                        <TableCell>{request.status}</TableCell>
+                        <TableCell>{new Date(request.requestedAt).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Box>
+        </Box>
+      )}
+
       {activeTab === "analytics" && analytics && (
         <Box mt={3}>
           <Grid container spacing={2}>
@@ -635,7 +860,7 @@ const Profile = ({ token }) => {
                   <Typography color="text.secondary">
                     Total Followers
                   </Typography>
-                </Box>[]
+                </Box>
               </Grid>
 
               <Grid item xs={12} sm={3}>

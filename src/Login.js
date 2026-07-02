@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, fetchProfile, resendVerification } from "./services/userService";
 import { parseApiError } from "./utils/errorHandler";
+import usePageMeta from "./hooks/usePageMeta";
 import {
   Container,
   Typography,
@@ -28,6 +29,13 @@ const Login = ({ setIsAuthenticated, setUser }) => {
   });
 
   const navigate = useNavigate();
+
+  usePageMeta({
+    title: 'Login to FunPlug | Manage Bookings & Tickets',
+    description: 'Securely sign in to your FunPlug account to manage event bookings, ticket sales, and payments.',
+    keywords: 'FunPlug login, account sign in, event marketplace login, ticket seller login',
+    url: typeof window !== 'undefined' ? `${window.location.origin}/login` : '',
+  });
 
   const showToast = (message, severity = "info") => {
     setToast({ open: true, message, severity });

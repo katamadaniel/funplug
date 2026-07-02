@@ -16,6 +16,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import CelebrationIcon from "@mui/icons-material/Celebration";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import usePageMeta from "./hooks/usePageMeta";
 import missionImage from "./mission.jpg";
 import bannerImage from "./FunPlug.png";
 
@@ -29,6 +30,13 @@ const fadeUp = {
 const About = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+
+  usePageMeta({
+    title: 'About FunPlug | Event Marketplace for Kenya',
+    description: 'Learn how FunPlug connects performers, vendors, venues, and event hosts in one transparent event marketplace.',
+    keywords: 'FunPlug about, event marketplace, event planning platform, venue booking',
+    url: typeof window !== 'undefined' ? `${window.location.origin}/about` : '',
+  });
 
   return (
     <Box sx={{ bgcolor: "background.default" }}>
@@ -257,7 +265,7 @@ const About = () => {
             </Typography>
             <Typography sx={{ opacity: 0.9, mb: 4 }}>
               Whether you're planning, hosting, performing, or attending,
-              FunPlug gives you clarity, trust, and convenience — all in one
+              FunPlug gives you clarity, trust, and convenience all in one
               place.
             </Typography>
             <Button

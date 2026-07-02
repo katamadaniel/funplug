@@ -13,6 +13,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import usePageMeta from "./hooks/usePageMeta";
 
 const MotionAccordion = motion(Accordion);
 
@@ -91,6 +92,13 @@ const faqCategories = [
 
 const FAQ = () => {
   const navigate = useNavigate();
+
+  usePageMeta({
+    title: 'FunPlug FAQ | Event Booking Questions',
+    description: 'Find answers to common questions about FunPlug bookings, payments, registration, and account support.',
+    keywords: 'FunPlug FAQ, event booking help, ticketing support, registration questions',
+    url: typeof window !== 'undefined' ? `${window.location.origin}/faq` : '',
+  });
 
   return (
     <Box sx={{ backgroundColor: "#fafafa", py: { xs: 6, md: 10 } }}>

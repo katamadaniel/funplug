@@ -16,9 +16,17 @@ import ServiceBookingFormModal from "../ServiceBookingFormModal";
 import { fetchActiveServices } from "../services/serviceService";
 import GroupedPaginatedSection from "./GroupedPaginatedSection";
 import ScreenLoader from "../components/ScreenLoader";
+import usePageMeta from "../hooks/usePageMeta";
 
 const ServiceDetails = () => {
   const [services, setServices] = useState([]);
+
+  usePageMeta({
+    title: 'Service Marketplace | FunPlug',
+    description: 'Discover event services and book vendors, photographers, caterers, and more through FunPlug.',
+    keywords: 'event services, vendor booking, service marketplace, FunPlug',
+    url: typeof window !== 'undefined' ? window.location.href : '',
+  });
   const [loading, setLoading] = useState(true);
 
   const [countryFilter, setCountryFilter] = useState("");

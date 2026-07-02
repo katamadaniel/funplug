@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import usePageMeta from "./hooks/usePageMeta";
 import {
   Box,
   Avatar,
@@ -88,6 +89,15 @@ const UserProfile = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [isServiceModalOpen, setServiceModalOpen] = useState(false);
   const [isServiceBookingOpen, setServiceBookingOpen] = useState(false);
+
+  usePageMeta({
+    title: user ? `${user.username || user.name} | FunPlug Creator Profile` : 'FunPlug Creator Profile',
+    description: user
+      ? `Explore ${user.username || user.name}'s FunPlug profile to book events, services, venues, and talent.`
+      : 'Discover creator profiles on FunPlug for event talent, services, and venue partners.',
+    keywords: 'FunPlug profile, creator profile, event talent, vendor profile, user search',
+    url: typeof window !== 'undefined' ? window.location.href : '',
+  });
 
   // Reviews
   const [reviews, setReviews] = useState([]);

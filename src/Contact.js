@@ -15,6 +15,7 @@ import {
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import EmailIcon from "@mui/icons-material/Email";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import usePageMeta from "./hooks/usePageMeta";
 
 const API_URL= process.env.REACT_APP_API_URL;
 
@@ -34,6 +35,13 @@ const sendSupportMessage = async (payload) => {
 };
 
 const Contact = () => {
+  usePageMeta({
+    title: 'Contact FunPlug Support | Get Help with Bookings',
+    description: 'Reach FunPlug support for help with bookings, ticket issues, payments, and account questions.',
+    keywords: 'FunPlug contact, support page, event support, booking help',
+    url: typeof window !== 'undefined' ? `${window.location.origin}/contact` : '',
+  });
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",

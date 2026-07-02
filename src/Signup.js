@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signup } from './services/userService';
 import { parseApiError } from './utils/errorHandler';
+import usePageMeta from './hooks/usePageMeta';
 import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl, Typography, IconButton, 
   InputAdornment, Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
@@ -35,6 +36,13 @@ const Signup = () => {
   });
 
   const navigate = useNavigate();
+
+  usePageMeta({
+    title: 'Join FunPlug | Event Creator & Vendor Signup',
+    description: 'Create your free FunPlug account to sell tickets, book event services, and grow your event business.',
+    keywords: 'FunPlug signup, event creator registration, vendor signup, event ticket seller account',
+    url: typeof window !== 'undefined' ? `${window.location.origin}/signup` : '',
+  });
 
   const showToast = (message, severity = "info") => {
     setToast({ open: true, message, severity });

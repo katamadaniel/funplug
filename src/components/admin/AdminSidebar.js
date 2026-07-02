@@ -121,6 +121,12 @@ const AdminSidebar = ({ adminProfile }) => {
         roles: ["SUPER_ADMIN", "ADMIN"],
       },
       {
+        label: "Withdrawals",
+        path: "/withdrawals",
+        icon: <ReceiptIcon fontSize="medium" />,
+        roles: ["SUPER_ADMIN", "ADMIN"],
+      },
+      {
         label: "Policies",
         path: "/policies",
         icon: <PolicyIcon fontSize="medium" />,
