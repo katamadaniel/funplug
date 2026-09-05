@@ -152,7 +152,7 @@ export default function PolicyUpdateSchedule({ onSuccess }) {
       )}
 
       {/* Upcoming Reviews Alert */}
-      <Card sx={{ mb: 3, bgcolor: '#fff3cd', borderLeft: '4px solid #ffc107' }}>
+      <Card sx={{ mb: 3, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(245,158,11,0.14)' : 'rgba(255,243,205,0.82)', borderLeft: '4px solid', borderLeftColor: 'warning.main', border: 1, borderColor: 'warning.light', backdropFilter: 'blur(14px)' }}>
         <CardContent>
           <Typography variant="body2">
             <strong>Upcoming Reviews:</strong> Check the schedule below to see when policy reviews are due
@@ -176,9 +176,9 @@ export default function PolicyUpdateSchedule({ onSuccess }) {
       {loading ? (
         <CircularProgress />
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={0} sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', backdropFilter: 'blur(18px)' }}>
           <Table>
-            <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell>Document</TableCell>
                 <TableCell>Review Frequency</TableCell>

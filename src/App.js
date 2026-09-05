@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'r
 import Login from './Login';
 import Signup from './Signup';
 import Home from './Home';
+import EventPlanner from './EventPlanner';
 import Category from './categories/Category';
 import CategoryRouter from './categories/CategoryRouter';
 import About from './About';
@@ -217,7 +218,7 @@ function App() {
                               <Menu isAuthenticated={isAuthenticated} />
                               <div className="content">
                                 <Routes>
-                                  <Route path="/admin" element={<AdminLogin setAdminAuthenticated={setAdminAuthenticated} setAdmin={setAdmin} />} />
+                                  <Route path="/tc3kb" element={<AdminLogin setAdminAuthenticated={setAdminAuthenticated} setAdmin={setAdmin} />} />
                                   <Route path="/reset" element={<PasswordResetRequest />} />
                                   <Route path="/reset-password/:token" element={<PasswordResetVerify />} />
                                   <Route path="/verify-email/:token" element={<VerifyEmail />} />
@@ -226,6 +227,7 @@ function App() {
                                   <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
                                   <Route path="/signup" element={<Signup />} />
                                   <Route path="/" element={<Home />} />
+                                  <Route path="/plan-event" element={<EventPlanner />} />
                                   <Route path="/about" element={<About />} />
                                   <Route path="/faq" element={<FAQ />} />
                                   <Route path="/contact" element={<Contact />} />

@@ -137,17 +137,22 @@ const AdminLogin = ({ setAdminAuthenticated, setAdmin }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        bgcolor: "#f4f6f8",
+        bgcolor: "background.default",
+        background: "linear-gradient(135deg, rgba(108,99,255,0.12), transparent 45%)",
         px: 2,
       }}
     >
       <Paper
-        elevation={4}
+        elevation={0}
         sx={{
           width: "100%",
           maxWidth: 480,
           p: 4,
           borderRadius: 3,
+          bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.82)" : "rgba(255,255,255,0.82)",
+          backdropFilter: "blur(20px)",
+          border: 1,
+          borderColor: "divider",
         }}
       >
         <Box sx={{ textAlign: "center", mb: 2 }}>

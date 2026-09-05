@@ -217,6 +217,13 @@ const Events = ({ token }) => {
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
 
+      <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 3, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.78)" : "rgba(255,255,255,0.82)", border: 1, borderColor: "divider", backdropFilter: "blur(16px)" }} elevation={0}>
+        <Typography variant="h5" fontWeight={800}>Create and manage your events</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Publish an event to start selling tickets, then use purchases to track guests, revenue, and follow-up actions.
+        </Typography>
+      </Paper>
+
       <Box sx={{ display:'flex', justifyContent:'space-between', mb: 3, flexWrap:'wrap', gap:1 }}>
         <Button variant="contained" startIcon={<Add />} onClick={() => setIsModalOpen(true)}>
           Create Event
@@ -345,6 +352,15 @@ const Events = ({ token }) => {
                 </Accordion>
               );
             })}
+            {!events.length && (
+              <Paper sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
+                <Typography fontWeight={700}>Your event workspace is ready.</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+                  Create your first event to publish the details attendees need and begin receiving ticket purchases.
+                </Typography>
+                <Button variant="contained" startIcon={<Add />} onClick={() => setIsModalOpen(true)}>Create your first event</Button>
+              </Paper>
+            )}
           </Box>
         </Collapse>
       )}
@@ -447,6 +463,15 @@ const Events = ({ token }) => {
               </Card>
             ))}
           </Box>
+          {!upcomingEvents.length && (
+            <Paper sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
+              <Typography fontWeight={700}>No upcoming events yet.</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+                Start with the event type, date, venue, ticket setup, and a clear description. You can edit everything later.
+              </Typography>
+              <Button variant="contained" startIcon={<Add />} onClick={() => setIsModalOpen(true)}>Create an event</Button>
+            </Paper>
+          )}
         </>
       )}
 

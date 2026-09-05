@@ -149,9 +149,9 @@ export default function PolicyVersionControl({ onSuccess }) {
       {loading ? (
         <CircularProgress />
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={0} sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', backdropFilter: 'blur(18px)' }}>
           <Table>
-            <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell>Version</TableCell>
                 <TableCell>Title</TableCell>

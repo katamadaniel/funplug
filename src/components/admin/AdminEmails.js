@@ -24,9 +24,9 @@ const AdminEmails = () => {
   };
 
   return (
-    <Box p={2}>
+    <Box sx={{ p: { xs: 1.5, md: 3 }, minHeight: "100vh", bgcolor: "background.default", background: "linear-gradient(135deg, rgba(108,99,255,0.08), transparent 38%)" }}>
       {/* Tabs */}
-      <Paper sx={{ borderRadius: 2, mb: 2 }}>
+      <Paper sx={{ borderRadius: 3, mb: 2, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.76)" : "rgba(255,255,255,0.78)", backdropFilter: "blur(18px)", border: 1, borderColor: "divider" }} elevation={0}>
         <Tabs
           value={tabValue}
           onChange={(e, val) => setTabValue(val)}

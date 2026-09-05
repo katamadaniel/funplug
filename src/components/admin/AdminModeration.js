@@ -169,8 +169,8 @@ const AdminModeration = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "#f4f6f8", minHeight: "100vh" }}>
-      <Paper sx={{ borderRadius: 3 }} elevation={3}>
+    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "background.default", background: "linear-gradient(135deg, rgba(108,99,255,0.08), transparent 38%)", minHeight: "100vh" }}>
+      <Paper sx={{ borderRadius: 3, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.76)" : "rgba(255,255,255,0.78)", backdropFilter: "blur(18px)", border: 1, borderColor: "divider" }} elevation={0}>
         <Box sx={{ p: 2 }}>
           <Typography variant="h5" fontWeight={900}>
             Moderation Panel
@@ -215,7 +215,7 @@ const AdminModeration = () => {
 
       {/* REVIEW MODERATION */}
       {tab === 0 && (
-        <Paper sx={{ mt: 2, borderRadius: 3 }} elevation={3}>
+        <Paper sx={{ mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
           <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", gap: 2 }}>
             <TextField
               label="Search Reviews"
@@ -254,7 +254,7 @@ const AdminModeration = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#fafafa" }}>
+                  <TableRow sx={{ bgcolor: "action.hover" }}>
                     <TableCell sx={{ fontWeight: 900 }}>Profile</TableCell>
                     <TableCell sx={{ fontWeight: 900 }}>Reviewer</TableCell>
                     <TableCell sx={{ fontWeight: 900 }}>Rating</TableCell>
@@ -345,7 +345,7 @@ const AdminModeration = () => {
 
       {/* VERIFICATION REQUESTS */}
       {tab === 1 && (
-        <Paper sx={{ mt: 2, borderRadius: 3 }} elevation={3}>
+        <Paper sx={{ mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
           <Box sx={{ p: 2, display: "flex", justifyContent: "space-between", gap: 2 }}>
             <TextField
               label="Search Users"
@@ -384,7 +384,7 @@ const AdminModeration = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#fafafa" }}>
+                  <TableRow sx={{ bgcolor: "action.hover" }}>
                     <TableCell sx={{ fontWeight: 900 }}>Avatar</TableCell>
                     <TableCell sx={{ fontWeight: 900 }}>Name</TableCell>
                     <TableCell sx={{ fontWeight: 900 }}>Email</TableCell>

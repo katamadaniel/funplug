@@ -254,6 +254,12 @@ const Venues = ({ token }) => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
+      <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 3, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.78)" : "rgba(255,255,255,0.82)", border: 1, borderColor: "divider", backdropFilter: "blur(16px)" }} elevation={0}>
+        <Typography variant="h5" fontWeight={800}>Make your space bookable</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Add clear venue details, capacity, pricing, media, and location so clients can confidently book your space.
+        </Typography>
+      </Paper>
       <Box
         sx={{
           display: "flex",
@@ -417,6 +423,15 @@ const Venues = ({ token }) => {
                 </Card>
               );
             })}
+            {!venues.length && (
+              <Paper sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
+                <Typography fontWeight={700}>No venue listings yet.</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+                  Create a venue listing with photos, capacity, charges, and availability. Clients will use these details when planning.
+                </Typography>
+                <Button variant="contained" startIcon={<Add />} onClick={() => { setCurrentVenue(null); setIsEditing(false); setModalOpen(true); }}>Create your first venue</Button>
+              </Paper>
+            )}
           </Box>
         </Box>
       )}

@@ -160,7 +160,8 @@ const AdminSidebar = ({ adminProfile }) => {
       <Box
         sx={{
           p: 2,
-          borderBottom: "1px solid #eee",
+          borderBottom: 1,
+          borderColor: "divider",
           display: "flex",
           alignItems: "center",
           justifyContent: collapsed ? "center" : "space-between",
@@ -335,7 +336,10 @@ const AdminSidebar = ({ adminProfile }) => {
           sx={{
             "& .MuiDrawer-paper": {
               width: SIDEBAR_WIDTH,
-              borderRight: "1px solid #eee",
+              borderRight: 1,
+              borderColor: "divider",
+              bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.88)" : "rgba(255,255,255,0.88)",
+              backdropFilter: "blur(18px)",
             },
           }}
         >
@@ -372,7 +376,10 @@ const AdminSidebar = ({ adminProfile }) => {
         "& .MuiDrawer-paper": {
           width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
           boxSizing: "border-box",
-          borderRight: "1px solid #eee",
+          borderRight: 1,
+          borderColor: "divider",
+          bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.88)" : "rgba(255,255,255,0.88)",
+          backdropFilter: "blur(18px)",
           transition: "width 0.25s ease",
           overflow: "hidden",
         },

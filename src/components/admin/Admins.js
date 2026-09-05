@@ -177,7 +177,7 @@ const Admins = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: "#f4f6f8", minHeight: "100vh" }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: "background.default", background: "linear-gradient(135deg, rgba(108,99,255,0.08), transparent 38%)", minHeight: "100vh" }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={800}>
           Admin Management
@@ -200,7 +200,7 @@ const Admins = () => {
       )}
 
       {/* ADMIN LIST */}
-      <Paper sx={{ borderRadius: 3, overflow: "hidden" }} elevation={3}>
+      <Paper sx={{ borderRadius: 3, overflow: "hidden", bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.76)" : "rgba(255,255,255,0.78)", backdropFilter: "blur(18px)", border: 1, borderColor: "divider" }} elevation={0}>
         <Box sx={{ p: 2 }}>
           <Typography variant="h6" fontWeight={700}>
             Admin Accounts
@@ -215,7 +215,7 @@ const Admins = () => {
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: "#fafafa" }}>
+              <TableRow sx={{ bgcolor: "action.hover" }}>
                 <TableCell sx={{ fontWeight: 800 }}>Name</TableCell>
                 <TableCell sx={{ fontWeight: 800 }}>Email</TableCell>
                 <TableCell sx={{ fontWeight: 800 }}>Role</TableCell>
@@ -278,7 +278,7 @@ const Admins = () => {
       </Paper>
 
       {/* ADD ADMIN FORM */}
-      <Paper sx={{ mt: 3, p: 3, borderRadius: 3 }} elevation={3}>
+      <Paper sx={{ mt: 3, p: 3, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.76)" : "rgba(255,255,255,0.78)", backdropFilter: "blur(18px)", border: 1, borderColor: "divider" }} elevation={0}>
         <Typography variant="h6" fontWeight={800}>
           Create New Admin
         </Typography>

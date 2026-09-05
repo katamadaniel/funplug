@@ -33,17 +33,38 @@ export const CustomThemeProvider = ({ children }) => {
             main: "#6C63FF",
           },
           background: {
-            default: mode === "dark" ? "#0f172a" : "#f8fafc",
-            paper: mode === "dark" ? "#020617" : "#ffffff",
+            default: mode === "dark" ? "#0b1020" : "#f7f8fc",
+            paper: mode === "dark" ? "#121a2d" : "#ffffff",
           },
+          text: {
+            primary: mode === "dark" ? "#f8fafc" : "#182033",
+            secondary: mode === "dark" ? "#aeb9cc" : "#667085",
+          },
+          divider: mode === "dark" ? "rgba(226,232,240,0.14)" : "rgba(15,23,42,0.10)",
         },
         shape: {
-          borderRadius: 12,
+          borderRadius: 14,
         },
         typography: {
-          fontFamily: "Inter, Roboto, sans-serif",
+          fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+          body1: { lineHeight: 1.65 },
+          body2: { lineHeight: 1.55 },
+          h3: { fontWeight: 800, letterSpacing: "-0.02em" },
+          h4: { fontWeight: 800, letterSpacing: "-0.02em" },
           h6: {
             fontWeight: 700,
+          },
+        },
+        components: {
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                backgroundImage: "none",
+              },
+            },
+          },
+          MuiButton: {
+            defaultProps: { disableElevation: true },
           },
         },
       }),

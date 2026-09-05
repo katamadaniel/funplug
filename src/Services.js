@@ -438,6 +438,12 @@ const Services = ({ token }) => {
 
   return (
     <Box p={2}>
+      <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 3, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.78)" : "rgba(255,255,255,0.82)", border: 1, borderColor: "divider", backdropFilter: "blur(16px)" }} elevation={0}>
+        <Typography variant="h5" fontWeight={800}>Make your service easy to hire</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Describe what you provide, show your work, set your rate and duration, then manage every client booking from this space.
+        </Typography>
+      </Paper>
       <Typography variant="h5" gutterBottom textAlign="center">
         My Services
       </Typography>
@@ -695,6 +701,15 @@ const Services = ({ token }) => {
             );
           })}
         </Grid>
+      )}
+      {!showBookings && !services.length && (
+        <Paper sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
+          <Typography fontWeight={700}>No services listed yet.</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+            Add your service type, business name, description, pricing, location, and media to start receiving requests.
+          </Typography>
+          <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenModal()}>Add your first service</Button>
+        </Paper>
       )}
 
       {/* --------------------------

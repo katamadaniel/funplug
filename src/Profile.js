@@ -375,6 +375,12 @@ const Profile = ({ token }) => {
   /** ---------------- RENDER ---------------- */
   return (
     <Box maxWidth={800} mx="auto" p={3}>
+      <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 3, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.78)" : "rgba(255,255,255,0.82)", border: 1, borderColor: "divider", backdropFilter: "blur(16px)" }} elevation={0}>
+        <Typography variant="h6" fontWeight={800}>Your FunPlug workspace</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Keep your profile current, review feedback, watch your audience grow, and manage earnings from the tabs below.
+        </Typography>
+      </Paper>
       {/* HEADER */}
       <Stack direction="row" spacing={3} alignItems="center">
               <input
@@ -668,12 +674,23 @@ const Profile = ({ token }) => {
               ))}
             </Stack>
           )}
+          {!reviewsLoading && reviews.length === 0 && (
+            <Paper sx={{ p: 2.5, mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
+              <Typography fontWeight={700}>Reviews will appear here.</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Complete bookings and keep your profile details clear so clients can work with confidence.
+              </Typography>
+            </Paper>
+          )}
         </Box>
       )}
       {activeTab === "wallet" && (
         <Box mt={3}>
           <Typography variant="h5" fontWeight={700} gutterBottom>
             Wallet Balance
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Track net earnings from successful bookings and submit a withdrawal request when your balance is ready.
           </Typography>
 
           <Grid container spacing={3}>
@@ -804,6 +821,11 @@ const Profile = ({ token }) => {
                   </TableBody>
                 </Table>
               </TableContainer>
+            )}
+            {!walletLoading && withdrawalRequests.length === 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                No withdrawal requests yet. Successful ticket sales & bookings may contribute to your available balance.
+              </Typography>
             )}
           </Box>
         </Box>
@@ -944,6 +966,14 @@ const Profile = ({ token }) => {
               </Table>
             ) : (
               <Typography sx={{ p: 2 }}>No followers yet.</Typography>
+            )}
+            {followers.length === 0 && !followersLoading && (
+              <Paper sx={{ p: 2.5, mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
+                <Typography fontWeight={700}>Your audience will appear here.</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  Share a complete profile and active listings to give people a reason to follow your work.
+                </Typography>
+              </Paper>
             )}
             {followers.length < followersTotal && (
               <Box display="flex" justifyContent="center" mt={2}>

@@ -118,7 +118,7 @@ export default function PolicyComplianceReport() {
         <Grid container spacing={2} sx={{ mb: 4 }}>
           {report.map((item) => (
             <Grid item xs={12} sm={6} md={4} key={item._id}>
-              <Card>
+              <Card sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.76)' : 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', border: 1, borderColor: 'divider' }}>
                 <CardContent>
                   <Typography color="textSecondary" gutterBottom>
                     {docTypeLabels[item._id]}
@@ -163,9 +163,9 @@ export default function PolicyComplianceReport() {
       {loading ? (
         <CircularProgress />
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={0} sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', backdropFilter: 'blur(18px)' }}>
           <Table>
-            <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+            <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell>Document</TableCell>
                 <TableCell align="right">Total Acknowledgments</TableCell>

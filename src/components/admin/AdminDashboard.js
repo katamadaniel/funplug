@@ -32,14 +32,14 @@ const AdminDashboard = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ marginTop: '2rem' }}>
-      <Typography variant="h4" gutterBottom>
+    <Container maxWidth="lg" sx={{ py: { xs: 2.5, md: 4 } }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 800, letterSpacing: "-0.02em" }}>
         Admin Dashboard
       </Typography>
-      <Grid container spacing={4}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         {/* User Stats Card */}
         <Grid item xs={12} md={12} lg={12}>
-          <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
+          <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, minHeight: '150px', border: 1, borderColor: 'divider', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.72)' : 'rgba(255,255,255,0.58)', backdropFilter: 'blur(18px)' }}>
             <Typography variant="h6" gutterBottom>
               User Statistics
             </Typography>
@@ -49,7 +49,7 @@ const AdminDashboard = () => {
 
         {/* Ticket Stats Card */}
         <Grid item xs={12} md={12} lg={12}>
-          <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
+          <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, minHeight: '150px', border: 1, borderColor: 'divider', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.72)' : 'rgba(255,255,255,0.58)', backdropFilter: 'blur(18px)' }}>
             <Typography variant="h6" gutterBottom>
               Ticket Statistics
             </Typography>
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
 
         {/* Event Stats Card */}
         <Grid item xs={12} md={12} lg={12}>
-          <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
+          <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, minHeight: '150px', border: 1, borderColor: 'divider', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.72)' : 'rgba(255,255,255,0.58)', backdropFilter: 'blur(18px)' }}>
             <Typography variant="h6" gutterBottom>
               Event Statistics
             </Typography>
@@ -69,7 +69,7 @@ const AdminDashboard = () => {
 
         {/* Venue Stats Card */}
         <Grid item xs={12} md={12} lg={12}>
-          <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
+          <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, minHeight: '150px', border: 1, borderColor: 'divider', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.72)' : 'rgba(255,255,255,0.58)', backdropFilter: 'blur(18px)' }}>
             <Typography variant="h6" gutterBottom>
               Venue Statistics
             </Typography>
@@ -79,7 +79,7 @@ const AdminDashboard = () => {
 
         {/* Performance Stats Card */}
         <Grid item xs={12} md={12} lg={12}>
-          <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
+          <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, minHeight: '150px', border: 1, borderColor: 'divider', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.72)' : 'rgba(255,255,255,0.58)', backdropFilter: 'blur(18px)' }}>
             <Typography variant="h6" gutterBottom>
               Performance Statistics
             </Typography>
@@ -89,7 +89,7 @@ const AdminDashboard = () => {
 
         {/* Service Stats Card */}
         <Grid item xs={12} md={12} lg={12}>
-          <Paper elevation={3} sx={{ padding: '1.5rem', minHeight: '150px' }}>
+          <Paper elevation={0} sx={{ p: { xs: 1.5, md: 2.5 }, minHeight: '150px', border: 1, borderColor: 'divider', bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.72)' : 'rgba(255,255,255,0.58)', backdropFilter: 'blur(18px)' }}>
             <Typography variant="h6" gutterBottom>
               Service Statistics
             </Typography>

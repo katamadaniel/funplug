@@ -51,8 +51,18 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
   };
 
   return (
-    <AppBar position="sticky" elevation={1} color="default">
-      <Toolbar sx={{ justifyContent: "space-between" }}>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.82)" : "rgba(255,255,255,0.86)",
+        color: "text.primary",
+        backdropFilter: "blur(18px)",
+        borderBottom: 1,
+        borderColor: "divider",
+      }}
+    >
+      <Toolbar sx={{ justifyContent: "space-between", minHeight: { xs: 62, sm: 70 } }}>
         {/* LOGO */}
         <Box
           onClick={() => navigate("/")}
@@ -82,7 +92,15 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
 
         {/* RIGHT */}
         {!isAuthenticated ? (
-          <Box>
+          <Box display="flex" alignItems="center" gap={0.5}>
+            <Tooltip title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+              <IconButton
+                onClick={toggleTheme}
+                aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+              </IconButton>
+            </Tooltip>
             <Button onClick={() => navigate("/login")}>Login</Button>
             <Button variant="contained" onClick={() => navigate("/signup")}>
               Signup
@@ -91,8 +109,11 @@ const Header = ({ isAuthenticated, user, onLogout }) => {
         ) : (
           <Box display="flex" alignItems="center" gap={1}>
             {/* THEME TOGGLE */}
-            <Tooltip title="Toggle theme">
-              <IconButton onClick={toggleTheme}>
+            <Tooltip title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+              <IconButton
+                onClick={toggleTheme}
+                aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
                 {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
               </IconButton>
             </Tooltip>

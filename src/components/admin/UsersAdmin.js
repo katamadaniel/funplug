@@ -155,9 +155,9 @@ const UsersAdmin = () => {
   };
 
 return (
-    <div>
-      <Typography variant="h4">Manage Users</Typography>
-      <Box sx={{ p: 3 }}>
+    <Box sx={{ minHeight: "100vh", p: { xs: 2, md: 4 }, bgcolor: "background.default", background: "linear-gradient(135deg, rgba(108,99,255,0.08), transparent 38%)" }}>
+      <Typography variant="h4" sx={{ mb: 2, fontWeight: 800, letterSpacing: "-0.02em" }}>Manage Users</Typography>
+      <Box sx={{ p: { xs: 0, md: 1 }, borderRadius: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <TextField
             variant="outlined"
@@ -169,7 +169,7 @@ return (
           />
         </Box>
 
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={0} sx={{ border: 1, borderColor: "divider", bgcolor: "background.paper", backdropFilter: "blur(18px)" }}>
           <Table>
             <TableHead>
               <TableRow>
@@ -188,9 +188,9 @@ return (
             </TableHead>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow
+                  <TableRow
                   key={user._id}
-                  sx={{ backgroundColor: isInactiveUser(user) ? '#fff4e5' : 'inherit',}}
+                    sx={{ backgroundColor: isInactiveUser(user) ? 'action.hover' : 'transparent',}}
                 >
                   <TableCell>
                     {isInactiveUser(user) ? (
@@ -341,7 +341,7 @@ return (
           </DialogActions>
         </Dialog>
       </Box>
-    </div>
+    </Box>
   );
 };
 

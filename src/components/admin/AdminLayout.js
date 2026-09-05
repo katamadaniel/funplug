@@ -49,7 +49,18 @@ const AdminLayout = ({ children }) => {
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <AdminSidebar adminProfile={adminProfile} />
 
-      <Box sx={{ flex: 1, bgcolor: "#f7f7f7", minHeight: "100vh" }}>
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          minHeight: "100vh",
+          bgcolor: "background.default",
+          background: (theme) => theme.palette.mode === "dark"
+            ? "linear-gradient(135deg, rgba(108,99,255,0.12), transparent 38%), linear-gradient(180deg, #0b1020 0%, #10182a 100%)"
+            : "linear-gradient(135deg, rgba(108,99,255,0.08), transparent 38%), linear-gradient(180deg, #f7f8fc 0%, #eef1f8 100%)",
+          transition: "background 180ms ease",
+        }}
+      >
         {children || <Outlet context={{ adminProfile }} />}
       </Box>
     </Box>

@@ -52,10 +52,14 @@ const SearchBar = () => {
       {/* Search Toggle Button */}
       <IconButton
         onClick={() => setOpen(prev => !prev)}
+        aria-label={open ? 'Close search' : 'Open search'}
         sx={{
-          bgcolor: 'white',
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          border: 1,
+          borderColor: 'divider',
           boxShadow: 2,
-          '&:hover': { bgcolor: '#f1f1f1' },
+          '&:hover': { bgcolor: 'action.hover' },
         }}
       >
         <FaSearch />
@@ -75,10 +79,16 @@ const SearchBar = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: 1,
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.94)' : 'rgba(255,255,255,0.94)',
+            color: 'text.primary',
+            border: 1,
+            borderColor: 'divider',
+            backdropFilter: 'blur(18px)',
           }}
         >
           <IconButton
             onClick={() => setOpen(false)}
+            aria-label="Close search"
             sx={{ alignSelf: 'flex-end', mb: 1 }}
           >
             <CloseIcon />
@@ -91,11 +101,12 @@ const SearchBar = () => {
             placeholder="Search users, events, venues..."
             value={query}
             onChange={e => setQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
+            inputProps={{ 'aria-label': 'Search users, events, and venues' }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={handleSearch}>
+                  <IconButton onClick={handleSearch} aria-label="Submit search">
                     <FaSearch />
                   </IconButton>
                 </InputAdornment>

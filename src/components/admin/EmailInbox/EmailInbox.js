@@ -212,7 +212,7 @@ const EmailInbox = ({ onRefresh }) => {
         </Box>
 
         {/* Filters */}
-        <Paper sx={{ p: 2, borderRadius: 1.5 }}>
+        <Paper sx={{ p: 2, borderRadius: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.78)' : 'rgba(255,255,255,0.82)', border: 1, borderColor: 'divider', backdropFilter: 'blur(18px)' }} elevation={0}>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <TextField
               label="Search (to/from/subject)"
@@ -278,11 +278,11 @@ const EmailInbox = ({ onRefresh }) => {
         )}
 
         {/* Table */}
-        <Paper sx={{ borderRadius: 1.5 }}>
+        <Paper sx={{ borderRadius: 2, bgcolor: 'background.paper', border: 1, borderColor: 'divider', overflow: 'hidden' }} elevation={0}>
           <TableContainer>
             <Table>
               <TableHead>
-                <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                <TableRow sx={{ bgcolor: "action.hover" }}>
                   <TableCell>
                     <strong>Status</strong>
                   </TableCell>
@@ -492,7 +492,7 @@ const EmailInbox = ({ onRefresh }) => {
                 <>
                   <Typography variant="subtitle2">Text Version</Typography>
 
-                  <Paper sx={{ p: 2, mt: 1, mb: 2, bgcolor: "#0d0d0d" }}>
+                  <Paper sx={{ p: 2, mt: 1, mb: 2, bgcolor: (theme) => theme.palette.mode === "dark" ? "#080b12" : "#1b1f2a", border: 1, borderColor: "divider" }} elevation={0}>
                     <Typography
                       variant="body2"
                       sx={{ whiteSpace: "pre-wrap", color: "#ddd" }}
@@ -511,7 +511,9 @@ const EmailInbox = ({ onRefresh }) => {
                     sx={{
                       p: 2,
                       mt: 1,
-                      border: "1px solid #eee",
+                      border: 1,
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
                       overflow: "auto",
                       maxHeight: 400,
                     }}

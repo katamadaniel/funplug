@@ -93,7 +93,7 @@ export default function PolicyManagement() {
       {stats && (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 4 }}>
           {stats.map((stat) => (
-            <Card key={stat._id}>
+            <Card key={stat._id} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.76)' : 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', border: 1, borderColor: 'divider' }}>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
                   {stat._id === 'privacy-policy' && 'Privacy Policy'}
@@ -113,13 +113,13 @@ export default function PolicyManagement() {
       )}
 
       {/* Tabs */}
-      <Card>
+      <Card sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(18,26,45,0.76)' : 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', border: 1, borderColor: 'divider' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
             aria-label="policy management tabs"
-            sx={{ bgcolor: '#f5f5f5' }}
+            sx={{ bgcolor: 'action.hover' }}
           >
             <Tab label="Version Control" id="policy-tab-0" />
             <Tab label="Update Schedule" id="policy-tab-1" />

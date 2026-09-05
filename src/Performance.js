@@ -416,6 +416,12 @@ const Performance = ({ token }) => {
 
   return (
     <Box p={2}>
+      <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 3, borderRadius: 3, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.78)" : "rgba(255,255,255,0.82)", border: 1, borderColor: "divider", backdropFilter: "blur(16px)" }} elevation={0}>
+        <Typography variant="h5" fontWeight={800}>Turn your talent into bookings</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Create a rate card with your art type, location, media, availability, and hourly charges. Keep bookings and earnings in one place.
+        </Typography>
+      </Paper>
       <Typography variant="h5" gutterBottom textAlign="center">
         {showBookings ? "My Bookings" : "My Rate Cards"}
       </Typography>
@@ -663,6 +669,15 @@ const Performance = ({ token }) => {
             );
           })}
         </Grid>
+      )}
+      {!showBookings && !cards.length && (
+        <Paper sx={{ p: 3, mt: 2, borderRadius: 3, bgcolor: "background.paper", border: 1, borderColor: "divider" }} elevation={0}>
+          <Typography fontWeight={700}>Your talent profile starts with a rate card.</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+            Add your stage name, art type, location, charges, and sample media so event hosts know what to book.
+          </Typography>
+          <Button variant="contained" startIcon={<Add />} onClick={() => handleOpenModal()}>Create your first rate card</Button>
+        </Paper>
       )}
 
       {/* Modal */}

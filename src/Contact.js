@@ -99,12 +99,12 @@ const Contact = () => {
   };
 
   return (
-    <Box sx={{ backgroundColor: "#fafafa", py: { xs: 6, md: 10 } }}>
+    <Box sx={{ bgcolor: "background.default", background: "linear-gradient(180deg, rgba(108,99,255,0.08), transparent 40%)", py: { xs: 4, md: 8 } }}>
       <Container maxWidth="lg">
         <Grid container spacing={6}>
           {/* Contact Info */}
           <Grid item xs={12} md={5}>
-            <Paper sx={{ p: 4, height: "100%", borderRadius: 4 }} elevation={2}>
+            <Paper sx={{ p: { xs: 2.5, md: 4 }, height: "100%", borderRadius: 4, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.76)" : "rgba(255,255,255,0.78)", backdropFilter: "blur(18px)", border: 1, borderColor: "divider" }} elevation={0}>
               <Stack spacing={3}>
                 <Box>
                   <Typography variant="h4" fontWeight={700} gutterBottom>
@@ -140,7 +140,7 @@ const Contact = () => {
 
           {/* Contact Form */}
           <Grid item xs={12} md={7}>
-            <Paper sx={{ p: 4, borderRadius: 4 }} elevation={2}>
+            <Paper sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 4, bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(18,26,45,0.76)" : "rgba(255,255,255,0.78)", backdropFilter: "blur(18px)", border: 1, borderColor: "divider" }} elevation={0}>
               <Typography variant="h5" fontWeight={700} gutterBottom>
                 Send a Support Message
               </Typography>
